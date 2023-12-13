@@ -18,6 +18,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type (
+	FileResult struct {
+		Results map[string]*Result `json:"results,omitempty"`
+		Error   error              `json:"error,omitempty"`
+	}
+	Result struct {
+		Result interface{} `json:"result,omitempty"`
+		Error  error       `json:"error,omitempty"`
+	}
+
+	NewDecoder func(io.Reader) decoder
+	decoder    interface {
+		Decode(dest interface{}) error
+	}
+)
+
 func (c *Controller) Lint(_ context.Context, args ...string) error {
 	filePaths, err := c.findJsonnet()
 	if err != nil {
@@ -28,12 +44,21 @@ func (c *Controller) Lint(_ context.Context, args ...string) error {
 		return err
 	}
 
+	results := make(map[string]*FileResult, len(args))
 	for _, arg := range args {
-		if err := c.lint(arg, jsonnetAsts); err != nil {
+		rs, err := c.lint(arg, jsonnetAsts)
+		if err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"file_path": arg,
 			})
 		}
+		results[arg] = &FileResult{
+			Results: rs,
+			Error:   err,
+		}
+	}
+	if err := json.NewEncoder(c.stdout).Encode(results); err != nil {
+		return fmt.Errorf("encode the result as JSON: %w", err)
 	}
 
 	return nil
@@ -74,16 +99,16 @@ func getNewDecoder(fileName string) (NewDecoder, error) {
 	}
 }
 
-func (c *Controller) readJsonnets(filePaths []string) ([]ast.Node, error) {
-	jsonnetAsts := make([]ast.Node, len(filePaths))
-	for i, filePath := range filePaths {
+func (c *Controller) readJsonnets(filePaths []string) (map[string]ast.Node, error) {
+	jsonnetAsts := make(map[string]ast.Node, len(filePaths))
+	for _, filePath := range filePaths {
 		ja, err := c.readJsonnet(filePath)
 		if err != nil {
 			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"file_path": filePath,
 			})
 		}
-		jsonnetAsts[i] = ja
+		jsonnetAsts[filePath] = ja
 	}
 	return jsonnetAsts, nil
 }
@@ -100,29 +125,38 @@ func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
 	return ja, nil
 }
 
-type (
-	NewDecoder func(io.Reader) decoder
-	decoder    interface {
-		Decode(dest interface{}) error
-	}
-)
-
-func (c *Controller) lint(arg string, jsonnetAsts []ast.Node) error {
+func (c *Controller) lint(arg string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {
 	input, err := c.parse(arg)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	vm := jsonnet.MakeVM()
 	vm.ExtCode("input", string(input))
-	for _, ja := range jsonnetAsts {
+	results := make(map[string]*Result, len(jsonnetAsts))
+	for k, ja := range jsonnetAsts {
 		result, err := vm.Evaluate(ja)
 		if err != nil {
-			return fmt.Errorf("evaluate Jsonnet: %w", err)
+			results[k] = &Result{
+				Result: result,
+				Error:  err,
+			}
+			continue
 		}
-		fmt.Println(result) //nolint:forbidigo
+		var a interface{}
+		if err := json.Unmarshal([]byte(result), &a); err != nil {
+			results[k] = &Result{
+				Result: result,
+				Error:  err,
+			}
+			continue
+		}
+		results[k] = &Result{
+			Result: a,
+			Error:  err,
+		}
 	}
-	return nil
+	return results, nil
 }
 
 func (c *Controller) parse(arg string) ([]byte, error) {
