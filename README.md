@@ -80,7 +80,7 @@ local fileType = std.extVar('file_type');
 local input = std.extVar('input');
 
 {
-  group_name: "GitHub Actions",
+  name: "GitHub Actions",
   description: |||
     Lint rules regarding GitHub Actions
   |||,
