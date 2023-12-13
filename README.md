@@ -1,6 +1,6 @@
 # lintnet
 
-Generic Linter powered by [Jsonnet](https://jsonnet.org/)
+General Linter powered by [Jsonnet](https://jsonnet.org/)
 
 You can write lint rules with Jsonnet and lint files (JSON and YAML).
 
