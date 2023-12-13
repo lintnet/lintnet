@@ -34,9 +34,22 @@ lintnet [<file path to be validated> ...]
 
 ## Lint rules
 
-Coming soon.
+> [!WARNING]
+> The specification is unstable yet.
 
 lintnet uses Jsonnet to write lint rules.
+
+### External Variables
+
+- `input`: A file content to be linted
+- `file_path`: A file path to be linted
+- `file_type`: A file type to be linted. One of `json` and `yaml`
+
+### Format
+
+Coming soon.
+
+### Example
 
 ```jsonnet
 local fileType = std.extVar('filetype');
