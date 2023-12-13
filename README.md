@@ -45,9 +45,17 @@ lintnet uses Jsonnet to write lint rules.
 - `file_path`: A file path to be linted
 - `file_type`: A file type to be linted. One of `json` and `yaml`
 
-### Format
+### Format of Jsonnet
 
-Coming soon.
+JSONPath | type | description
+--- | --- | ---
+`.name` | string | Group name
+`.description` | string | Group description
+`.rules[].name` | string | Rule name
+`.rules[].description` | string | Rule description
+`.rules[].errors[].message` | string | Error message
+
+If `.rules[].errors` isn't empty, lintnet treats as the lint fails.
 
 ### Example
 
