@@ -74,6 +74,7 @@ func (c *Controller) Lint(_ context.Context, args ...string) error {
 	if checkFailed(results) {
 		encoder := json.NewEncoder(c.stdout)
 		encoder.SetEscapeHTML(false)
+		encoder.SetIndent("", "  ")
 		if err := encoder.Encode(results); err != nil {
 			return fmt.Errorf("encode the result as JSON: %w", err)
 		}
