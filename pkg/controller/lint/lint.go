@@ -77,17 +77,27 @@ func getNewDecoder(fileName string) (NewDecoder, error) {
 func (c *Controller) readJsonnets(filePaths []string) ([]ast.Node, error) {
 	jsonnetAsts := make([]ast.Node, len(filePaths))
 	for i, filePath := range filePaths {
-		b, err := afero.ReadFile(c.fs, filePath)
+		ja, err := c.readJsonnet(filePath)
 		if err != nil {
-			return nil, fmt.Errorf("read a jsonnet file: %w", err)
-		}
-		ja, err := jsonnet.SnippetToAST(filePath, string(b))
-		if err != nil {
-			return nil, fmt.Errorf("parse a jsonnet file: %w", err)
+			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+				"file_path": filePath,
+			})
 		}
 		jsonnetAsts[i] = ja
 	}
 	return jsonnetAsts, nil
+}
+
+func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
+	b, err := afero.ReadFile(c.fs, filePath)
+	if err != nil {
+		return nil, fmt.Errorf("read a jsonnet file: %w", err)
+	}
+	ja, err := jsonnet.SnippetToAST(filePath, string(b))
+	if err != nil {
+		return nil, fmt.Errorf("parse a jsonnet file: %w", err)
+	}
+	return ja, nil
 }
 
 type (
