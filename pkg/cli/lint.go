@@ -18,5 +18,5 @@ func (lc *lintCommand) command() *cli.Command {
 
 func (lc *lintCommand) action(c *cli.Context) error {
 	ctrl := lint.NewController(afero.NewOsFs())
-	return ctrl.Lint(c.Context) //nolint:wrapcheck
+	return ctrl.Lint(c.Context, c.Args().Slice()...) //nolint:wrapcheck
 }
