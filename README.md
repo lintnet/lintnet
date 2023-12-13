@@ -52,7 +52,9 @@ Coming soon.
 ### Example
 
 ```jsonnet
-local fileType = std.extVar('filetype');
+local fileType = std.extVar('file_type');
+local input = std.extVar('input');
+
 {
   group_name: "GitHub Actions",
   description: |||
@@ -70,7 +72,7 @@ local fileType = std.extVar('filetype');
           job_name: job.key,
           uses: step.uses,
         }
-        for job in std.objectKeysValues(std.extVar('input').jobs)
+        for job in std.objectKeysValues(input.jobs)
         if std.objectHas(job.value, 'steps')
         for step in job.value.steps
         if fileType == 'yaml' && std.objectHas(step, 'uses') && std.endsWith(step.uses, '@main')
