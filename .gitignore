@@ -1,0 +1,5 @@
+dist
+.coverage
+
+# ignore goland files
+.idea
