@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (c *Controller) Lint(ctx context.Context) error {
+func (c *Controller) Lint(_ context.Context) error {
 	jsonnetFileName := "test.jsonnet"
 	b, err := afero.ReadFile(c.fs, jsonnetFileName)
 	if err != nil {
@@ -42,6 +42,6 @@ func (c *Controller) Lint(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("evaluate Jsonnet: %w", err)
 	}
-	fmt.Println(result)
+	fmt.Println(result) //nolint:forbidigo
 	return nil
 }
