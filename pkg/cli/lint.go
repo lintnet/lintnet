@@ -15,10 +15,20 @@ func (lc *lintCommand) command() *cli.Command {
 		Name:   "lint",
 		Usage:  "Lint files",
 		Action: lc.action,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "rule-base-dir",
+				Aliases: []string{"d"},
+				Value:   "lintnet",
+			},
+		},
 	}
 }
 
 func (lc *lintCommand) action(c *cli.Context) error {
 	ctrl := lint.NewController(afero.NewOsFs(), os.Stdout)
-	return ctrl.Lint(c.Context, c.Args().Slice()...) //nolint:wrapcheck
+	return ctrl.Lint(c.Context, &lint.ParamLint{ //nolint:wrapcheck
+		FilePaths:   c.Args().Slice(),
+		RuleBaseDir: c.String("rule-base-dir"),
+	})
 }
