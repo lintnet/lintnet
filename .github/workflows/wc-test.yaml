@@ -17,7 +17,7 @@ jobs:
         with:
           go-version: 1.21.5
           cache: true
-      - uses: aquaproj/aqua-installer@36dc5833b04eb63f06e3bb818aa6b7a6e6db99a9 # v2.1.2
+      - uses: aquaproj/aqua-installer@928a2ee4243a9ee8312d80dc8cbaca88fb602a91 # v2.2.0
         with:
           aqua_version: v2.21.0
       - run: golangci-lint run --timeout 120s
