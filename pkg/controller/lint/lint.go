@@ -34,7 +34,7 @@ type (
 		Error     string      `json:"error,omitempty"`
 	}
 	Output struct {
-		GroupName   string  `json:"group_name,omitempty"`
+		Name        string  `json:"name,omitempty"`
 		Description string  `json:"description,omitempty"`
 		Rules       []*Rule `json:"rules,omitempty"`
 	}
