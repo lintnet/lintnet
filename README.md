@@ -13,7 +13,7 @@ Please don't use this tool yet.
 
 - Powerful
   - Jsonnet has enough features to lint data
-    - e.g. variables, functions, conditions, Array and Object Comprehension, Imports, Errors, External variables, Top-level arguments, Standard library
+    - e.g. Variables, Functions, Conditions, Array and Object Comprehension, Imports, Errors, External variables, Top-level arguments, Standard library
 - Simple
   - The learning cost is not so high
 - Popular
@@ -28,8 +28,11 @@ Coming soon.
 
 ## How to use
 
+1. Write lint rules with Jsonnet
+1. Run the command `lintnet lint`
+
 ```sh
-lintnet [<file path to be validated> ...]
+lintnet lint [<file path to be validated> ...]
 ```
 
 ## Lint rules
@@ -39,7 +42,20 @@ lintnet [<file path to be validated> ...]
 
 lintnet uses Jsonnet to write lint rules.
 
+### Location of lint files
+
+`lintnet` looks for lint files `*.jsonnet` recursively from the base directory `lintnet`.
+You can change the base directory with the command line option `--rule-baes-dir (-d)`.
+
+e.g. Change the base directory to `policy`
+
+```sh
+lintnet lint -d policy foo.yaml bar.yaml
+```
+
 ### External Variables
+
+The following [External Variables](https://jsonnet.org/ref/language.html#external-variables-extvars) are passed to lint files.
 
 - `input`: A file content to be linted
 - `file_path`: A file path to be linted

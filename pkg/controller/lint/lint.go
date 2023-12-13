@@ -19,6 +19,11 @@ import (
 )
 
 type (
+	ParamLint struct {
+		RuleBaseDir string
+		FilePaths   []string
+	}
+
 	FileResult struct {
 		Results map[string]*Result `json:"results,omitempty"`
 		Error   string             `json:"error,omitempty"`
@@ -48,8 +53,8 @@ type (
 	}
 )
 
-func (c *Controller) Lint(_ context.Context, args ...string) error {
-	filePaths, err := c.findJsonnet()
+func (c *Controller) Lint(_ context.Context, param *ParamLint) error {
+	filePaths, err := c.findJsonnet(param.RuleBaseDir)
 	if err != nil {
 		return err
 	}
@@ -58,16 +63,16 @@ func (c *Controller) Lint(_ context.Context, args ...string) error {
 		return err
 	}
 
-	results := make(map[string]*FileResult, len(args))
-	for _, arg := range args {
-		rs, err := c.lint(arg, jsonnetAsts)
+	results := make(map[string]*FileResult, len(param.FilePaths))
+	for _, filePath := range param.FilePaths {
+		rs, err := c.lint(filePath, jsonnetAsts)
 		if err != nil {
-			results[arg] = &FileResult{
+			results[filePath] = &FileResult{
 				Error: err.Error(),
 			}
 			continue
 		}
-		results[arg] = &FileResult{
+		results[filePath] = &FileResult{
 			Results: rs,
 		}
 	}
@@ -103,9 +108,9 @@ func checkFailed(results map[string]*FileResult) bool {
 	return false
 }
 
-func (c *Controller) findJsonnet() ([]string, error) {
+func (c *Controller) findJsonnet(baseDir string) ([]string, error) {
 	filePaths := []string{}
-	if err := filepath.WalkDir("lintnet", func(path string, d fs.DirEntry, err error) error {
+	if err := filepath.WalkDir(baseDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
