@@ -24,7 +24,28 @@ Please don't use this tool yet.
 
 ## Install
 
-Coming soon.
+lintnet is a single binary written in [Go](https://go.dev/). So you only need to install an execurable file into `$PATH`.
+
+1. [Homebrew](https://brew.sh/)
+
+```sh
+brew install suzuki-shunsuke/lintnet/lintnet
+```
+
+2. [Scoop](https://scoop.sh/)
+
+```sh
+scoop bucket add suzuki-shunsuke https://github.com/suzuki-shunsuke/scoop-bucket
+scoop install lintnet
+```
+
+3. [aqua](https://aquaproj.github.io/)
+
+```sh
+aqua g -i suzuki-shunsuke/lintnet
+```
+
+4. Download a prebuilt binary from [GitHub Releases](https://github.com/suzuki-shunsuke/lintnet/releases) and install it into `$PATH`
 
 ## How to use
 
