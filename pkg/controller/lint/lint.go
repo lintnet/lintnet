@@ -71,12 +71,12 @@ func (c *Controller) Lint(_ context.Context, args ...string) error {
 			Results: rs,
 		}
 	}
-	encoder := json.NewEncoder(c.stdout)
-	encoder.SetEscapeHTML(false)
-	if err := encoder.Encode(results); err != nil {
-		return fmt.Errorf("encode the result as JSON: %w", err)
-	}
 	if checkFailed(results) {
+		encoder := json.NewEncoder(c.stdout)
+		encoder.SetEscapeHTML(false)
+		if err := encoder.Encode(results); err != nil {
+			return fmt.Errorf("encode the result as JSON: %w", err)
+		}
 		return errors.New("lint failed")
 	}
 
