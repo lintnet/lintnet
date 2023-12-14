@@ -1,5 +1,8 @@
-local fileType = std.extVar('file_type');
-local input = std.extVar('input');
+local filePath = std.extVar('file_path');
+local nf = {
+  contains: std.native('strings.contains'),
+};
+
 {
   name: 'File Name',
   description: |||
@@ -12,15 +15,9 @@ local input = std.extVar('input');
         Use underscores "_" rather than dash.
       |||,
       errors: [
-        {
-          message: '',
-          job_name: job.key,
-          uses: step.uses,
-        }
-        for job in std.objectKeysValues(input.jobs)
-        if std.objectHas(job.value, 'steps')
-        for step in job.value.steps
-        if fileType == 'yaml' && std.objectHas(step, 'uses') && std.endsWith(step.uses, '@main')
+        elem
+        for elem in [{}]
+        if nf.contains(filePath, '-')
       ],
     },
   ],

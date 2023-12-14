@@ -24,6 +24,10 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
+github.com/suzuki-shunsuke/go-jsonnet-native-functions v0.0.0-20231214173026-d1734b5b26de h1:NpMVDUBV9LhkHXfH1YbENeGGDGo5W9lXYU9C9EwL3BM=
+github.com/suzuki-shunsuke/go-jsonnet-native-functions v0.0.0-20231214173026-d1734b5b26de/go.mod h1:6dQhcEqPAUmaAj57CD8+UZiGjv7+anNHVSal7PQdsL0=
+github.com/suzuki-shunsuke/go-jsonnet-native-functions v0.0.0-20231214191324-6a3ffb7e7a15 h1:xoHUKf0BHBvViFDxzmLPhKZFsPTr7v9maSuQ293+CmE=
+github.com/suzuki-shunsuke/go-jsonnet-native-functions v0.0.0-20231214191324-6a3ffb7e7a15/go.mod h1:6dQhcEqPAUmaAj57CD8+UZiGjv7+anNHVSal7PQdsL0=
 github.com/suzuki-shunsuke/logrus-error v0.1.4 h1:nWo98uba1fANHdZ9Y5pJ2RKs/PpVjrLzRp5m+mRb9KE=
 github.com/suzuki-shunsuke/logrus-error v0.1.4/go.mod h1:WsVvvw6SKSt08/fB2qbnsKIMJA4K1MYCUprqsBJbMiM=
 github.com/urfave/cli/v2 v2.26.0 h1:3f3AMg3HpThFNT4I++TKOejZO8yU55t3JnnSr4S4QEI=
