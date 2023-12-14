@@ -1,4 +1,5 @@
 local fileType = std.extVar('file_type');
+local filePath = std.extVar('file_path');
 local input = std.extVar('input');
 {
   name: 'GitHub Actions',
@@ -11,7 +12,7 @@ local input = std.extVar('input');
       description: |||
         actions reference must not be main.
       |||,
-      errors: [
+      errors: if fileType == 'yaml' && std.startsWith(filePath, '.github/workflows/') then [
         {
           message: '',
           job_name: job.key,
@@ -20,8 +21,8 @@ local input = std.extVar('input');
         for job in std.objectKeysValues(input.jobs)
         if std.objectHas(job.value, 'steps')
         for step in job.value.steps
-        if fileType == 'yaml' && std.objectHas(step, 'uses') && std.endsWith(step.uses, '@main')
-      ],
+        if std.objectHas(step, 'uses') && std.endsWith(step.uses, '@main')
+      ] else [],
     },
   ],
 }

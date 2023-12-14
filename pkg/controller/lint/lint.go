@@ -179,6 +179,8 @@ func (c *Controller) lint(arg string, jsonnetAsts map[string]ast.Node) (map[stri
 	vm.ExtCode("input", string(input))
 	vm.ExtVar("file_path", arg)
 	vm.ExtVar("file_type", fileType)
+	setNativeFunctions(vm)
+
 	results := make(map[string]*Result, len(jsonnetAsts))
 	for k, ja := range jsonnetAsts {
 		result, err := vm.Evaluate(ja)
