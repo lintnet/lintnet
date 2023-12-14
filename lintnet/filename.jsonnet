@@ -1,6 +1,6 @@
 local filePath = std.extVar('file_path');
 local nf = {
-  contains: std.native('strings.contains'),
+  contains: std.native('strings.Contains'),
 };
 
 {

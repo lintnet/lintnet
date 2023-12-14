@@ -14,7 +14,6 @@ import (
 	"github.com/google/go-jsonnet/ast"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/go-jsonnet-native-functions/nativefunc"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v3"
 )
@@ -180,7 +179,7 @@ func (c *Controller) lint(arg string, jsonnetAsts map[string]ast.Node) (map[stri
 	vm.ExtCode("input", string(input))
 	vm.ExtVar("file_path", arg)
 	vm.ExtVar("file_type", fileType)
-	nativefunc.SetAll(vm)
+	setNativeFunctions(vm)
 
 	results := make(map[string]*Result, len(jsonnetAsts))
 	for k, ja := range jsonnetAsts {
