@@ -66,7 +66,7 @@ lintnet uses Jsonnet to write lint rules.
 ### Location of lint files
 
 `lintnet` looks for lint files `*.jsonnet` recursively from the base directory `lintnet`.
-You can change the base directory with the command line option `--rule-baes-dir (-d)`.
+You can change the base directory with the command line option `--rule-base-dir (-d)`.
 
 e.g. Change the base directory to `policy`
 
