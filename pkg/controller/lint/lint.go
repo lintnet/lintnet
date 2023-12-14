@@ -134,7 +134,7 @@ func getNewDecoder(fileName string) (NewDecoder, string, error) {
 		return func(r io.Reader) decoder {
 			return json.NewDecoder(r)
 		}, "json", nil
-	case strings.HasSuffix(fileName, ".yaml"):
+	case strings.HasSuffix(fileName, ".yaml") || strings.HasSuffix(fileName, ".yml"):
 		return func(r io.Reader) decoder {
 			return yaml.NewDecoder(r)
 		}, "yaml", nil
