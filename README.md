@@ -82,6 +82,25 @@ The following [External Variables](https://jsonnet.org/ref/language.html#externa
 - `file_path`: A file path to be linted
 - `file_type`: A file type to be linted. One of `json` and `yaml`
 
+### Native functions
+
+lintnet supports all [native functions](https://pkg.go.dev/github.com/google/go-jsonnet#NativeFunction) supported by [suzuki-shunsuke/go-jsonnet-native-functions](https://github.com/suzuki-shunsuke/go-jsonnet-native-functions), which ports Go stanard libraries to Jsonnet.
+The following native functions are available.
+
+- strings.Contains
+- strings.TrimPrefix
+- strings.TrimSpace
+- regexp.MatchString
+- filepath.Base
+
+You can executed these functions by `std.native("{native function name}")`.
+
+e.g.
+
+```jsonnet
+local contained = std.native("strings.Contains")("hello", "ll"); // true
+```
+
 ### Format of Jsonnet
 
 JSONPath | type | description
