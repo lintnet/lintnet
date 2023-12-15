@@ -12,6 +12,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type (
+	NewDecoder func(io.Reader) decoder
+	decoder    interface {
+		Decode(dest interface{}) error
+	}
+)
+
 func getNewDecoder(fileName string) (NewDecoder, string, error) {
 	switch {
 	case strings.HasSuffix(fileName, ".json"):

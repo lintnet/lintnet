@@ -67,3 +67,22 @@ func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
 	}
 	return ja, nil
 }
+
+func (c *Controller) evaluate(input []byte, filePath, fileType string, jsonnetAsts map[string]ast.Node) map[string]*Result {
+	vm := newVM(input, filePath, fileType)
+
+	results := make(map[string]*Result, len(jsonnetAsts))
+	for k, ja := range jsonnetAsts {
+		result, err := vm.Evaluate(ja)
+		if err != nil {
+			results[k] = &Result{
+				Error: err.Error(),
+			}
+			continue
+		}
+		results[k] = &Result{
+			RawOutput: result,
+		}
+	}
+	return results
+}
