@@ -1,8 +1,8 @@
 # lintnet
 
-General Linter powered by [Jsonnet](https://jsonnet.org/)
+General configuration file linter powered by [Jsonnet](https://jsonnet.org/)
 
-You can write lint rules with Jsonnet and lint files (JSON and YAML).
+You can write lint rules in Jsonnet and lint configuration files such as JSON and YAML.
 
 ## :warning: This project is still under development
 
@@ -55,6 +55,15 @@ aqua g -i suzuki-shunsuke/lintnet
 ```sh
 lintnet lint [<file path to be validated> ...]
 ```
+
+## Supported file format
+
+lintnet can lint the following file formats
+
+- JSON (`.json`)
+- YAML (`.yml`, `.yaml`)
+
+We're considering supporting additional file formats. [#37](https://github.com/suzuki-shunsuke/lintnet/issues/37)
 
 ## Lint rules
 
