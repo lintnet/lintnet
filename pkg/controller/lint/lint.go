@@ -20,6 +20,7 @@ type (
 	}
 	Result struct {
 		Output    *Output     `json:"-"`
+		RawOutput string      `json:"-"`
 		RawResult interface{} `json:"result,omitempty"`
 		Error     string      `json:"error,omitempty"`
 	}
@@ -75,6 +76,36 @@ func (c *Controller) lint(filePath string, jsonnetAsts map[string]ast.Node) (map
 		return nil, err
 	}
 
+	results := c.evaluate(input, fileType, filePath, jsonnetAsts)
+
+	for _, result := range results {
+		c.parseResult(result)
+	}
+	return results, nil
+}
+
+func (c *Controller) parseResult(result *Result) {
+	if result.Error != "" {
+		return
+	}
+	rb := []byte(result.RawOutput)
+
+	var rs interface{}
+	if err := json.Unmarshal(rb, &rs); err != nil {
+		result.Error = err.Error()
+		return
+	}
+	result.RawResult = rs
+
+	out := &Output{}
+	if err := json.Unmarshal(rb, out); err != nil {
+		result.Error = err.Error()
+		return
+	}
+	result.Output = out
+}
+
+func (c *Controller) evaluate(input []byte, filePath, fileType string, jsonnetAsts map[string]ast.Node) map[string]*Result {
 	vm := newVM(input, filePath, fileType)
 
 	results := make(map[string]*Result, len(jsonnetAsts))
@@ -82,31 +113,13 @@ func (c *Controller) lint(filePath string, jsonnetAsts map[string]ast.Node) (map
 		result, err := vm.Evaluate(ja)
 		if err != nil {
 			results[k] = &Result{
-				RawResult: result,
-				Error:     err.Error(),
-			}
-			continue
-		}
-		var rs interface{}
-		rb := []byte(result)
-		if err := json.Unmarshal(rb, &rs); err != nil {
-			results[k] = &Result{
 				Error: err.Error(),
 			}
 			continue
 		}
-		out := &Output{}
-		if err := json.Unmarshal(rb, out); err != nil {
-			results[k] = &Result{
-				RawResult: rs,
-				Error:     err.Error(),
-			}
-			continue
-		}
 		results[k] = &Result{
-			RawResult: rs,
-			Output:    out,
+			RawOutput: result,
 		}
 	}
-	return results, nil
+	return results
 }
