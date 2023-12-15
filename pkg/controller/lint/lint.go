@@ -3,19 +3,9 @@ package lint
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io"
-	"io/fs"
-	"path/filepath"
-	"strings"
 
-	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"gopkg.in/yaml.v3"
 )
 
 type (
@@ -76,110 +66,16 @@ func (c *Controller) Lint(_ context.Context, param *ParamLint) error {
 			Results: rs,
 		}
 	}
-	if checkFailed(results) {
-		encoder := json.NewEncoder(c.stdout)
-		encoder.SetEscapeHTML(false)
-		encoder.SetIndent("", "  ")
-		if err := encoder.Encode(results); err != nil {
-			return fmt.Errorf("encode the result as JSON: %w", err)
-		}
-		return errors.New("lint failed")
-	}
-
-	return nil
+	return c.Output(results)
 }
 
-func checkFailed(results map[string]*FileResult) bool {
-	for _, result := range results {
-		if result.Error != "" {
-			return true
-		}
-		for _, r := range result.Results {
-			if r.Error != "" {
-				return true
-			}
-			for _, rule := range r.Output.Rules {
-				if len(rule.Errors) != 0 {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
-func (c *Controller) findJsonnet(baseDir string) ([]string, error) {
-	filePaths := []string{}
-	if err := filepath.WalkDir(baseDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.Type().IsDir() {
-			return nil
-		}
-		if !strings.HasSuffix(path, ".jsonnet") {
-			return nil
-		}
-		filePaths = append(filePaths, path)
-		return nil
-	}); err != nil {
-		return nil, fmt.Errorf("walks the file tree of the unarchived package: %w", err)
-	}
-	return filePaths, nil
-}
-
-func getNewDecoder(fileName string) (NewDecoder, string, error) {
-	switch {
-	case strings.HasSuffix(fileName, ".json"):
-		return func(r io.Reader) decoder {
-			return json.NewDecoder(r)
-		}, "json", nil
-	case strings.HasSuffix(fileName, ".yaml") || strings.HasSuffix(fileName, ".yml"):
-		return func(r io.Reader) decoder {
-			return yaml.NewDecoder(r)
-		}, "yaml", nil
-	default:
-		return nil, "", errors.New("lintnet supports linting only JSON or YAML")
-	}
-}
-
-func (c *Controller) readJsonnets(filePaths []string) (map[string]ast.Node, error) {
-	jsonnetAsts := make(map[string]ast.Node, len(filePaths))
-	for _, filePath := range filePaths {
-		ja, err := c.readJsonnet(filePath)
-		if err != nil {
-			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"file_path": filePath,
-			})
-		}
-		jsonnetAsts[filePath] = ja
-	}
-	return jsonnetAsts, nil
-}
-
-func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
-	b, err := afero.ReadFile(c.fs, filePath)
-	if err != nil {
-		return nil, fmt.Errorf("read a jsonnet file: %w", err)
-	}
-	ja, err := jsonnet.SnippetToAST(filePath, string(b))
-	if err != nil {
-		return nil, fmt.Errorf("parse a jsonnet file: %w", err)
-	}
-	return ja, nil
-}
-
-func (c *Controller) lint(arg string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {
-	input, fileType, err := c.parse(arg)
+func (c *Controller) lint(filePath string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {
+	input, fileType, err := c.parse(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	vm := jsonnet.MakeVM()
-	vm.ExtCode("input", string(input))
-	vm.ExtVar("file_path", arg)
-	vm.ExtVar("file_type", fileType)
-	setNativeFunctions(vm)
+	vm := newVM(input, filePath, fileType)
 
 	results := make(map[string]*Result, len(jsonnetAsts))
 	for k, ja := range jsonnetAsts {
@@ -213,27 +109,4 @@ func (c *Controller) lint(arg string, jsonnetAsts map[string]ast.Node) (map[stri
 		}
 	}
 	return results, nil
-}
-
-func (c *Controller) parse(arg string) ([]byte, string, error) {
-	newDecoder, fileType, err := getNewDecoder(arg)
-	if err != nil {
-		return nil, "", logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-			"file_path": arg,
-		})
-	}
-	f, err := c.fs.Open(arg)
-	if err != nil {
-		return nil, "", fmt.Errorf("open a yaml file: %w", err)
-	}
-	defer f.Close()
-	var input interface{}
-	if err := newDecoder(f).Decode(&input); err != nil {
-		return nil, "", fmt.Errorf("decode a file: %w", err)
-	}
-	inputB, err := json.Marshal(input)
-	if err != nil {
-		return nil, "", fmt.Errorf("marshal input as JSON: %w", err)
-	}
-	return inputB, fileType, nil
 }
