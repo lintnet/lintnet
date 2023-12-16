@@ -199,7 +199,6 @@ func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 
 	out := &JsonnetResult{}
 	if err := json.Unmarshal(rb, out); err != nil {
-		fmt.Println(string(rb))
 		return &Result{
 			RawOutput: result.Result,
 			Interface: rs,
