@@ -135,7 +135,7 @@ JSONPath | type | description
 
 ### Example
 
-Please see [examples](examples).
+Please see [lintnet](lintnet).
 
 ## LICENSE
 
