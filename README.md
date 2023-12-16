@@ -2,7 +2,7 @@
 
 Configuration file linter powered by [Jsonnet](https://jsonnet.org/)
 
-You can write lint rules in Jsonnet and lint configuration files such as JSON, YAML, and TOML.
+You can write lint rules in Jsonnet and lint configuration files ([Supported formats](#supported-file-format)).
 
 ## :warning: This project is still under development
 
@@ -72,9 +72,11 @@ We're considering supporting additional file formats. [#37](https://github.com/s
 
 format | file extensions | parser
 --- | --- | ---
+CSV | `.csv` | [encoding/csv](https://pkg.go.dev/encoding/csv#Reader)
 JSON | `.json` | [encoding/json](https://pkg.go.dev/encoding/json#Decoder)
-YAML | `.yml`, `.yaml` | [gopkg.in/yaml.v3](https://pkg.go.dev/gopkg.in/yaml.v3#Decoder)
 TOML | `.toml` | [github.com/BurntSushi/toml](https://godocs.io/github.com/BurntSushi/toml#Decoder)
+TSV | `.tsv` | [encoding/csv](https://pkg.go.dev/encoding/csv#Reader)
+YAML | `.yml`, `.yaml` | [gopkg.in/yaml.v3](https://pkg.go.dev/gopkg.in/yaml.v3#Decoder)
 
 ## Lint rules
 
