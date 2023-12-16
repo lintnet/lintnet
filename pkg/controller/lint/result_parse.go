@@ -61,7 +61,7 @@ func (l *Location) MarshalJSON() ([]byte, error) {
 	if l.S != "" {
 		return []byte(l.S), nil
 	}
-	return json.Marshal(l.Raw)
+	return json.Marshal(l.Raw) //nolint:wrapcheck
 }
 
 func (l *Location) UnmarshalJSON(b []byte) error {
