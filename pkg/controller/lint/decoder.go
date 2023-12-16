@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
+	"path/filepath"
 
+	"github.com/BurntSushi/toml"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v3"
@@ -20,18 +21,34 @@ type (
 )
 
 func getNewDecoder(fileName string) (NewDecoder, string, error) {
-	switch {
-	case strings.HasSuffix(fileName, ".json"):
+	ext := filepath.Ext(fileName)
+	switch ext {
+	case ".json":
 		return func(r io.Reader) decoder {
 			return json.NewDecoder(r)
 		}, "json", nil
-	case strings.HasSuffix(fileName, ".yaml") || strings.HasSuffix(fileName, ".yml"):
+	case ".yml", ".yaml":
 		return func(r io.Reader) decoder {
 			return yaml.NewDecoder(r)
 		}, "yaml", nil
+	case ".toml":
+		return func(r io.Reader) decoder {
+			return &tomlDecoder{
+				decoder: toml.NewDecoder(r),
+			}
+		}, "toml", nil
 	default:
 		return nil, "", errors.New("lintnet supports linting only JSON or YAML")
 	}
+}
+
+type tomlDecoder struct {
+	decoder *toml.Decoder
+}
+
+func (d *tomlDecoder) Decode(v interface{}) error {
+	_, err := d.decoder.Decode(v)
+	return err //nolint:wrapcheck
 }
 
 func (c *Controller) parse(filePath string) ([]byte, string, error) {
