@@ -15,9 +15,75 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type LintFile struct {
+type LintFile struct { //nolint:revive
 	Path    string
 	Imports map[string]string
+}
+
+func (c *Controller) findFilesbyGlob(target *config.Target) ([]*LintFile, error) {
+	filePaths := make([]*LintFile, 0, len(target.LintFiles.Paths))
+	for _, p := range target.LintFiles.Paths {
+		matches, err := fs.Glob(afero.NewIOFS(c.fs), p.Path)
+		if err != nil {
+			return nil, fmt.Errorf("search files by glob: %w", err)
+		}
+		for _, match := range matches {
+			filePaths = append(filePaths, &LintFile{
+				Path: match,
+			})
+		}
+	}
+	return filePaths, nil
+}
+
+func (c *Controller) findFilesByRegexp(logE *logrus.Entry, target *config.Target) ([]*LintFile, error) {
+	patterns := make([]*regexp.Regexp, len(target.LintFiles.Paths))
+	for i, p := range target.LintFiles.Paths {
+		p, err := regexp.Compile(p.Path)
+		if err != nil {
+			return nil, fmt.Errorf("compile a regular expression to search files: %w", err)
+		}
+		patterns[i] = p
+	}
+	filePaths := make([]*LintFile, 0, len(target.LintFiles.Paths))
+	if err := fs.WalkDir(afero.NewIOFS(c.fs), "", func(p string, dirEntry fs.DirEntry, e error) error {
+		if e != nil {
+			logE.WithError(e).Warn("error occurred while searching files")
+			return nil
+		}
+		for _, pattern := range patterns {
+			if pattern.MatchString(p) {
+				filePaths = append(filePaths, &LintFile{
+					Path: p,
+				})
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("search files: %w", err)
+	}
+	return filePaths, nil
+}
+
+func (c *Controller) findFilesFromTarget(logE *logrus.Entry, target *config.Target) ([]*LintFile, error) {
+	switch target.LintFiles.SearchType {
+	case "equal":
+		filePaths := make([]*LintFile, len(target.LintFiles.Paths))
+		for i, p := range target.LintFiles.Paths {
+			filePaths[i] = &LintFile{
+				Path: p.Path,
+			}
+		}
+		return filePaths, nil
+	case "glob":
+		return c.findFilesbyGlob(target)
+	case "regexp":
+		return c.findFilesByRegexp(logE, target)
+	default:
+		return nil, logerr.WithFields(errors.New("search_type is invalid"), logrus.Fields{ //nolint:wrapcheck
+			"search_type": target.LintFiles.SearchType,
+		})
+	}
 }
 
 func (c *Controller) findJsonnet(logE *logrus.Entry, cfg *config.Config, ruleBaseDir string) ([]*LintFile, error) {
@@ -29,55 +95,11 @@ func (c *Controller) findJsonnet(logE *logrus.Entry, cfg *config.Config, ruleBas
 	}
 	filePaths := make([]*LintFile, 0, len(cfg.Targets))
 	for _, target := range cfg.Targets {
-		switch target.LintFiles.SearchType {
-		case "equal":
-			for _, p := range target.LintFiles.Paths {
-				filePaths = append(filePaths, &LintFile{
-					Path: p.Path,
-				})
-			}
-		case "glob":
-			for _, p := range target.LintFiles.Paths {
-				matches, err := fs.Glob(afero.NewIOFS(c.fs), p.Path)
-				if err != nil {
-					return nil, fmt.Errorf("search files by glob: %w", err)
-				}
-				for _, match := range matches {
-					filePaths = append(filePaths, &LintFile{
-						Path: match,
-					})
-				}
-			}
-		case "regexp":
-			patterns := make([]*regexp.Regexp, len(target.LintFiles.Paths))
-			for i, p := range target.LintFiles.Paths {
-				p, err := regexp.Compile(p.Path)
-				if err != nil {
-					return nil, fmt.Errorf("compile a regular expression to search files: %w", err)
-				}
-				patterns[i] = p
-			}
-			if err := fs.WalkDir(afero.NewIOFS(c.fs), "", func(p string, dirEntry fs.DirEntry, e error) error {
-				if e != nil {
-					logE.WithError(e).Warn("error occurred while searching files")
-					return nil
-				}
-				for _, pattern := range patterns {
-					if pattern.MatchString(p) {
-						filePaths = append(filePaths, &LintFile{
-							Path: p,
-						})
-					}
-				}
-				return nil
-			}); err != nil {
-				return nil, fmt.Errorf("search files: %w", err)
-			}
-		default:
-			return nil, logerr.WithFields(errors.New("search_type is invalid"), logrus.Fields{ //nolint:wrapcheck
-				"search_type": target.LintFiles.SearchType,
-			})
+		fps, err := c.findFilesFromTarget(logE, target)
+		if err != nil {
+			return nil, err
 		}
+		filePaths = append(filePaths, fps...)
 	}
 	return filePaths, nil
 }
