@@ -28,6 +28,7 @@ func (lc *lintCommand) command() *cli.Command {
 			&cli.StringFlag{
 				Name:    "error-level",
 				Aliases: []string{"e"},
+				EnvVars: []string{"LINTNET_ERROR_LEVEL"},
 			},
 		},
 	}
