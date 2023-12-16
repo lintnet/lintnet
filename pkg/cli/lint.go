@@ -40,8 +40,9 @@ func (lc *lintCommand) action(c *cli.Context) error {
 	log.SetLevel(c.String("log-level"), logE)
 	log.SetColor(c.String("log-color"), logE)
 	return ctrl.Lint(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
-		FilePaths:   c.Args().Slice(),
-		RuleBaseDir: c.String("rule-base-dir"),
-		ErrorLevel:  c.String("error-level"),
+		FilePaths:      c.Args().Slice(),
+		RuleBaseDir:    c.String("rule-base-dir"),
+		ErrorLevel:     c.String("error-level"),
+		ConfigFilePath: c.String("config"),
 	})
 }
