@@ -137,14 +137,11 @@ JSONPath | type | description
 --- | --- | ---
 `.name` | string | Rule name
 `.description` | string | Group description
-`.error` | string | Error message
+`.message` | string | Error message
 `.failed` | bool | If this is true, this means the file violates the rule
 `.level` | string | Error level
-`.errors.error` | string | Error message
-`.errors.level` | string | Error level
-`.errors.location` | `string|any` | Error level
-`.locations.location` | string | Error level
-`.sub_rules` | | Sub rules
+`.location` | `string|any` | Location where errors occur
+`.metadata` | `any` | Metadata that users can set freely
 
 ### Example
 
