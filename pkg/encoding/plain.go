@@ -2,6 +2,6 @@ package encoding
 
 type plainUnmarshaler struct{}
 
-func (c *plainUnmarshaler) Unmarshal(b []byte) (interface{}, error) {
-	return nil, nil
+func (c *plainUnmarshaler) Unmarshal(_ []byte) (interface{}, error) {
+	return map[string]interface{}{}, nil
 }
