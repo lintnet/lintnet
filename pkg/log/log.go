@@ -1,17 +1,13 @@
 package log
 
 import (
-	"fmt"
-	"runtime"
-
 	"github.com/sirupsen/logrus"
 )
 
 func New(version string) *logrus.Entry {
 	return logrus.WithFields(logrus.Fields{
-		"lintnet_version": version,
-		"program":         "lintnet",
-		"env":             fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+		"version": version,
+		"program": "lintnet",
 	})
 }
 
@@ -24,7 +20,7 @@ func SetLevel(level string, logE *logrus.Entry) {
 		logE.WithField("log_level", level).WithError(err).Error("the log level is invalid")
 		return
 	}
-	logrus.SetLevel(lvl)
+	logE.Logger.Level = lvl
 }
 
 func SetColor(color string, logE *logrus.Entry) {

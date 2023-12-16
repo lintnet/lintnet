@@ -39,11 +39,18 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 				Usage:   "log level",
 				EnvVars: []string{"LINTNET_LOG_LEVEL"},
 			},
+			&cli.StringFlag{
+				Name:    "log-color",
+				Usage:   "Log color. One of 'auto' (default), 'always', 'never'",
+				EnvVars: []string{"LINTNET_LOG_COLOR"},
+			},
 		},
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			(&versionCommand{}).command(),
-			(&lintCommand{}).command(),
+			(&lintCommand{
+				logE: r.LogE,
+			}).command(),
 		},
 	}
 
