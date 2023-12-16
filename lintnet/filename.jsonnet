@@ -8,17 +8,13 @@ local nf = {
   description: |||
     Lint rules regarding file names
   |||,
-  rules: [
+  sub_rules: [
     {
       name: 'use_underscore_rather_than_dash',
       description: |||
         Use underscores "_" rather than dash.
       |||,
-      errors: [
-        elem
-        for elem in [{}]
-        if nf.contains(filePath, '-')
-      ],
+      failed: nf.contains(filePath, '-'),
     },
   ],
 }
