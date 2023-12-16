@@ -6,15 +6,14 @@ local input = std.extVar('input');
   description: |||
     Lint rules regarding GitHub Actions
   |||,
-  rules: [
+  sub_rules: [
     {
       name: 'uses_must_not_be_main',
       description: |||
         actions reference must not be main.
       |||,
-      errors: if fileType == 'yaml' && std.startsWith(filePath, '.github/workflows/') then [
+      locations: if fileType == 'yaml' && std.startsWith(filePath, '.github/workflows/') then [
         {
-          message: '',
           job_name: job.key,
           uses: step.uses,
         }
@@ -22,7 +21,7 @@ local input = std.extVar('input');
         if std.objectHas(job.value, 'steps')
         for step in job.value.steps
         if std.objectHas(step, 'uses') && std.endsWith(step.uses, '@main')
-      ] else [],
+      ] else null,
     },
   ],
 }

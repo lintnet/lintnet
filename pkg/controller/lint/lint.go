@@ -45,10 +45,11 @@ func (c *Controller) lint(filePath string, jsonnetAsts map[string]ast.Node) (map
 		return nil, err
 	}
 
-	results := c.evaluate(input, fileType, filePath, jsonnetAsts)
+	results := c.evaluate(input, filePath, fileType, jsonnetAsts)
+	rs := make(map[string]*Result, len(results))
 
-	for _, result := range results {
-		c.parseResult(result)
+	for k, result := range results {
+		rs[k] = c.parseResult(result)
 	}
-	return results, nil
+	return rs, nil
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func (c *Controller) Output(results map[string]*FileResult) error {
-	if !checkFailed(results) {
+	if !isFailed(results) {
 		return nil
 	}
 	encoder := json.NewEncoder(c.stdout)
