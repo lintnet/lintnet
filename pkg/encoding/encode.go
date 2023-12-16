@@ -1,32 +1,29 @@
 package encoding
 
 import (
-	"errors"
-	"io"
 	"path/filepath"
 )
 
-type (
-	NewDecoder func(io.Reader) Decoder
-	Decoder    interface {
-		Decode() (interface{}, error)
-	}
-)
+type Unmarshaler interface {
+	Unmarshal(b []byte) (interface{}, error)
+}
 
-func GetNewDecoder(fileName string) (NewDecoder, string, error) {
+func NewUnmarshaler(fileName string) (Unmarshaler, string, error) {
 	ext := filepath.Ext(fileName)
 	switch ext {
 	case ".csv":
-		return newCSVDecoder, "csv", nil
+		return &csvUnmarshaler{}, "csv", nil
 	case ".json":
-		return newJSONDecoder, "json", nil
+		return &jsonUnmarshaler{}, "json", nil
 	case ".toml":
-		return newTOMLDecoder, "toml", nil
+		return &tomlUnmarshaler{}, "toml", nil
 	case ".tsv":
-		return newTSVDecoder, "tsv", nil
+		return &csvUnmarshaler{
+			TSV: true,
+		}, "tsv", nil
 	case ".yml", ".yaml":
-		return newYAMLDecoder, "yaml", nil
+		return &yamlUnmarshaler{}, "yaml", nil
 	default:
-		return nil, "", errors.New("this format is unsupported")
+		return &plainUnmarshaler{}, "plain_text", nil
 	}
 }

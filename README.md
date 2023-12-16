@@ -78,6 +78,13 @@ TOML | `.toml` | [github.com/BurntSushi/toml](https://godocs.io/github.com/Burnt
 TSV | `.tsv` | [encoding/csv](https://pkg.go.dev/encoding/csv#Reader)
 YAML | `.yml`, `.yaml` | [gopkg.in/yaml.v3](https://pkg.go.dev/gopkg.in/yaml.v3#Decoder)
 
+### Plain Text
+
+lintnet judges file types by file extensions.
+If no parser is found, lintnet parse the file as a plain text file.
+The external variable `file_type` is `plain_text`.
+The external variable `input` is empty, but you can still lint the file with other external variables such as `file_path` and `file_text`.
+
 ## Lint rules
 
 > [!WARNING]
@@ -103,6 +110,7 @@ The following [External Variables](https://jsonnet.org/ref/language.html#externa
 - `input`: A file content to be linted
 - `file_path`: A file path to be linted
 - `file_type`: A file type to be linted. One of `json` and `yaml`
+- `file_text`: A file content to be linted
 
 ### Native functions
 

@@ -47,11 +47,12 @@ func (c *Controller) readJsonnets(filePaths []string) (map[string]ast.Node, erro
 	return jsonnetAsts, nil
 }
 
-func newVM(input []byte, filePath, fileType string) *jsonnet.VM {
+func newVM(data *Data) *jsonnet.VM {
 	vm := jsonnet.MakeVM()
-	vm.ExtCode("input", string(input))
-	vm.ExtVar("file_path", filePath)
-	vm.ExtVar("file_type", fileType)
+	vm.ExtCode("input", string(data.JSON))
+	vm.ExtVar("file_path", data.FilePath)
+	vm.ExtVar("file_type", data.FileType)
+	vm.ExtVar("file_text", data.Text)
 	setNativeFunctions(vm)
 	return vm
 }
@@ -68,8 +69,8 @@ func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
 	return ja, nil
 }
 
-func (c *Controller) evaluate(input []byte, filePath, fileType string, jsonnetAsts map[string]ast.Node) map[string]*JsonnetEvaluateResult {
-	vm := newVM(input, filePath, fileType)
+func (c *Controller) evaluate(data *Data, jsonnetAsts map[string]ast.Node) map[string]*JsonnetEvaluateResult {
+	vm := newVM(data)
 
 	results := make(map[string]*JsonnetEvaluateResult, len(jsonnetAsts))
 	for k, ja := range jsonnetAsts {

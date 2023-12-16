@@ -2,26 +2,16 @@ package encoding
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/BurntSushi/toml"
 )
 
-type tomlDecoder struct {
-	decoder *toml.Decoder
-}
+type tomlUnmarshaler struct{}
 
-func (d *tomlDecoder) Decode() (interface{}, error) {
+func (d *tomlUnmarshaler) Unmarshal(b []byte) (interface{}, error) {
 	var v interface{}
-	_, err := d.decoder.Decode(&v)
-	if err != nil {
+	if err := toml.Unmarshal(b, &v); err != nil {
 		return nil, fmt.Errorf("parse a file as TOML: %w", err)
 	}
 	return v, nil
-}
-
-func newTOMLDecoder(r io.Reader) Decoder {
-	return &tomlDecoder{
-		decoder: toml.NewDecoder(r),
-	}
 }
