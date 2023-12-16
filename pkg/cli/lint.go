@@ -25,6 +25,10 @@ func (lc *lintCommand) command() *cli.Command {
 				Aliases: []string{"d"},
 				Value:   "lintnet",
 			},
+			&cli.StringFlag{
+				Name:    "error-level",
+				Aliases: []string{"e"},
+			},
 		},
 	}
 }
@@ -37,5 +41,6 @@ func (lc *lintCommand) action(c *cli.Context) error {
 	return ctrl.Lint(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
 		FilePaths:   c.Args().Slice(),
 		RuleBaseDir: c.String("rule-base-dir"),
+		ErrorLevel:  c.String("error-level"),
 	})
 }

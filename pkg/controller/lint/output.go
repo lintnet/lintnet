@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func (c *Controller) Output(logLevel LogLevel, results map[string]*FileResult) error {
+func (c *Controller) Output(logLevel ErrorLevel, results map[string]*FileResult) error {
 	if !isFailed(results) {
 		return nil
 	}
@@ -29,7 +29,7 @@ type FlatError struct {
 	Location     interface{} `json:"location,omitempty"`
 }
 
-func (c *Controller) formatResultToOutput(logLevel LogLevel, results map[string]*FileResult) []*FlatError {
+func (c *Controller) formatResultToOutput(logLevel ErrorLevel, results map[string]*FileResult) []*FlatError {
 	list := make([]*FlatError, 0, len(results))
 	for dataFilePath, fileResult := range results {
 		list = append(list, fileResult.flattenError(logLevel, dataFilePath)...)

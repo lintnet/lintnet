@@ -2,16 +2,16 @@ package lint
 
 import "errors"
 
-type LogLevel int
+type ErrorLevel int
 
 const (
-	debugLevel LogLevel = iota
+	debugLevel ErrorLevel = iota
 	infoLevel
 	warnLevel
 	errorLevel
 )
 
-func newLogLevel(s string) (LogLevel, error) {
+func newErrorLevel(s string) (ErrorLevel, error) {
 	switch s {
 	case "debug":
 		return debugLevel, nil

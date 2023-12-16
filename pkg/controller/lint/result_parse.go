@@ -40,7 +40,7 @@ type (
 	}
 )
 
-func (r *FileResult) flattenError(logLevel LogLevel, dataFilePath string) []*FlatError {
+func (r *FileResult) flattenError(logLevel ErrorLevel, dataFilePath string) []*FlatError {
 	if r.Error != "" {
 		return []*FlatError{
 			{
@@ -59,7 +59,7 @@ func (r *FileResult) flattenError(logLevel LogLevel, dataFilePath string) []*Fla
 	return list
 }
 
-func (r *Result) flattenError(logLevel LogLevel, dataFilePath, lintFilePath string) []*FlatError {
+func (r *Result) flattenError(logLevel ErrorLevel, dataFilePath, lintFilePath string) []*FlatError {
 	if r.Error != "" {
 		return []*FlatError{
 			{
@@ -76,7 +76,7 @@ func (r *Result) flattenError(logLevel LogLevel, dataFilePath, lintFilePath stri
 	return arr
 }
 
-func (r *JsonnetResult) flattenError(logLevel LogLevel, dataFilePath, lintFilePath string) []*FlatError {
+func (r *JsonnetResult) flattenError(logLevel ErrorLevel, dataFilePath, lintFilePath string) []*FlatError {
 	if !r.Failed {
 		return nil
 	}
@@ -91,7 +91,7 @@ func (r *JsonnetResult) flattenError(logLevel LogLevel, dataFilePath, lintFilePa
 	if r.Level == "" {
 		return []*FlatError{fe}
 	}
-	ll, err := newLogLevel(r.Level)
+	ll, err := newErrorLevel(r.Level)
 	if err != nil {
 		return []*FlatError{
 			fe,
