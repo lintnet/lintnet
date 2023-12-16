@@ -122,46 +122,20 @@ local contained = std.native("strings.Contains")("hello", "ll"); // true
 
 JSONPath | type | description
 --- | --- | ---
-`.name` | string | Group name
+`.name` | string | Rule name
 `.description` | string | Group description
-`.rules[].name` | string | Rule name
-`.rules[].description` | string | Rule description
-`.rules[].errors[].message` | string | Error message
-
-If `.rules[].errors` isn't empty, lintnet treats as the lint fails.
+`.error` | string | Error message
+`.failed` | bool | If this is true, this means the file violates the rule
+`.level` | string | Error level
+`.errors.error` | string | Error message
+`.errors.level` | string | Error level
+`.errors.location` | `string|any` | Error level
+`.locations.location` | string | Error level
+`.sub_rules` | | Sub rules
 
 ### Example
 
-```jsonnet
-local fileType = std.extVar('file_type');
-local input = std.extVar('input');
-
-{
-  name: "GitHub Actions",
-  description: |||
-    Lint rules regarding GitHub Actions
-  |||,
-  rules: [
-    {
-      name: "uses_must_not_be_main",
-      description: |||
-        actions reference must not be main.
-      |||,
-      errors: [
-        {
-          message: "",
-          job_name: job.key,
-          uses: step.uses,
-        }
-        for job in std.objectKeysValues(input.jobs)
-        if std.objectHas(job.value, 'steps')
-        for step in job.value.steps
-        if fileType == 'yaml' && std.objectHas(step, 'uses') && std.endsWith(step.uses, '@main')
-      ]
-    }
-  ],
-}
-```
+Please see [examples](examples).
 
 ## LICENSE
 
