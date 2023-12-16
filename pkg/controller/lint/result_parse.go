@@ -15,28 +15,18 @@ type (
 	}
 	// unmarshal Jsonnet as JSON
 	JsonnetResult struct {
-		Name             string           `json:"name,omitempty"`
-		ID               string           `json:"id,omitempty"`
-		ShortDescription string           `json:"short_description,omitempty"`
-		Description      string           `json:"description,omitempty"`
-		Error            string           `json:"error,omitempty"`
-		Level            string           `json:"level,omitempty"`
-		Errors           []*Error         `json:"errors,omitempty"`
-		Locations        []*Location      `json:"locations,omitempty"`
-		SubRules         []*JsonnetResult `json:"sub_rules,omitempty"`
-		Failed           bool             `json:"failed,omitempty"`
+		Name        string      `json:"name,omitempty"`
+		Description string      `json:"description,omitempty"`
+		Message     string      `json:"message,omitempty"`
+		Level       string      `json:"level,omitempty"`
+		Location    *Location   `json:"location,omitempty"`
+		Metadata    interface{} `json:"metadata,omitempty"`
+		Failed      bool        `json:"failed,omitempty"`
 	}
 
 	Location struct {
 		S   string
 		Raw interface{}
-	}
-
-	Error struct {
-		Error    string    `json:"error,omitempty"`
-		Level    string    `json:"level,omitempty"`
-		FilePath string    `json:"file_path,omitempty"`
-		Location *Location `json:"location,omitempty"`
 	}
 
 	// Aggregate results
@@ -48,13 +38,11 @@ type (
 	}
 
 	Result struct {
-		RawResult *JsonnetResult `json:"-"`
-		RawOutput string         `json:"-"`
-		Interface interface{}    `json:"result,omitempty"`
-		Error     string         `json:"error,omitempty"`
+		RawResult []*JsonnetResult `json:"-"`
+		RawOutput string           `json:"-"`
+		Interface interface{}      `json:"result,omitempty"`
+		Error     string           `json:"error,omitempty"`
 	}
-
-	// Format result to output
 )
 
 func (r *FileResult) flattenError(p string) []*FlatError {
@@ -86,7 +74,11 @@ func (r *Result) flattenError(dataFilePath, lintFilePath string) []*FlatError {
 			},
 		}
 	}
-	return r.RawResult.flattenError(dataFilePath, lintFilePath)
+	arr := make([]*FlatError, 0, len(r.RawResult))
+	for _, result := range r.RawResult {
+		arr = append(arr, result.flattenError(dataFilePath, lintFilePath)...)
+	}
+	return arr
 }
 
 func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatError {
@@ -96,50 +88,10 @@ func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatE
 				DataFilePath: dataFilePath,
 				LintFilePath: lintFilePath,
 				RuleName:     r.Name,
+				Error:        r.Message,
+				Location:     r.Location,
 			},
 		}
-	}
-	if r.Error != "" {
-		return []*FlatError{
-			{
-				DataFilePath: dataFilePath,
-				LintFilePath: lintFilePath,
-				Error:        r.Error,
-			},
-		}
-	}
-	if len(r.Locations) != 0 {
-		list := make([]*FlatError, len(r.Locations))
-		for i, location := range r.Locations {
-			list[i] = &FlatError{
-				DataFilePath: dataFilePath,
-				LintFilePath: lintFilePath,
-				Location:     location,
-				Error:        r.Error,
-			}
-		}
-		return list
-	}
-
-	if len(r.Errors) != 0 {
-		list := make([]*FlatError, len(r.Errors))
-		for i, e := range r.Errors {
-			list[i] = &FlatError{
-				DataFilePath: dataFilePath,
-				LintFilePath: lintFilePath,
-				Location:     e.Location,
-				Error:        e.Error,
-			}
-		}
-		return list
-	}
-
-	if len(r.SubRules) != 0 {
-		list := make([]*FlatError, 0, len(r.SubRules))
-		for _, rule := range r.SubRules {
-			list = append(list, rule.flattenError(dataFilePath, lintFilePath)...)
-		}
-		return list
 	}
 	return nil
 }
@@ -148,13 +100,14 @@ func (r *FileResult) isFailed() bool {
 	if r.Error != "" {
 		return true
 	}
-	// lint file -> result
 	for _, r := range r.Results {
 		if r.Error != "" {
 			return true
 		}
-		if r.RawResult.isFailed() {
-			return true
+		for _, result := range r.RawResult {
+			if result.isFailed() {
+				return true
+			}
 		}
 	}
 	return false
@@ -197,8 +150,8 @@ func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 		}
 	}
 
-	out := &JsonnetResult{}
-	if err := json.Unmarshal(rb, out); err != nil {
+	out := []*JsonnetResult{}
+	if err := json.Unmarshal(rb, &out); err != nil {
 		return &Result{
 			RawOutput: result.Result,
 			Interface: rs,
