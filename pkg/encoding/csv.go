@@ -3,29 +3,19 @@ package encoding
 import (
 	"encoding/csv"
 	"fmt"
-	"io"
+	"strings"
 )
 
-type csvDecoder struct {
-	reader *csv.Reader
+type csvUnmarshaler struct {
+	TSV bool
 }
 
-func newCSVDecoder(r io.Reader) Decoder {
-	return &csvDecoder{
-		reader: csv.NewReader(r),
+func (c *csvUnmarshaler) Unmarshal(b []byte) (interface{}, error) {
+	reader := csv.NewReader(strings.NewReader(string(b)))
+	if c.TSV {
+		reader.Comma = '	'
 	}
-}
-
-func newTSVDecoder(r io.Reader) Decoder {
-	reader := csv.NewReader(r)
-	reader.Comma = '	'
-	return &csvDecoder{
-		reader: reader,
-	}
-}
-
-func (c *csvDecoder) Decode() (interface{}, error) {
-	records, err := c.reader.ReadAll()
+	records, err := reader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("parse a file as CSV: %w", err)
 	}

@@ -41,12 +41,12 @@ func (c *Controller) Lint(_ context.Context, _ *logrus.Entry, param *ParamLint) 
 }
 
 func (c *Controller) lint(filePath string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {
-	input, fileType, err := c.parse(filePath)
+	data, err := c.parse(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	results := c.evaluate(input, filePath, fileType, jsonnetAsts)
+	results := c.evaluate(data, jsonnetAsts)
 	rs := make(map[string]*Result, len(results))
 
 	for k, result := range results {
