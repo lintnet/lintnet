@@ -57,6 +57,109 @@ type (
 	// Format result to output
 )
 
+func (r *FileResult) flattenError(p string) []*FlatError {
+	if r.Error != "" {
+		return []*FlatError{
+			{
+				LintFilePath: p,
+				Error:        r.Error,
+			},
+		}
+	}
+	list := make([]*FlatError, 0, len(r.Results))
+	for lintFilePath, result := range r.Results {
+		list = append(list, result.flattenError(p, lintFilePath)...)
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	return list
+}
+
+func (r *Result) flattenError(dataFilePath, lintFilePath string) []*FlatError {
+	if r.Error != "" {
+		return []*FlatError{
+			{
+				DataFilePath: dataFilePath,
+				LintFilePath: lintFilePath,
+				Error:        r.Error,
+			},
+		}
+	}
+	return r.RawResult.flattenError(dataFilePath, lintFilePath)
+}
+
+func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatError {
+	if r.Failed {
+		return []*FlatError{
+			{
+				DataFilePath: dataFilePath,
+				LintFilePath: lintFilePath,
+				RuleName:     r.Name,
+			},
+		}
+	}
+	if r.Error != "" {
+		return []*FlatError{
+			{
+				DataFilePath: dataFilePath,
+				LintFilePath: lintFilePath,
+				Error:        r.Error,
+			},
+		}
+	}
+	if len(r.Locations) != 0 {
+		list := make([]*FlatError, len(r.Locations))
+		for i, location := range r.Locations {
+			list[i] = &FlatError{
+				DataFilePath: dataFilePath,
+				LintFilePath: lintFilePath,
+				Location:     location,
+				Error:        r.Error,
+			}
+		}
+		return list
+	}
+
+	if len(r.Errors) != 0 {
+		list := make([]*FlatError, len(r.Errors))
+		for i, e := range r.Errors {
+			list[i] = &FlatError{
+				DataFilePath: dataFilePath,
+				LintFilePath: lintFilePath,
+				Location:     e.Location,
+				Error:        e.Error,
+			}
+		}
+		return list
+	}
+
+	if len(r.SubRules) != 0 {
+		list := make([]*FlatError, 0, len(r.SubRules))
+		for _, rule := range r.SubRules {
+			list = append(list, rule.flattenError(dataFilePath, lintFilePath)...)
+		}
+		return list
+	}
+	return nil
+}
+
+func (r *FileResult) isFailed() bool {
+	if r.Error != "" {
+		return true
+	}
+	// lint file -> result
+	for _, r := range r.Results {
+		if r.Error != "" {
+			return true
+		}
+		if r.RawResult.isFailed() {
+			return true
+		}
+	}
+	return false
+}
+
 func (l *Location) MarshalJSON() ([]byte, error) {
 	if l.S != "" {
 		return []byte(l.S), nil

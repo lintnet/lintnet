@@ -3,41 +3,32 @@ package lint
 func isFailed(results map[string]*FileResult) bool {
 	// data file -> result
 	for _, result := range results {
-		if result.Error != "" {
+		if result.isFailed() {
 			return true
-		}
-		// lint file -> result
-		for _, r := range result.Results {
-			if r.Error != "" {
-				return true
-			}
-			if isJsonnetResultFailed(r.RawResult) {
-				return true
-			}
 		}
 	}
 	return false
 }
 
-func isJsonnetResultFailed(result *JsonnetResult) bool {
-	if result.Failed {
+func (r *JsonnetResult) isFailed() bool {
+	if r.Failed {
 		return true
 	}
-	if result.Error != "" {
+	if r.Error != "" {
 		return true
 	}
-	for _, l := range result.Locations {
+	for _, l := range r.Locations {
 		if l.S != "" || l.Raw != nil {
 			return true
 		}
 	}
-	for _, e := range result.Errors {
+	for _, e := range r.Errors {
 		if e.Error != "" {
 			return true
 		}
 	}
-	for _, r := range result.SubRules {
-		if isJsonnetResultFailed(r) {
+	for _, sub := range r.SubRules {
+		if sub.isFailed() {
 			return true
 		}
 	}
