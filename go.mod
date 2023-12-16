@@ -3,6 +3,7 @@ module github.com/suzuki-shunsuke/lintnet
 go 1.21.5
 
 require (
+	github.com/BurntSushi/toml v1.3.2
 	github.com/google/go-jsonnet v0.20.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/sirupsen/logrus v1.9.3

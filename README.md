@@ -2,7 +2,7 @@
 
 Configuration file linter powered by [Jsonnet](https://jsonnet.org/)
 
-You can write lint rules in Jsonnet and lint configuration files such as JSON and YAML.
+You can write lint rules in Jsonnet and lint configuration files such as JSON, YAML, and TOML.
 
 ## :warning: This project is still under development
 
@@ -11,7 +11,7 @@ Please don't use this tool yet.
 
 ## Features
 
-- Lint any configuration files such as JSON and YAML
+- Lint any configuration files ([Supported formats](#supported-file-format))
 - Powerful. You can lint configuration files flexibly by Jsonnet. And lintnet extends Jsonnet by native functions
 - Secure. Jsonnet can't access filesystem and network so it's secure compared with common programming languages such as JavaScript
 - Cross Platform. lintnet works on Linux, macOS, and Windows. And it works on both amd64 and arm64
@@ -66,12 +66,15 @@ lintnet lint [<file path to be validated> ...]
 
 ## Supported file format
 
-lintnet can lint the following file formats
-
-- JSON (`.json`)
-- YAML (`.yml`, `.yaml`)
-
+lintnet can lint the following file formats.
+lintnet judges file types by file extensions.
 We're considering supporting additional file formats. [#37](https://github.com/suzuki-shunsuke/lintnet/issues/37)
+
+format | file extensions | parser
+--- | --- | ---
+JSON | `.json` | [encoding/json](https://pkg.go.dev/encoding/json#Decoder)
+YAML | `.yml`, `.yaml` | [gopkg.in/yaml.v3](https://pkg.go.dev/gopkg.in/yaml.v3#Decoder)
+TOML | `.toml` | [github.com/BurntSushi/toml](https://godocs.io/github.com/BurntSushi/toml#Decoder)
 
 ## Lint rules
 
