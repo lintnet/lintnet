@@ -1,6 +1,7 @@
 package lint
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,29 +17,77 @@ import (
 type (
 	NewDecoder func(io.Reader) decoder
 	decoder    interface {
-		Decode(dest interface{}) error
+		Decode() (interface{}, error)
 	}
 )
+
+type csvDecoder struct {
+	reader *csv.Reader
+}
+
+func newCSVDecoder(r io.Reader) decoder {
+	return &csvDecoder{
+		reader: csv.NewReader(r),
+	}
+}
+
+func (c *csvDecoder) Decode() (interface{}, error) {
+	records, err := c.reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("parse a file as CSV: %w", err)
+	}
+	return records, nil
+}
+
+type jsonDecoder struct {
+	decoder *json.Decoder
+}
+
+func (d *jsonDecoder) Decode() (interface{}, error) {
+	var dest interface{}
+	if err := d.decoder.Decode(&dest); err != nil {
+		return nil, fmt.Errorf("parse a file as JSON: %w", err)
+	}
+	return dest, nil
+}
+
+func newJSONDecoder(r io.Reader) decoder {
+	return &jsonDecoder{
+		decoder: json.NewDecoder(r),
+	}
+}
+
+type yamlDecoder struct {
+	decoder *yaml.Decoder
+}
+
+func (d *yamlDecoder) Decode() (interface{}, error) {
+	var dest interface{}
+	if err := d.decoder.Decode(&dest); err != nil {
+		return nil, fmt.Errorf("parse a file as YAML: %w", err)
+	}
+	return dest, nil
+}
+
+func newYAMLDecoder(r io.Reader) decoder {
+	return &yamlDecoder{
+		decoder: yaml.NewDecoder(r),
+	}
+}
 
 func getNewDecoder(fileName string) (NewDecoder, string, error) {
 	ext := filepath.Ext(fileName)
 	switch ext {
+	case ".csv":
+		return newCSVDecoder, "csv", nil
 	case ".json":
-		return func(r io.Reader) decoder {
-			return json.NewDecoder(r)
-		}, "json", nil
-	case ".yml", ".yaml":
-		return func(r io.Reader) decoder {
-			return yaml.NewDecoder(r)
-		}, "yaml", nil
+		return newJSONDecoder, "json", nil
 	case ".toml":
-		return func(r io.Reader) decoder {
-			return &tomlDecoder{
-				decoder: toml.NewDecoder(r),
-			}
-		}, "toml", nil
+		return newTOMLDecoder, "toml", nil
+	case ".yml", ".yaml":
+		return newYAMLDecoder, "yaml", nil
 	default:
-		return nil, "", errors.New("lintnet supports linting only JSON or YAML")
+		return nil, "", errors.New("this format is unsupported")
 	}
 }
 
@@ -46,9 +95,19 @@ type tomlDecoder struct {
 	decoder *toml.Decoder
 }
 
-func (d *tomlDecoder) Decode(v interface{}) error {
-	_, err := d.decoder.Decode(v)
-	return err //nolint:wrapcheck
+func (d *tomlDecoder) Decode() (interface{}, error) {
+	var v interface{}
+	_, err := d.decoder.Decode(&v)
+	if err != nil {
+		return nil, fmt.Errorf("parse a file as TOML: %w", err)
+	}
+	return v, nil
+}
+
+func newTOMLDecoder(r io.Reader) decoder {
+	return &tomlDecoder{
+		decoder: toml.NewDecoder(r),
+	}
 }
 
 func (c *Controller) parse(filePath string) ([]byte, string, error) {
@@ -63,8 +122,8 @@ func (c *Controller) parse(filePath string) ([]byte, string, error) {
 		return nil, "", fmt.Errorf("open a file: %w", err)
 	}
 	defer f.Close()
-	var input interface{}
-	if err := newDecoder(f).Decode(&input); err != nil {
+	input, err := newDecoder(f).Decode()
+	if err != nil {
 		return nil, "", fmt.Errorf("decode a file: %w", err)
 	}
 	inputB, err := json.Marshal(input)
