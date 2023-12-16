@@ -44,6 +44,11 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 				Usage:   "Log color. One of 'auto' (default), 'always', 'never'",
 				EnvVars: []string{"LINTNET_LOG_COLOR"},
 			},
+			&cli.StringFlag{
+				Name:    "config",
+				Usage:   "Configuration file path",
+				EnvVars: []string{"LINTNET_CONFIG"},
+			},
 		},
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
