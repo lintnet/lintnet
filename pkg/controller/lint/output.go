@@ -6,25 +6,33 @@ import (
 	"fmt"
 )
 
-func (c *Controller) Output(results map[string]*FileResult) error {
+func (c *Controller) Output(logLevel LogLevel, results map[string]*FileResult) error {
 	if !isFailed(results) {
 		return nil
 	}
-	return c.outputJSON(c.formatResultToOutput(results))
+	fes := c.formatResultToOutput(logLevel, results)
+	if len(fes) == 0 {
+		return nil
+	}
+	if err := c.outputJSON(fes); err != nil {
+		return fmt.Errorf("lint failed: output errors as JSON: %w", err)
+	}
+	return errors.New("lint failed")
 }
 
 type FlatError struct {
-	DataFilePath string      `json:"data_file,omitempty"`
-	LintFilePath string      `json:"lint_file,omitempty"`
-	Location     interface{} `json:"location,omitempty"`
 	RuleName     string      `json:"rule,omitempty"`
-	Error        string      `json:"error,omitempty"`
+	Level        string      `json:"level,omitempty"`
+	Message      string      `json:"message,omitempty"`
+	LintFilePath string      `json:"lint_file,omitempty"`
+	DataFilePath string      `json:"data_file,omitempty"`
+	Location     interface{} `json:"location,omitempty"`
 }
 
-func (c *Controller) formatResultToOutput(results map[string]*FileResult) []*FlatError {
+func (c *Controller) formatResultToOutput(logLevel LogLevel, results map[string]*FileResult) []*FlatError {
 	list := make([]*FlatError, 0, len(results))
 	for dataFilePath, fileResult := range results {
-		list = append(list, fileResult.flattenError(dataFilePath)...)
+		list = append(list, fileResult.flattenError(logLevel, dataFilePath)...)
 	}
 	if len(list) == 0 {
 		return nil
@@ -39,5 +47,5 @@ func (c *Controller) outputJSON(result interface{}) error {
 	if err := encoder.Encode(result); err != nil {
 		return fmt.Errorf("encode the result as JSON: %w", err)
 	}
-	return errors.New("lint failed")
+	return nil
 }

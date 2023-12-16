@@ -11,11 +11,5 @@ func isFailed(results map[string]*FileResult) bool {
 }
 
 func (r *JsonnetResult) isFailed() bool {
-	if r.Failed {
-		return true
-	}
-	if r.Message != "" {
-		return true
-	}
-	return false
+	return r.Failed
 }

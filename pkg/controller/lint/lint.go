@@ -24,6 +24,8 @@ func (c *Controller) Lint(_ context.Context, _ *logrus.Entry, param *ParamLint) 
 		return err
 	}
 
+	logLevel := infoLevel
+
 	results := make(map[string]*FileResult, len(param.FilePaths))
 	for _, filePath := range param.FilePaths {
 		rs, err := c.lint(filePath, jsonnetAsts)
@@ -37,7 +39,7 @@ func (c *Controller) Lint(_ context.Context, _ *logrus.Entry, param *ParamLint) 
 			Results: rs,
 		}
 	}
-	return c.Output(results)
+	return c.Output(logLevel, results)
 }
 
 func (c *Controller) lint(filePath string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {

@@ -19,14 +19,9 @@ type (
 		Description string      `json:"description,omitempty"`
 		Message     string      `json:"message,omitempty"`
 		Level       string      `json:"level,omitempty"`
-		Location    *Location   `json:"location,omitempty"`
+		Location    interface{} `json:"location,omitempty"`
 		Metadata    interface{} `json:"metadata,omitempty"`
 		Failed      bool        `json:"failed,omitempty"`
-	}
-
-	Location struct {
-		S   string
-		Raw interface{}
 	}
 
 	// Aggregate results
@@ -45,18 +40,18 @@ type (
 	}
 )
 
-func (r *FileResult) flattenError(p string) []*FlatError {
+func (r *FileResult) flattenError(logLevel LogLevel, dataFilePath string) []*FlatError {
 	if r.Error != "" {
 		return []*FlatError{
 			{
-				LintFilePath: p,
-				Error:        r.Error,
+				DataFilePath: dataFilePath,
+				Message:      r.Error,
 			},
 		}
 	}
 	list := make([]*FlatError, 0, len(r.Results))
 	for lintFilePath, result := range r.Results {
-		list = append(list, result.flattenError(p, lintFilePath)...)
+		list = append(list, result.flattenError(logLevel, dataFilePath, lintFilePath)...)
 	}
 	if len(list) == 0 {
 		return nil
@@ -64,36 +59,55 @@ func (r *FileResult) flattenError(p string) []*FlatError {
 	return list
 }
 
-func (r *Result) flattenError(dataFilePath, lintFilePath string) []*FlatError {
+func (r *Result) flattenError(logLevel LogLevel, dataFilePath, lintFilePath string) []*FlatError {
 	if r.Error != "" {
 		return []*FlatError{
 			{
 				DataFilePath: dataFilePath,
 				LintFilePath: lintFilePath,
-				Error:        r.Error,
+				Message:      r.Error,
 			},
 		}
 	}
 	arr := make([]*FlatError, 0, len(r.RawResult))
 	for _, result := range r.RawResult {
-		arr = append(arr, result.flattenError(dataFilePath, lintFilePath)...)
+		arr = append(arr, result.flattenError(logLevel, dataFilePath, lintFilePath)...)
 	}
 	return arr
 }
 
-func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatError {
-	if r.Failed {
+func (r *JsonnetResult) flattenError(logLevel LogLevel, dataFilePath, lintFilePath string) []*FlatError {
+	if !r.Failed {
+		return nil
+	}
+	fe := &FlatError{
+		DataFilePath: dataFilePath,
+		LintFilePath: lintFilePath,
+		RuleName:     r.Name,
+		Message:      r.Message,
+		Location:     r.Location,
+		Level:        r.Level,
+	}
+	if r.Level == "" {
+		return []*FlatError{fe}
+	}
+	ll, err := newLogLevel(r.Level)
+	if err != nil {
 		return []*FlatError{
+			fe,
 			{
 				DataFilePath: dataFilePath,
 				LintFilePath: lintFilePath,
 				RuleName:     r.Name,
-				Error:        r.Message,
+				Message:      err.Error(),
 				Location:     r.Location,
 			},
 		}
 	}
-	return nil
+	if ll < logLevel {
+		return nil
+	}
+	return []*FlatError{fe}
 }
 
 func (r *FileResult) isFailed() bool {
@@ -101,36 +115,23 @@ func (r *FileResult) isFailed() bool {
 		return true
 	}
 	for _, r := range r.Results {
-		if r.Error != "" {
+		if r.isFailed() {
 			return true
-		}
-		for _, result := range r.RawResult {
-			if result.isFailed() {
-				return true
-			}
 		}
 	}
 	return false
 }
 
-func (l *Location) MarshalJSON() ([]byte, error) {
-	if l.S != "" {
-		return []byte(l.S), nil
+func (r *Result) isFailed() bool {
+	if r.Error != "" {
+		return true
 	}
-	return json.Marshal(l.Raw) //nolint:wrapcheck
-}
-
-func (l *Location) UnmarshalJSON(b []byte) error {
-	var a interface{}
-	if err := json.Unmarshal(b, &a); err != nil {
-		return err //nolint:wrapcheck
+	for _, result := range r.RawResult {
+		if result.isFailed() {
+			return true
+		}
 	}
-	l.Raw = a
-	if v, ok := a.(string); ok {
-		l.S = v
-		return nil
-	}
-	return nil
+	return false
 }
 
 func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
