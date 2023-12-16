@@ -17,7 +17,7 @@ type ParamLint struct {
 	FilePaths      []string
 }
 
-func (c *Controller) Lint(_ context.Context, _ *logrus.Entry, param *ParamLint) error {
+func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
 	cfg := &config.Config{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
@@ -29,7 +29,7 @@ func (c *Controller) Lint(_ context.Context, _ *logrus.Entry, param *ParamLint) 
 	// TODO search lint files
 	// TODO search data files
 
-	filePaths, err := c.findJsonnet(param.RuleBaseDir)
+	filePaths, err := c.findJsonnet(logE, cfg, param.RuleBaseDir)
 	if err != nil {
 		return err
 	}
