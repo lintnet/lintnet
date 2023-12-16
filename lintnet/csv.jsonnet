@@ -17,7 +17,7 @@ local test() = std.filter(
   sub_rules: [
     {
       name: 'age must be greater than 18',
-      locations: if fileType == 'csv' then test() else null,
+      locations: if fileType == 'csv' || fileType == 'tsv' then test() else null,
       'error': 'age must be greater than 18',
     },
   ],

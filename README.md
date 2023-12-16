@@ -75,6 +75,7 @@ format | file extensions | parser
 CSV | `.csv` | [encoding/csv](https://pkg.go.dev/encoding/csv#Reader)
 JSON | `.json` | [encoding/json](https://pkg.go.dev/encoding/json#Decoder)
 TOML | `.toml` | [github.com/BurntSushi/toml](https://godocs.io/github.com/BurntSushi/toml#Decoder)
+TSV | `.tsv` | [encoding/csv](https://pkg.go.dev/encoding/csv#Reader)
 YAML | `.yml`, `.yaml` | [gopkg.in/yaml.v3](https://pkg.go.dev/gopkg.in/yaml.v3#Decoder)
 
 ## Lint rules
