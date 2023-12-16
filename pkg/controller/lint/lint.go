@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/go-jsonnet/ast"
+	"github.com/sirupsen/logrus"
 )
 
 type (
@@ -13,7 +14,7 @@ type (
 	}
 )
 
-func (c *Controller) Lint(_ context.Context, param *ParamLint) error {
+func (c *Controller) Lint(_ context.Context, _ *logrus.Entry, param *ParamLint) error {
 	filePaths, err := c.findJsonnet(param.RuleBaseDir)
 	if err != nil {
 		return err
