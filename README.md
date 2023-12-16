@@ -143,6 +143,29 @@ JSONPath | type | description
 `.location` | `string|any` | Location where errors occur
 `.metadata` | `any` | Metadata that users can set freely
 
+### Error level
+
+lintnet supports the following error levels.
+
+severity | error level
+--- | ---
+1 | debug
+2 | info
+3 | warn
+4 | error
+
+You can specify the error level by command line option `--error-level (-e)` or the environment variable `LINTNET_ERROR_LEVEL`.
+
+e.g.
+
+```sh
+lintnet lint -e error
+```
+
+Error level is similar to log level.
+Errors whose error level is lower than the error level of the command are ignored.
+The default error level is `info`.
+
 ### Example
 
 Please see [lintnet](lintnet).

@@ -10,6 +10,7 @@ import (
 type (
 	ParamLint struct {
 		RuleBaseDir string
+		ErrorLevel  string
 		FilePaths   []string
 	}
 )
@@ -22,6 +23,15 @@ func (c *Controller) Lint(_ context.Context, _ *logrus.Entry, param *ParamLint) 
 	jsonnetAsts, err := c.readJsonnets(filePaths)
 	if err != nil {
 		return err
+	}
+
+	errLevel := infoLevel
+	if param.ErrorLevel != "" {
+		ll, err := newErrorLevel(param.ErrorLevel)
+		if err != nil {
+			return err
+		}
+		errLevel = ll
 	}
 
 	results := make(map[string]*FileResult, len(param.FilePaths))
@@ -37,7 +47,7 @@ func (c *Controller) Lint(_ context.Context, _ *logrus.Entry, param *ParamLint) 
 			Results: rs,
 		}
 	}
-	return c.Output(results)
+	return c.Output(errLevel, results)
 }
 
 func (c *Controller) lint(filePath string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {
