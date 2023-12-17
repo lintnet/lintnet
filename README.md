@@ -166,6 +166,87 @@ Error level is similar to log level.
 Errors whose error level is lower than the error level of the command are ignored.
 The default error level is `info`.
 
+## Configuration file
+
+lintnet reads a configuration file `^\.?lintnet\.ya?ml$` on the current directory.
+You can also specify the configuration file path by the command line option `--config (-c)` and the environment variable `LINTNET_CONFIG`.
+
+```sh
+lintnet -c foo.yaml lint
+```
+
+e.g.
+
+```yaml
+error_level: info
+modules:
+  - id: toml
+    source: github_content>suzuki-shunsuke/lintnet-example//toml.jsonnet#v0.1.0
+  - id: suzuki-shunsuke/lintnet-example-2
+    source: github_content>suzuki-shunsuke/lintnet-example-2#v0.1.0
+  - id: suzuki-shunsuke/lintnet-example-3
+    source: github_archive>suzuki-shunsuke/lintnet-example-3#v0.1.0
+  - id: yaml
+    source: http>https://example.com/v0.1.0/yaml.jsonnet
+data_transformation:
+  - id: foo
+    type: jsonnet
+    file: transform.jsonnet
+outputs:
+  - dest: stdout # stdout, stderr, file, github issue
+    format: json
+    template: foo.jsonnet
+  - dest: file
+    format: markdown
+    path: foo.md
+    template: foo.tmpl
+targets:
+  - lint_files:
+      search_type: equal
+      paths:
+        - path: lintnet/csv.jsonnet
+      # imports:
+      #   - module: suzuki-shunsuke/lintnet-example-2
+      #     path: util.libsonnet
+      #     import: utils.libsonnet # optional
+    data_files:
+      search_type: equal
+      paths:
+        - path: examples/hello.csv
+  # - lint_files:
+  #     module: toml
+  #   data_files:
+  #     search_type: glob
+  #     paths:
+  #       - path: "*.toml"
+  # - lint_files:
+  #     module: suzuki-shunsuke/lintnet-example-2
+  #     search_type: equal
+  #     paths:
+  #       - path: actions.jsonnet
+  #   data_files:
+  #     search_type: glob
+  #     paths:
+  #       - path: .github/workflows/*.yml
+  #       - path: .github/workflows/*.yaml
+  #       - path: .github/workflows/fooyaml
+  #         exclude: true
+  # - lint_files:
+  #     module: suzuki-shunsuke/lintnet-example-3
+  #     paths:
+  #       - path: lintnet/json.jsonnet
+  #   data_files:
+  #     search_type: glob
+  #     paths:
+  #       - path: "*/*.json"
+  # - lint_files:
+  #     module: yaml
+  #   data_files:
+  #     search_type: glob
+  #     paths:
+  #       - path: "*/*.yaml"
+```
+
 ### Example
 
 Please see [lintnet](lintnet).
