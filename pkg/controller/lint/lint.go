@@ -63,7 +63,7 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 		}
 	}
 
-	return c.Output(errLevel, results)
+	return c.Output(logE, cfg, errLevel, results)
 }
 
 func (c *Controller) lint(dataFile string, jsonnetAsts map[string]ast.Node, libs map[string]string) (map[string]*Result, error) {
