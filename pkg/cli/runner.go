@@ -46,6 +46,7 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 			},
 			&cli.StringFlag{
 				Name:    "config",
+				Aliases: []string{"c"},
 				Usage:   "Configuration file path",
 				EnvVars: []string{"LINTNET_CONFIG"},
 			},
