@@ -23,7 +23,6 @@ func (lc *lintCommand) command() *cli.Command {
 			&cli.StringFlag{
 				Name:    "rule-base-dir",
 				Aliases: []string{"d"},
-				Value:   "lintnet",
 			},
 			&cli.StringFlag{
 				Name:    "error-level",
