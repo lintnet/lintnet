@@ -57,6 +57,9 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 			(&lintCommand{
 				logE: r.LogE,
 			}).command(),
+			(&initCommand{
+				logE: r.LogE,
+			}).command(),
 		},
 	}
 
