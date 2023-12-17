@@ -20,32 +20,49 @@ type LintFile struct { //nolint:revive
 	Imports map[string]string
 }
 
-func (c *Controller) findFilesbyGlob(target *config.Target) ([]*LintFile, error) {
-	filePaths := make([]*LintFile, 0, len(target.LintFiles.Paths))
-	for _, p := range target.LintFiles.Paths {
+func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target) (*Target, error) {
+	lintFiles, err := c.findFilesFromPaths(logE, target.LintFiles.SearchType, target.LintFiles.Paths)
+	if err != nil {
+		return nil, err
+	}
+	dataFiles, err := c.findFilesFromPaths(logE, target.DataFiles.SearchType, target.DataFiles.Paths)
+	if err != nil {
+		return nil, err
+	}
+	a := make([]*LintFile, len(lintFiles))
+	for i, b := range lintFiles {
+		a[i] = &LintFile{
+			Path: b,
+		}
+	}
+	return &Target{
+		LintFiles: a,
+		DataFiles: dataFiles,
+	}, nil
+}
+
+func (c *Controller) findFilesbyGlob(paths []*config.Path) ([]string, error) {
+	filePaths := make([]string, 0, len(paths))
+	for _, p := range paths {
 		matches, err := fs.Glob(afero.NewIOFS(c.fs), p.Path)
 		if err != nil {
 			return nil, fmt.Errorf("search files by glob: %w", err)
 		}
-		for _, match := range matches {
-			filePaths = append(filePaths, &LintFile{
-				Path: match,
-			})
-		}
+		filePaths = append(filePaths, matches...)
 	}
 	return filePaths, nil
 }
 
-func (c *Controller) findFilesByRegexp(logE *logrus.Entry, target *config.Target) ([]*LintFile, error) {
-	patterns := make([]*regexp.Regexp, len(target.LintFiles.Paths))
-	for i, p := range target.LintFiles.Paths {
+func (c *Controller) findFilesByRegexp(logE *logrus.Entry, paths []*config.Path) ([]string, error) {
+	patterns := make([]*regexp.Regexp, len(paths))
+	for i, p := range paths {
 		p, err := regexp.Compile(p.Path)
 		if err != nil {
 			return nil, fmt.Errorf("compile a regular expression to search files: %w", err)
 		}
 		patterns[i] = p
 	}
-	filePaths := make([]*LintFile, 0, len(target.LintFiles.Paths))
+	filePaths := make([]string, 0, len(paths))
 	if err := fs.WalkDir(afero.NewIOFS(c.fs), "", func(p string, dirEntry fs.DirEntry, e error) error {
 		if e != nil {
 			logE.WithError(e).Warn("error occurred while searching files")
@@ -53,9 +70,7 @@ func (c *Controller) findFilesByRegexp(logE *logrus.Entry, target *config.Target
 		}
 		for _, pattern := range patterns {
 			if pattern.MatchString(p) {
-				filePaths = append(filePaths, &LintFile{
-					Path: p,
-				})
+				filePaths = append(filePaths, p)
 			}
 		}
 		return nil
@@ -65,47 +80,74 @@ func (c *Controller) findFilesByRegexp(logE *logrus.Entry, target *config.Target
 	return filePaths, nil
 }
 
-func (c *Controller) findFilesFromTarget(logE *logrus.Entry, target *config.Target) ([]*LintFile, error) {
-	switch target.LintFiles.SearchType {
-	case "equal":
-		filePaths := make([]*LintFile, len(target.LintFiles.Paths))
-		for i, p := range target.LintFiles.Paths {
-			filePaths[i] = &LintFile{
-				Path: p.Path,
-			}
-		}
-		return filePaths, nil
-	case "glob":
-		return c.findFilesbyGlob(target)
-	case "regexp":
-		return c.findFilesByRegexp(logE, target)
-	default:
-		return nil, logerr.WithFields(errors.New("search_type is invalid"), logrus.Fields{ //nolint:wrapcheck
-			"search_type": target.LintFiles.SearchType,
-		})
-	}
-}
-
-func (c *Controller) findJsonnet(logE *logrus.Entry, cfg *config.Config, ruleBaseDir string) ([]*LintFile, error) {
-	if ruleBaseDir != "" {
-		return c.findJsonnetFromBaseDir(logE, ruleBaseDir)
-	}
-	if len(cfg.Targets) == 0 {
-		return c.findJsonnetFromBaseDir(logE, "lintnet")
-	}
-	filePaths := make([]*LintFile, 0, len(cfg.Targets))
-	for _, target := range cfg.Targets {
-		fps, err := c.findFilesFromTarget(logE, target)
-		if err != nil {
-			return nil, err
-		}
-		filePaths = append(filePaths, fps...)
+func (c *Controller) findFilesByEqual(paths []*config.Path) ([]string, error) {
+	filePaths := make([]string, len(paths))
+	for i, p := range paths {
+		filePaths[i] = p.Path
 	}
 	return filePaths, nil
 }
 
-func (c *Controller) findJsonnetFromBaseDir(logE *logrus.Entry, baseDir string) ([]*LintFile, error) {
-	filePaths := []*LintFile{}
+type Target struct {
+	LintFiles []*LintFile
+	DataFiles []string
+}
+
+func (c *Controller) findFilesFromPaths(logE *logrus.Entry, searchType string, paths []*config.Path) ([]string, error) {
+	switch searchType {
+	case "equal":
+		return c.findFilesByEqual(paths)
+	case "glob":
+		return c.findFilesbyGlob(paths)
+	case "regexp":
+		return c.findFilesByRegexp(logE, paths)
+	default:
+		return nil, logerr.WithFields(errors.New("search_type is invalid"), logrus.Fields{ //nolint:wrapcheck
+			"search_type": searchType,
+		})
+	}
+}
+
+func (c *Controller) convertStringsToTargets(logE *logrus.Entry, ruleBaseDir string, dataFiles []string) ([]*Target, error) {
+	lintFiles, err := c.findJsonnetFromBaseDir(logE, ruleBaseDir)
+	if err != nil {
+		return nil, err
+	}
+	arr := make([]*LintFile, len(lintFiles))
+	for i, lintFile := range lintFiles {
+		arr[i] = &LintFile{
+			Path: lintFile,
+		}
+	}
+	return []*Target{
+		{
+			LintFiles: arr,
+			DataFiles: dataFiles,
+		},
+	}, nil
+}
+
+func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, ruleBaseDir string, dataFiles []string) ([]*Target, error) {
+	if ruleBaseDir != "" {
+		return c.convertStringsToTargets(logE, ruleBaseDir, dataFiles)
+	}
+	if len(cfg.Targets) == 0 {
+		return c.convertStringsToTargets(logE, "lintnet", dataFiles)
+	}
+
+	targets := make([]*Target, len(cfg.Targets))
+	for i, target := range cfg.Targets {
+		t, err := c.findTarget(logE, target)
+		if err != nil {
+			return nil, err
+		}
+		targets[i] = t
+	}
+	return targets, nil
+}
+
+func (c *Controller) findJsonnetFromBaseDir(logE *logrus.Entry, baseDir string) ([]string, error) {
+	filePaths := []string{}
 	if err := fs.WalkDir(afero.NewIOFS(c.fs), baseDir, func(p string, dirEntry fs.DirEntry, e error) error {
 		if e != nil {
 			logE.WithError(e).Warn("error occurred while searching files")
@@ -117,9 +159,7 @@ func (c *Controller) findJsonnetFromBaseDir(logE *logrus.Entry, baseDir string) 
 		if !strings.HasSuffix(p, ".jsonnet") {
 			return nil
 		}
-		filePaths = append(filePaths, &LintFile{
-			Path: p,
-		})
+		filePaths = append(filePaths, p)
 		return nil
 	}); err != nil {
 		return nil, fmt.Errorf("walks the file tree of the unarchived package: %w", err)
@@ -141,13 +181,25 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, e
 	return jsonnetAsts, nil
 }
 
-func newVM(data *Data) *jsonnet.VM {
+func newVM(data *Data, libs map[string]string) *jsonnet.VM {
 	vm := jsonnet.MakeVM()
 	vm.ExtCode("input", string(data.JSON))
 	vm.ExtVar("file_path", data.FilePath)
 	vm.ExtVar("file_type", data.FileType)
 	vm.ExtVar("file_text", data.Text)
 	setNativeFunctions(vm)
+
+	if len(libs) != 0 {
+		m := make(map[string]jsonnet.Contents, len(libs))
+		for k, v := range libs {
+			m[k] = jsonnet.MakeContents(v)
+		}
+		mi := &jsonnet.MemoryImporter{
+			Data: m,
+		}
+		vm.Importer(mi)
+	}
+
 	return vm
 }
 
@@ -163,8 +215,8 @@ func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
 	return ja, nil
 }
 
-func (c *Controller) evaluate(data *Data, jsonnetAsts map[string]ast.Node) map[string]*JsonnetEvaluateResult {
-	vm := newVM(data)
+func (c *Controller) evaluate(data *Data, jsonnetAsts map[string]ast.Node, libs map[string]string) map[string]*JsonnetEvaluateResult {
+	vm := newVM(data, libs)
 
 	results := make(map[string]*JsonnetEvaluateResult, len(jsonnetAsts))
 	for k, ja := range jsonnetAsts {

@@ -29,11 +29,7 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 	// TODO search lint files
 	// TODO search data files
 
-	filePaths, err := c.findJsonnet(logE, cfg, param.RuleBaseDir)
-	if err != nil {
-		return err
-	}
-	jsonnetAsts, err := c.readJsonnets(filePaths)
+	targets, err := c.findFiles(logE, cfg, param.RuleBaseDir, param.FilePaths)
 	if err != nil {
 		return err
 	}
@@ -47,29 +43,36 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 		errLevel = ll
 	}
 
-	results := make(map[string]*FileResult, len(param.FilePaths))
-	for _, filePath := range param.FilePaths {
-		rs, err := c.lint(filePath, jsonnetAsts)
+	results := make(map[string]*FileResult, len(targets))
+	for _, target := range targets {
+		jsonnetAsts, err := c.readJsonnets(target.LintFiles)
 		if err != nil {
-			results[filePath] = &FileResult{
-				Error: err.Error(),
-			}
-			continue
+			return err
 		}
-		results[filePath] = &FileResult{
-			Results: rs,
+		for _, dataFile := range target.DataFiles {
+			rs, err := c.lint(dataFile, jsonnetAsts, nil)
+			if err != nil {
+				results[dataFile] = &FileResult{
+					Error: err.Error(),
+				}
+				continue
+			}
+			results[dataFile] = &FileResult{
+				Results: rs,
+			}
 		}
 	}
+
 	return c.Output(errLevel, results)
 }
 
-func (c *Controller) lint(filePath string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {
-	data, err := c.parse(filePath)
+func (c *Controller) lint(dataFile string, jsonnetAsts map[string]ast.Node, libs map[string]string) (map[string]*Result, error) {
+	data, err := c.parse(dataFile)
 	if err != nil {
 		return nil, err
 	}
 
-	results := c.evaluate(data, jsonnetAsts)
+	results := c.evaluate(data, jsonnetAsts, libs)
 	rs := make(map[string]*Result, len(results))
 
 	for k, result := range results {
