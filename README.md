@@ -193,11 +193,11 @@ data_transformation:
     type: jsonnet
     file: transform.jsonnet
 outputs:
-  - dest: stdout # stdout, stderr, file, github issue
-    format: json
+  - type: stdout # stdout, stderr, file, github issue
+    renderer: jsonnet
     template: foo.jsonnet
-  - dest: file
-    format: markdown
+  - type: file
+    renderer: text/template
     path: foo.md
     template: foo.tmpl
 targets:

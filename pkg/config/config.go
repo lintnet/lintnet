@@ -4,6 +4,14 @@ type Config struct {
 	ErrorLevel string `yaml:"error_level"`
 	Modules    []*Module
 	Targets    []*Target
+	Outputs    []*Output
+}
+
+type Output struct {
+	Type     string
+	Renderer string
+	Path     string
+	Template string
 }
 
 type Module struct {
