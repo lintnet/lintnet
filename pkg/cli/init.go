@@ -16,7 +16,7 @@ type initCommand struct {
 
 func (lc *initCommand) command() *cli.Command {
 	return &cli.Command{
-		Name:   "lint",
+		Name:   "init",
 		Usage:  "Scaffold configuration file",
 		Action: lc.action,
 	}
