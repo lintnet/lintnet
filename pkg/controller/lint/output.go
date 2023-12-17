@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/lintnet/pkg/config"
+	"github.com/suzuki-shunsuke/lintnet/pkg/render"
 )
 
 func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, logLevel ErrorLevel, results map[string]*FileResult) error {
@@ -69,7 +70,7 @@ func (c *Controller) outputByJsonnet(output *config.Output, fes []*FlatError) er
 	return c.outputJSON(out, fes)
 }
 
-func (c *Controller) outputByTemplate(output *config.Output, fes []*FlatError, renderer TemplateRenderer) error {
+func (c *Controller) outputByTemplate(output *config.Output, fes []*FlatError, renderer render.TemplateRenderer) error {
 	out := c.stdout
 	if output.Type == "file" {
 		f, err := c.fs.Create(output.Path)
@@ -99,9 +100,9 @@ func (c *Controller) output(output *config.Output, fes []*FlatError) error {
 	case "jsonnet":
 		return c.outputByJsonnet(output, fes)
 	case "text/template":
-		return c.outputByTemplate(output, fes, &TextTemplateRenderer{})
+		return c.outputByTemplate(output, fes, &render.TextTemplateRenderer{})
 	case "html/template":
-		return c.outputByTemplate(output, fes, &HTMLTemplateRenderer{})
+		return c.outputByTemplate(output, fes, &render.HTMLTemplateRenderer{})
 	}
 	return errors.New("unknown renderer")
 }
