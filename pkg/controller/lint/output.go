@@ -9,8 +9,8 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/lintnet/pkg/config"
-	"github.com/suzuki-shunsuke/lintnet/pkg/render"
+	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/render"
 )
 
 func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, logLevel ErrorLevel, results map[string]*FileResult) error {

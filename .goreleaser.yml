@@ -23,7 +23,7 @@ builds:
 release:
   prerelease: true
   header: |
-    [Pull Requests](https://github.com/suzuki-shunsuke/lintnet/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/suzuki-shunsuke/lintnet/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/suzuki-shunsuke/lintnet/compare/{{.PreviousTag}}...{{.Tag}}
+    [Pull Requests](https://github.com/lintnet/lintnet/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/lintnet/lintnet/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/lintnet/lintnet/compare/{{.PreviousTag}}...{{.Tag}}
 
 signs:
   - cmd: cosign
@@ -57,7 +57,7 @@ brews:
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
     # Your app's homepage.
     # Default is empty.
-    homepage: https://github.com/suzuki-shunsuke/lintnet
+    homepage: https://github.com/lintnet/lintnet
 
     # Template of your app's description.
     # Default is empty.

@@ -6,7 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/lintnet/pkg/encoding"
+	"github.com/lintnet/lintnet/pkg/encoding"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 

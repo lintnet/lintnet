@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/suzuki-shunsuke/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 

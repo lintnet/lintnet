@@ -1,4 +1,4 @@
-module github.com/suzuki-shunsuke/lintnet
+module github.com/lintnet/lintnet
 
 go 1.21.5
 

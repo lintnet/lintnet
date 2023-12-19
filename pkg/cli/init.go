@@ -5,8 +5,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/lintnet/pkg/controller/lint"
-	"github.com/suzuki-shunsuke/lintnet/pkg/log"
+	"github.com/lintnet/lintnet/pkg/controller/lint"
+	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/urfave/cli/v2"
 )
 

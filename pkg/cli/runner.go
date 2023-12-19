@@ -30,7 +30,7 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 	}
 	app := cli.App{
 		Name:     "lintnet",
-		Usage:    "Lint with Jsonnet. https://github.com/suzuki-shunsuke/lintnet",
+		Usage:    "Lint with Jsonnet. https://github.com/lintnet/lintnet",
 		Version:  r.LDFlags.Version + " (" + r.LDFlags.Commit + ")",
 		Compiled: compiledDate,
 		Flags: []cli.Flag{
