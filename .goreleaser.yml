@@ -50,7 +50,7 @@ brews:
 
     # GitHub/GitLab repository to push the formula to
     repository:
-      owner: suzuki-shunsuke
+      owner: lintnet
       name: homebrew-lintnet
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     # The project name and current git tag are used in the format string.
@@ -62,7 +62,7 @@ brews:
     # Template of your app's description.
     # Default is empty.
     description: |
-      General Linter powered by Jsonnet.
+      Secure, Powerful, Reusable Configuration file linter powered by Jsonnet
     license: MIT
 
     # Setting this will prevent goreleaser to actually try to commit the updated
@@ -81,10 +81,10 @@ brews:
 scoops:
   -
     description: |
-      General Linter powered by Jsonnet.
+      Secure, Powerful, Reusable Configuration file linter powered by Jsonnet
     license: MIT
     skip_upload: auto
     repository:
-      owner: suzuki-shunsuke
+      owner: lintnet
       name: scoop-bucket
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
