@@ -1,6 +1,6 @@
 # lintnet
 
-Configuration file linter powered by [Jsonnet](https://jsonnet.org/)
+Secure, Powerful, Reusable Configuration file linter powered by [Jsonnet](https://jsonnet.org/)
 
 ## :warning: This project is still under development
 
@@ -9,7 +9,7 @@ Please don't use this tool yet.
 
 ## Features
 
-- Lint any configuration files ([Supported formats](#supported-file-format))
+- [Support various configuration file formats](https://lintnet.github.io/docs/supported-data-format)
 - Powerful. You can lint configuration files flexibly by Jsonnet. And lintnet extends Jsonnet by native functions
 - Secure. Jsonnet can't access filesystem and network so it's secure compared with common programming languages such as JavaScript
 - Cross Platform. lintnet works on Linux, macOS, and Windows. And it works on both amd64 and arm64
