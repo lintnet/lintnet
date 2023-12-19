@@ -167,7 +167,7 @@ func (c *Controller) findJsonnetFromBaseDir(logE *logrus.Entry, baseDir string) 
 	return filePaths, nil
 }
 
-func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, error) {
+func (c *Controller) readJsonnets(filePaths []*LintFile, modules map[string]string) (map[string]ast.Node, error) {
 	jsonnetAsts := make(map[string]ast.Node, len(filePaths))
 	for _, filePath := range filePaths {
 		ja, err := c.readJsonnet(filePath.Path)

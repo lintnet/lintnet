@@ -3,6 +3,7 @@ package lint
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/google/go-jsonnet/ast"
@@ -17,7 +18,7 @@ type ParamLint struct {
 	FilePaths      []string
 }
 
-func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
+func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error {
 	cfg := &config.Config{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
@@ -26,8 +27,10 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 	}
 
 	// TODO download modules
-	// TODO search lint files
-	// TODO search data files
+	modules, err := c.downloadModules(ctx, logE, cfg)
+	if err != nil {
+		return fmt.Errorf("download modules: %w", err)
+	}
 
 	targets, err := c.findFiles(logE, cfg, param.RuleBaseDir, param.FilePaths)
 	if err != nil {
