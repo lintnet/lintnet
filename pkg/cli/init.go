@@ -3,10 +3,10 @@ package cli
 import (
 	"os"
 
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/lintnet/lintnet/pkg/controller/lint"
 	"github.com/lintnet/lintnet/pkg/log"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/urfave/cli/v2"
 )
 
