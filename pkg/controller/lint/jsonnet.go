@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
+	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/lintnet/pkg/config"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 

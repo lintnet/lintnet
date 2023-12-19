@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/google/go-jsonnet/ast"
+	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/lintnet/pkg/config"
 )
 
 type ParamLint struct {

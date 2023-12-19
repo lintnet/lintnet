@@ -42,3 +42,7 @@ tasks:
     description: Build and install lintnet
     usage: Build and install lintnet by "go install" command
     script: go install ./cmd/lintnet
+  - name: fmt
+    description: Format GO codes
+    usage: Format GO codes
+    script: bash scripts/fmt.sh

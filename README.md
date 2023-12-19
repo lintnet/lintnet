@@ -37,7 +37,7 @@ lintnet is a single binary written in [Go](https://go.dev/). So you only need to
 1. [Homebrew](https://brew.sh/)
 
 ```sh
-brew install suzuki-shunsuke/lintnet/lintnet
+brew install lintnet/lintnet/lintnet
 ```
 
 2. [Scoop](https://scoop.sh/)
@@ -50,10 +50,10 @@ scoop install lintnet
 3. [aqua](https://aquaproj.github.io/)
 
 ```sh
-aqua g -i suzuki-shunsuke/lintnet
+aqua g -i lintnet/lintnet
 ```
 
-4. Download a prebuilt binary from [GitHub Releases](https://github.com/suzuki-shunsuke/lintnet/releases) and install it into `$PATH`
+4. Download a prebuilt binary from [GitHub Releases](https://github.com/lintnet/lintnet/releases) and install it into `$PATH`
 
 ## How to use
 
@@ -68,7 +68,7 @@ lintnet lint [<file path to be validated> ...]
 
 lintnet can lint the following file formats.
 lintnet judges file types by file extensions.
-We're considering supporting additional file formats. [#37](https://github.com/suzuki-shunsuke/lintnet/issues/37)
+We're considering supporting additional file formats. [#37](https://github.com/lintnet/lintnet/issues/37)
 
 format | file extensions | parser
 --- | --- | ---
@@ -181,11 +181,11 @@ e.g.
 error_level: info
 modules:
   - id: toml
-    source: github_content>suzuki-shunsuke/lintnet-example//toml.jsonnet#v0.1.0
-  - id: suzuki-shunsuke/lintnet-example-2
-    source: github_content>suzuki-shunsuke/lintnet-example-2#v0.1.0
-  - id: suzuki-shunsuke/lintnet-example-3
-    source: github_archive>suzuki-shunsuke/lintnet-example-3#v0.1.0
+    source: github_content>lintnet/lintnet-example//toml.jsonnet#v0.1.0
+  - id: lintnet/lintnet-example-2
+    source: github_content>lintnet/lintnet-example-2#v0.1.0
+  - id: lintnet/lintnet-example-3
+    source: github_archive>lintnet/lintnet-example-3#v0.1.0
   - id: yaml
     source: http>https://example.com/v0.1.0/yaml.jsonnet
 data_transformation:
@@ -206,7 +206,7 @@ targets:
       paths:
         - path: lintnet/csv.jsonnet
       # imports:
-      #   - module: suzuki-shunsuke/lintnet-example-2
+      #   - module: lintnet/lintnet-example-2
       #     path: util.libsonnet
       #     import: utils.libsonnet # optional
     data_files:
@@ -220,7 +220,7 @@ targets:
   #     paths:
   #       - path: "*.toml"
   # - lint_files:
-  #     module: suzuki-shunsuke/lintnet-example-2
+  #     module: lintnet/lintnet-example-2
   #     search_type: equal
   #     paths:
   #       - path: actions.jsonnet
@@ -232,7 +232,7 @@ targets:
   #       - path: .github/workflows/fooyaml
   #         exclude: true
   # - lint_files:
-  #     module: suzuki-shunsuke/lintnet-example-3
+  #     module: lintnet/lintnet-example-3
   #     paths:
   #       - path: lintnet/json.jsonnet
   #   data_files:

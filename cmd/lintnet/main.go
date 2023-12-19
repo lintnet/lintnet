@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/lintnet/lintnet/pkg/cli"
+	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/lintnet/pkg/cli"
-	"github.com/suzuki-shunsuke/lintnet/pkg/log"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
