@@ -50,7 +50,7 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 			return err
 		}
 		for _, dataFile := range target.DataFiles {
-			rs, err := c.lint(dataFile, jsonnetAsts, nil)
+			rs, err := c.lint(dataFile, jsonnetAsts)
 			if err != nil {
 				results[dataFile] = &FileResult{
 					Error: err.Error(),
@@ -66,13 +66,13 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 	return c.Output(logE, cfg, errLevel, results)
 }
 
-func (c *Controller) lint(dataFile string, jsonnetAsts map[string]ast.Node, libs map[string]string) (map[string]*Result, error) {
+func (c *Controller) lint(dataFile string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {
 	data, err := c.parse(dataFile)
 	if err != nil {
 		return nil, err
 	}
 
-	results := c.evaluate(data, jsonnetAsts, libs)
+	results := c.evaluate(data, jsonnetAsts)
 	rs := make(map[string]*Result, len(results))
 
 	for k, result := range results {
