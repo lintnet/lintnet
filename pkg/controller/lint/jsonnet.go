@@ -1,18 +1,18 @@
 package lint
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
-	"regexp"
 	"strings"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"golang.org/x/exp/maps"
 )
 
 type LintFile struct { //nolint:revive
@@ -20,12 +20,12 @@ type LintFile struct { //nolint:revive
 	Imports map[string]string
 }
 
-func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target) (*Target, error) {
-	lintFiles, err := c.findFilesFromPaths(logE, target.LintFiles.SearchType, target.LintFiles.Paths)
+func (c *Controller) findTarget(target *config.Target) (*Target, error) {
+	lintFiles, err := c.findFilesFromPaths(target.LintFiles)
 	if err != nil {
 		return nil, err
 	}
-	dataFiles, err := c.findFilesFromPaths(logE, target.DataFiles.SearchType, target.DataFiles.Paths)
+	dataFiles, err := c.findFilesFromPaths(target.DataFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -41,71 +41,40 @@ func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target) (*Tar
 	}, nil
 }
 
-func (c *Controller) findFilesbyGlob(paths []*config.Path) ([]string, error) {
-	filePaths := make([]string, 0, len(paths))
-	for _, p := range paths {
-		matches, err := fs.Glob(afero.NewIOFS(c.fs), p.Path)
-		if err != nil {
-			return nil, fmt.Errorf("search files by glob: %w", err)
-		}
-		filePaths = append(filePaths, matches...)
-	}
-	return filePaths, nil
-}
-
-func (c *Controller) findFilesByRegexp(logE *logrus.Entry, paths []*config.Path) ([]string, error) {
-	patterns := make([]*regexp.Regexp, len(paths))
-	for i, p := range paths {
-		p, err := regexp.Compile(p.Path)
-		if err != nil {
-			return nil, fmt.Errorf("compile a regular expression to search files: %w", err)
-		}
-		patterns[i] = p
-	}
-	filePaths := make([]string, 0, len(paths))
-	if err := fs.WalkDir(afero.NewIOFS(c.fs), "", func(p string, dirEntry fs.DirEntry, e error) error {
-		if e != nil {
-			logE.WithError(e).Warn("error occurred while searching files")
-			return nil
-		}
-		for _, pattern := range patterns {
-			if pattern.MatchString(p) {
-				filePaths = append(filePaths, p)
-			}
-		}
-		return nil
-	}); err != nil {
-		return nil, fmt.Errorf("search files: %w", err)
-	}
-	return filePaths, nil
-}
-
-func (c *Controller) findFilesByEqual(paths []*config.Path) ([]string, error) {
-	filePaths := make([]string, len(paths))
-	for i, p := range paths {
-		filePaths[i] = p.Path
-	}
-	return filePaths, nil
-}
-
 type Target struct {
 	LintFiles []*LintFile
 	DataFiles []string
 }
 
-func (c *Controller) findFilesFromPaths(logE *logrus.Entry, searchType string, paths []*config.Path) ([]string, error) {
-	switch searchType {
-	case "equal":
-		return c.findFilesByEqual(paths)
-	case "glob":
-		return c.findFilesbyGlob(paths)
-	case "regexp":
-		return c.findFilesByRegexp(logE, paths)
-	default:
-		return nil, logerr.WithFields(errors.New("search_type is invalid"), logrus.Fields{ //nolint:wrapcheck
-			"search_type": searchType,
-		})
+func (c *Controller) findFilesFromPaths(files string) ([]string, error) {
+	lines := strings.Split(files, "\n")
+	matchFiles := map[string]struct{}{}
+	for _, line := range lines {
+		if strings.HasPrefix(line, "#") {
+			// ignore comments
+			continue
+		}
+		if pattern := strings.TrimPrefix(line, "!"); pattern != line {
+			for file := range matchFiles {
+				matched, err := doublestar.Match(pattern, file)
+				if err != nil {
+					return nil, fmt.Errorf("check file match: %w", err)
+				}
+				if matched {
+					delete(matchFiles, file)
+				}
+			}
+			continue
+		}
+		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), line)
+		if err != nil {
+			return nil, fmt.Errorf("search files: %w", err)
+		}
+		for _, file := range matches {
+			matchFiles[file] = struct{}{}
+		}
 	}
+	return maps.Keys(matchFiles), nil
 }
 
 func (c *Controller) convertStringsToTargets(logE *logrus.Entry, ruleBaseDir string, dataFiles []string) ([]*Target, error) {
@@ -137,7 +106,7 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, ruleBaseD
 
 	targets := make([]*Target, len(cfg.Targets))
 	for i, target := range cfg.Targets {
-		t, err := c.findTarget(logE, target)
+		t, err := c.findTarget(target)
 		if err != nil {
 			return nil, err
 		}
@@ -183,14 +152,9 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, e
 
 func newVM(data *Data) *jsonnet.VM {
 	vm := jsonnet.MakeVM()
-	vm.ExtCode("input", string(data.JSON))
-	vm.ExtVar("file_path", data.FilePath)
-	vm.ExtVar("file_type", data.FileType)
-	vm.ExtVar("file_text", data.Text)
+	vm.TLACode("data", string(data.JSON))
 	setNativeFunctions(vm)
-
 	vm.Importer(&jsonnet.FileImporter{})
-
 	return vm
 }
 

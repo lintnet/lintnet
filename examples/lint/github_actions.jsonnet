@@ -1,8 +1,4 @@
-local fileType = std.extVar('file_type');
-local filePath = std.extVar('file_path');
-local input = std.extVar('input');
-
-if fileType == 'yaml' && std.startsWith(filePath, '.github/workflows/') then [
+function(data) if data.file_type == 'yaml' && std.startsWith(data.file_path, '.github/workflows/') then [
   {
     name: 'uses_must_not_be_main',
     message: 'actions reference must not be main',
@@ -11,7 +7,7 @@ if fileType == 'yaml' && std.startsWith(filePath, '.github/workflows/') then [
       uses: step.uses,
     },
   }
-  for job in std.objectKeysValues(input.jobs)
+  for job in std.objectKeysValues(data.value.jobs)
   if std.objectHas(job.value, 'steps')
   for step in job.value.steps
   if std.objectHas(step, 'uses') && std.endsWith(step.uses, '@main')

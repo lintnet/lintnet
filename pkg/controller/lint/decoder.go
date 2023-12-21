@@ -11,10 +11,11 @@ import (
 )
 
 type Data struct {
-	Text     string
-	JSON     []byte
-	FilePath string
-	FileType string
+	Text     string      `json:"text"`
+	Value    interface{} `json:"value"`
+	FilePath string      `json:"file_path"`
+	FileType string      `json:"file_type"`
+	JSON     []byte      `json:"-"`
 }
 
 func (c *Controller) parse(filePath string) (*Data, error) {
@@ -32,14 +33,16 @@ func (c *Controller) parse(filePath string) (*Data, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decode a file: %w", err)
 	}
-	inputB, err := json.Marshal(input)
-	if err != nil {
-		return nil, fmt.Errorf("marshal input as JSON: %w", err)
-	}
-	return &Data{
+	data := &Data{
 		Text:     string(b),
 		FilePath: filePath,
 		FileType: fileType,
-		JSON:     inputB,
-	}, nil
+		Value:    input,
+	}
+	dataB, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal data as JSON: %w", err)
+	}
+	data.JSON = dataB
+	return data, nil
 }

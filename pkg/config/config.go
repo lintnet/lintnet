@@ -20,24 +20,8 @@ type Module struct {
 }
 
 type Target struct {
-	LintFiles *LintFiles `yaml:"lint_files"`
-	DataFiles *DataFiles `yaml:"data_files"`
-}
-
-type LintFiles struct {
-	SearchType string `yaml:"search_type"`
-	Paths      []*Path
-	Imports    []*Import
-}
-
-type DataFiles struct {
-	SearchType string `yaml:"search_type"`
-	Paths      []*Path
-}
-
-type Path struct {
-	Path    string
-	Exclude bool
+	LintFiles string `yaml:"lint_files"`
+	DataFiles string `yaml:"data_files"`
 }
 
 type Import struct {

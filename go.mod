@@ -4,6 +4,7 @@ go 1.21.5
 
 require (
 	github.com/BurntSushi/toml v1.3.2
+	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/google/go-jsonnet v0.20.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/sirupsen/logrus v1.9.3
@@ -11,6 +12,7 @@ require (
 	github.com/suzuki-shunsuke/go-jsonnet-native-functions v0.2.0
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/urfave/cli/v2 v2.26.0
+	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
 	gopkg.in/yaml.v3 v3.0.1
 )
 
