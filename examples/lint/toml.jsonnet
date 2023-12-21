@@ -1,7 +1,4 @@
-local input = std.extVar('input');
-local fileType = std.extVar('file_type');
-
-[{
+function(data) [{
   message: 'TOML requires the field "name"',
-  failed: fileType == 'toml' && !std.objectHas(input, 'name'),
+  failed: data.file_type == 'toml' && !std.objectHas(data.value, 'name'),
 }]

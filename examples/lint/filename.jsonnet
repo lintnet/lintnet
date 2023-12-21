@@ -1,7 +1,6 @@
-local filePath = std.extVar('file_path');
 local contains = std.native('strings.Contains');
 
-[{
+function(data) [{
   message: 'Use underscores "_" rather than dash in file names',
-  failed: contains(filePath, '-'),
+  failed: contains(data.file_path, '-'),
 }]
