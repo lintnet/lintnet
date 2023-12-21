@@ -181,7 +181,7 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, e
 	return jsonnetAsts, nil
 }
 
-func newVM(data *Data, libs map[string]string) *jsonnet.VM {
+func newVM(data *Data) *jsonnet.VM {
 	vm := jsonnet.MakeVM()
 	vm.ExtCode("input", string(data.JSON))
 	vm.ExtVar("file_path", data.FilePath)
@@ -189,16 +189,7 @@ func newVM(data *Data, libs map[string]string) *jsonnet.VM {
 	vm.ExtVar("file_text", data.Text)
 	setNativeFunctions(vm)
 
-	if len(libs) != 0 {
-		m := make(map[string]jsonnet.Contents, len(libs))
-		for k, v := range libs {
-			m[k] = jsonnet.MakeContents(v)
-		}
-		mi := &jsonnet.MemoryImporter{
-			Data: m,
-		}
-		vm.Importer(mi)
-	}
+	vm.Importer(&jsonnet.FileImporter{})
 
 	return vm
 }
@@ -215,8 +206,8 @@ func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
 	return ja, nil
 }
 
-func (c *Controller) evaluate(data *Data, jsonnetAsts map[string]ast.Node, libs map[string]string) map[string]*JsonnetEvaluateResult {
-	vm := newVM(data, libs)
+func (c *Controller) evaluate(data *Data, jsonnetAsts map[string]ast.Node) map[string]*JsonnetEvaluateResult {
+	vm := newVM(data)
 
 	results := make(map[string]*JsonnetEvaluateResult, len(jsonnetAsts))
 	for k, ja := range jsonnetAsts {
