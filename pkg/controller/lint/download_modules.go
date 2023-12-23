@@ -32,28 +32,42 @@ type HTTPClient interface {
 func (c *Controller) downloadModules(ctx context.Context, logE *logrus.Entry, param *ParamDownloadModule, modMap map[string]*Module) error {
 	for modID, mod := range modMap {
 		logE := logE.WithField("module_id", modID)
-		if err := c.downloadModule(ctx, logE, param, modID, mod); err != nil {
+		if err := c.moduleInstaller.Install(ctx, logE, param, modID, mod); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, param *ParamDownloadModule, modID string, mod *Module) error { //nolint:funlen,cyclop
+type ModuleInstaller struct {
+	fs   afero.Fs
+	gh   GitHub
+	http HTTPClient
+}
+
+func NewModuleInstaller(fs afero.Fs, gh GitHub, httpClient HTTPClient) *ModuleInstaller {
+	return &ModuleInstaller{
+		fs:   fs,
+		gh:   gh,
+		http: httpClient,
+	}
+}
+
+func (mi *ModuleInstaller) Install(ctx context.Context, logE *logrus.Entry, param *ParamDownloadModule, modID string, mod *Module) error { //nolint:funlen,cyclop
 	// Check if the module is already downloaded
 	dest := filepath.Join(param.BaseDir, filepath.FromSlash(modID))
-	f, err := afero.DirExists(c.fs, dest)
+	f, err := afero.DirExists(mi.fs, dest)
 	if err != nil {
 		return fmt.Errorf("check if the module is already installed: %w", err)
 	}
 	if f {
 		return nil
 	}
-	if err := osfile.MkdirAll(c.fs, filepath.Dir(dest)); err != nil {
+	if err := osfile.MkdirAll(mi.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create parent directories: %w", err)
 	}
 	// Download Module
-	u, _, err := c.gh.GetArchiveLink(ctx, mod.RepoOwner, mod.RepoName, github.Tarball, nil, 5) //nolint:gomnd
+	u, _, err := mi.gh.GetArchiveLink(ctx, mod.RepoOwner, mod.RepoName, github.Tarball, nil, 5) //nolint:gomnd
 	if err != nil {
 		return fmt.Errorf("get an archive link by GitHub API: %w", err)
 	}
@@ -61,7 +75,7 @@ func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, par
 	if err != nil {
 		return fmt.Errorf("create a HTTP request: %w", err)
 	}
-	resp, err := c.http.Do(req)
+	resp, err := mi.http.Do(req)
 	if err != nil {
 		return fmt.Errorf("send a HTTP request: %w", err)
 	}
@@ -69,17 +83,17 @@ func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, par
 		return errors.New("HTTP status code >= 300")
 	}
 	defer resp.Body.Close()
-	tempDir, err := afero.TempDir(c.fs, "", "")
+	tempDir, err := afero.TempDir(mi.fs, "", "")
 	if err != nil {
 		return fmt.Errorf("create a temporal directory: %w", err)
 	}
 	defer func() {
-		if err := c.fs.RemoveAll(tempDir); err != nil {
+		if err := mi.fs.RemoveAll(tempDir); err != nil {
 			logE.WithError(err).Warn("delete a temporal directory")
 		}
 	}()
 	tempDest := filepath.Join(tempDir, "module.tar.gz")
-	tempFile, err := c.fs.Create(tempDest)
+	tempFile, err := mi.fs.Create(tempDest)
 	if err != nil {
 		return fmt.Errorf("create a temporal file: %w", err)
 	}
@@ -100,7 +114,7 @@ func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, par
 	if len(dirs) != 1 {
 		return fmt.Errorf("the number of sub directories must be one")
 	}
-	if err := osfile.Copy(c.fs, filepath.Join(unarchiveDest, dirs[0].Name()), dest); err != nil {
+	if err := osfile.Copy(mi.fs, filepath.Join(unarchiveDest, dirs[0].Name()), dest); err != nil {
 		return fmt.Errorf("copy a module from a teporal directory: %w", err)
 	}
 	return nil

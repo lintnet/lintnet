@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/controller/lint"
 	"github.com/lintnet/lintnet/pkg/github"
@@ -42,8 +43,7 @@ func (lc *lintCommand) command() *cli.Command {
 }
 
 func (lc *lintCommand) action(c *cli.Context) error {
-	gh := github.New(c.Context)
-	ctrl := lint.NewController(afero.NewOsFs(), os.Stdout, gh, http.DefaultClient)
+	fs := afero.NewOsFs()
 	logE := lc.logE
 	log.SetLevel(c.String("log-level"), logE)
 	log.SetColor(c.String("log-color"), logE)
@@ -55,6 +55,11 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		}
 		rootDir = dir
 	}
+	modInstaller := lint.NewModuleInstaller(fs, github.New(c.Context), http.DefaultClient)
+	importer := lint.NewImporter(c.Context, logE, &lint.ParamDownloadModule{}, &jsonnet.FileImporter{
+		JPaths: []string{rootDir},
+	}, modInstaller)
+	ctrl := lint.NewController(fs, os.Stdout, modInstaller, importer)
 	return ctrl.Lint(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
 		FilePaths:      c.Args().Slice(),
 		RuleBaseDir:    c.String("rule-base-dir"),

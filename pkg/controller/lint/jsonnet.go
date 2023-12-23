@@ -1,6 +1,7 @@
 package lint
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"path"
@@ -164,11 +165,47 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, e
 	return jsonnetAsts, nil
 }
 
-func newVM(param string) *jsonnet.VM {
+type Importer struct {
+	ctx             context.Context //nolint:containedctx
+	logE            *logrus.Entry
+	param           *ParamDownloadModule
+	importer        jsonnet.Importer
+	moduleInstaller *ModuleInstaller
+}
+
+func NewImporter(ctx context.Context, logE *logrus.Entry, param *ParamDownloadModule, importer jsonnet.Importer, installer *ModuleInstaller) *Importer {
+	return &Importer{
+		ctx:             ctx,
+		logE:            logE,
+		param:           param,
+		importer:        importer,
+		moduleInstaller: installer,
+	}
+}
+
+func (ip *Importer) Import(importedFrom, importedPath string) (jsonnet.Contents, string, error) {
+	contents, foundAt, err := ip.importer.Import(importedFrom, importedPath)
+	if err == nil {
+		return contents, foundAt, nil
+	}
+	if !strings.HasPrefix(importedPath, "github.com/") {
+		return contents, foundAt, err //nolint:wrapcheck
+	}
+	mod, err := parseModuleLine(importedPath)
+	if err != nil {
+		return contents, foundAt, err
+	}
+	if err := ip.moduleInstaller.Install(ip.ctx, ip.logE, ip.param, mod.ID(), mod); err != nil {
+		return contents, foundAt, err
+	}
+	return ip.importer.Import(importedFrom, importedPath) //nolint:wrapcheck
+}
+
+func newVM(param string, importer jsonnet.Importer) *jsonnet.VM {
 	vm := jsonnet.MakeVM()
 	vm.TLACode("param", param)
 	setNativeFunctions(vm)
-	vm.Importer(&jsonnet.FileImporter{})
+	vm.Importer(importer)
 	return vm
 }
 
@@ -185,7 +222,7 @@ func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
 }
 
 func (c *Controller) evaluate(tla string, jsonnetAsts map[string]ast.Node) map[string]*JsonnetEvaluateResult {
-	vm := newVM(tla)
+	vm := newVM(tla, c.importer)
 
 	results := make(map[string]*JsonnetEvaluateResult, len(jsonnetAsts))
 	for k, ja := range jsonnetAsts {
