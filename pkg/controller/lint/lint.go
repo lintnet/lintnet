@@ -3,10 +3,12 @@ package lint
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/google/go-jsonnet/ast"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,11 +30,11 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		}
 	}
 
-	modulesList, modMap, err := c.listModules(cfg)
+	modulesList, modMap, err := module.ListModules(cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("list modules: %w", err)
 	}
-	if err := c.downloadModules(ctx, logE, &ParamDownloadModule{
+	if err := c.installModules(ctx, logE, &module.ParamInstall{
 		BaseDir: param.RootDir,
 	}, modMap); err != nil {
 		return err

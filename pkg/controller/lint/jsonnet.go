@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -24,7 +25,7 @@ type LintFile struct { //nolint:revive
 	Imports    map[string]string
 }
 
-func (c *Controller) findTarget(target *config.Target, modules []*Module, rootDir string) (*Target, error) {
+func (c *Controller) findTarget(target *config.Target, modules []*module.Module, rootDir string) (*Target, error) {
 	lintFiles, err := c.findFilesFromPaths(target.LintFiles)
 	if err != nil {
 		return nil, err
@@ -106,7 +107,7 @@ func (c *Controller) convertStringsToTargets(logE *logrus.Entry, ruleBaseDir str
 	}, nil
 }
 
-func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, modulesList [][]*Module, ruleBaseDir string, dataFiles []string, rootDir string) ([]*Target, error) {
+func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, modulesList [][]*module.Module, ruleBaseDir string, dataFiles []string, rootDir string) ([]*Target, error) {
 	if ruleBaseDir != "" {
 		return c.convertStringsToTargets(logE, ruleBaseDir, dataFiles)
 	}
@@ -168,12 +169,12 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, e
 type Importer struct {
 	ctx             context.Context //nolint:containedctx
 	logE            *logrus.Entry
-	param           *ParamDownloadModule
+	param           *module.ParamInstall
 	importer        jsonnet.Importer
-	moduleInstaller *ModuleInstaller
+	moduleInstaller *module.Installer
 }
 
-func NewImporter(ctx context.Context, logE *logrus.Entry, param *ParamDownloadModule, importer jsonnet.Importer, installer *ModuleInstaller) *Importer {
+func NewImporter(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, importer jsonnet.Importer, installer *module.Installer) *Importer {
 	return &Importer{
 		ctx:             ctx,
 		logE:            logE,
@@ -191,12 +192,15 @@ func (ip *Importer) Import(importedFrom, importedPath string) (jsonnet.Contents,
 	if !strings.HasPrefix(importedPath, "github.com/") {
 		return contents, foundAt, err //nolint:wrapcheck
 	}
-	mod, err := parseModuleLine(importedPath)
+	mod, err := module.ParseModuleLine(importedPath)
 	if err != nil {
-		return contents, foundAt, err
+		return contents, foundAt, fmt.Errorf("parse a module import path: %w", err)
 	}
 	if err := ip.moduleInstaller.Install(ip.ctx, ip.logE, ip.param, mod.ID(), mod); err != nil {
-		return contents, foundAt, err
+		return contents, foundAt, fmt.Errorf("install a module: %w", logerr.WithFields(err, logrus.Fields{
+			"module_id": mod.ID(),
+			"import":    importedPath,
+		}))
 	}
 	return ip.importer.Import(importedFrom, path.Join(mod.ID(), mod.Path)) //nolint:wrapcheck
 }
