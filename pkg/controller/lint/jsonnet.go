@@ -88,7 +88,7 @@ func (c *Controller) findFilesFromPaths(files string) ([]string, error) {
 func (c *Controller) convertStringsToTargets(logE *logrus.Entry, ruleBaseDir string, dataFiles []string) ([]*Target, error) {
 	lintFiles, err := jsonnet.FindFiles(logE, c.fs, ruleBaseDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find lint files: %w", err)
 	}
 	arr := make([]*LintFile, len(lintFiles))
 	for i, lintFile := range lintFiles {
