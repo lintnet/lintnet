@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/google/go-jsonnet/ast"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 )
@@ -77,7 +77,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	return c.Output(logE, cfg, errLevel, results, param.Outputs, param.OutputSuccess)
 }
 
-func (c *Controller) lint(dataFile string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {
+func (c *Controller) lint(dataFile string, jsonnetAsts map[string]jsonnet.Node) (map[string]*Result, error) {
 	data, err := c.parse(dataFile)
 	if err != nil {
 		return nil, err

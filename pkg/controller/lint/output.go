@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/render"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -81,7 +81,7 @@ func (c *Controller) outputByJsonnet(output *config.Output, result *Output) erro
 		out = f
 	}
 	if output.Template != "" {
-		node, err := c.readJsonnet(output.Template)
+		node, err := jsonnet.Read(c.fs, output.Template)
 		if err != nil {
 			return fmt.Errorf("read a template as Jsonnet: %w", err)
 		}
@@ -91,7 +91,7 @@ func (c *Controller) outputByJsonnet(output *config.Output, result *Output) erro
 		}
 		vm := jsonnet.MakeVM()
 		vm.ExtCode("input", string(b))
-		setNativeFunctions(vm)
+		jsonnet.SetNativeFunctions(vm)
 		result, err := vm.Evaluate(node)
 		if err != nil {
 			return fmt.Errorf("evaluate a Jsonnet: %w", err)
