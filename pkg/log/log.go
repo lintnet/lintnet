@@ -1,6 +1,9 @@
 package log
 
 import (
+	"fmt"
+	"runtime"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -8,6 +11,7 @@ func New(version string) *logrus.Entry {
 	return logrus.WithFields(logrus.Fields{
 		"version": version,
 		"program": "lintnet",
+		"env":     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 	})
 }
 
