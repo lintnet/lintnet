@@ -13,13 +13,14 @@ import (
 type ParamLint struct {
 	RuleBaseDir    string
 	ErrorLevel     string
+	RootDir        string
 	ConfigFilePath string
 	FilePaths      []string
 	Outputs        []string
 	OutputSuccess  bool
 }
 
-func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
+func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop
 	cfg := &config.Config{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
@@ -27,11 +28,17 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 		}
 	}
 
-	// TODO download modules
-	// TODO search lint files
-	// TODO search data files
+	modulesList, modMap, err := c.listModules(cfg)
+	if err != nil {
+		return err
+	}
+	if err := c.downloadModules(ctx, logE, &ParamDownloadModule{
+		BaseDir: param.RootDir,
+	}, modMap); err != nil {
+		return err
+	}
 
-	targets, err := c.findFiles(logE, cfg, param.RuleBaseDir, param.FilePaths)
+	targets, err := c.findFiles(logE, cfg, modulesList, param.RuleBaseDir, param.FilePaths, param.RootDir)
 	if err != nil {
 		return err
 	}
