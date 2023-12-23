@@ -1,14 +1,20 @@
 package lint
 
-func isFailed(results []*FlatError, errLevel ErrorLevel) (bool, error) {
+import (
+	"fmt"
+
+	"github.com/lintnet/lintnet/pkg/errlevel"
+)
+
+func isFailed(results []*FlatError, errLevel errlevel.Level) (bool, error) {
 	for _, result := range results {
 		e := result.Level
 		if e == "" {
 			e = "error"
 		}
-		feErrLevel, err := newErrorLevel(e)
+		feErrLevel, err := errlevel.New(e)
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("verify the error level of a result: %w", err)
 		}
 		if feErrLevel >= errLevel {
 			return true, nil

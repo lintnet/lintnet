@@ -7,13 +7,14 @@ import (
 	"io"
 
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/errlevel"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/render"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel ErrorLevel, results map[string]*FileResult, outputIDs []string, outputSuccess bool) error {
+func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel errlevel.Level, results map[string]*FileResult, outputIDs []string, outputSuccess bool) error {
 	fes := c.formatResultToOutput(results)
 	if !outputSuccess && len(fes.Errors) == 0 {
 		return nil
