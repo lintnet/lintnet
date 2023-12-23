@@ -1,5 +1,5 @@
-function(data)
-  if data.file_type == 'yaml' && std.startsWith(data.file_path, '.github/workflows/') then [
+function(param)
+  if param.data.file_type == 'yaml' && std.startsWith(param.data.file_path, '.github/workflows/') then [
     {
       name: 'uses_must_not_be_main',
       message: 'actions reference must not be main',
@@ -8,7 +8,7 @@ function(data)
         uses: step.uses,
       },
     }
-    for job in std.objectKeysValues(data.value.jobs)
+    for job in std.objectKeysValues(param.data.value.jobs)
     if std.objectHas(job.value, 'steps')
     for step in job.value.steps
     if std.objectHas(step, 'uses') && std.endsWith(step.uses, '@main')

@@ -150,9 +150,9 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, e
 	return jsonnetAsts, nil
 }
 
-func newVM(data *Data) *jsonnet.VM {
+func newVM(param string) *jsonnet.VM {
 	vm := jsonnet.MakeVM()
-	vm.TLACode("data", string(data.JSON))
+	vm.TLACode("param", param)
 	setNativeFunctions(vm)
 	vm.Importer(&jsonnet.FileImporter{})
 	return vm
@@ -170,8 +170,8 @@ func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
 	return ja, nil
 }
 
-func (c *Controller) evaluate(data *Data, jsonnetAsts map[string]ast.Node) map[string]*JsonnetEvaluateResult {
-	vm := newVM(data)
+func (c *Controller) evaluate(tla string, jsonnetAsts map[string]ast.Node) map[string]*JsonnetEvaluateResult {
+	vm := newVM(tla)
 
 	results := make(map[string]*JsonnetEvaluateResult, len(jsonnetAsts))
 	for k, ja := range jsonnetAsts {
