@@ -92,30 +92,6 @@ func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatE
 	}
 }
 
-func (r *FileResult) isFailed() bool {
-	if r.Error != "" {
-		return true
-	}
-	for _, r := range r.Results {
-		if r.isFailed() {
-			return true
-		}
-	}
-	return false
-}
-
-func (r *Result) isFailed() bool {
-	if r.Error != "" {
-		return true
-	}
-	for _, result := range r.RawResult {
-		if result.isFailed() {
-			return true
-		}
-	}
-	return false
-}
-
 func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 	if result.Error != "" {
 		return &Result{

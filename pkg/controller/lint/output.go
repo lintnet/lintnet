@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel ErrorLevel, results map[string]*FileResult, outputIDs []string) error {
+func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel ErrorLevel, results map[string]*FileResult, outputIDs []string) error { //nolint:cyclop
 	fes := c.formatResultToOutput(results)
 	if len(fes) == 0 {
 		return nil

@@ -16,7 +16,3 @@ func isFailed(results []*FlatError, errLevel ErrorLevel) (bool, error) {
 	}
 	return false, nil
 }
-
-func (r *JsonnetResult) isFailed() bool {
-	return r.Failed
-}
