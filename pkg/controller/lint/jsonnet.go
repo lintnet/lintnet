@@ -3,6 +3,7 @@ package lint
 import (
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -20,7 +21,7 @@ type LintFile struct { //nolint:revive
 	Imports map[string]string
 }
 
-func (c *Controller) findTarget(target *config.Target) (*Target, error) {
+func (c *Controller) findTarget(target *config.Target, modules []*Module, rootDir string) (*Target, error) {
 	lintFiles, err := c.findFilesFromPaths(target.LintFiles)
 	if err != nil {
 		return nil, err
@@ -29,11 +30,16 @@ func (c *Controller) findTarget(target *config.Target) (*Target, error) {
 	if err != nil {
 		return nil, err
 	}
-	a := make([]*LintFile, len(lintFiles))
-	for i, b := range lintFiles {
-		a[i] = &LintFile{
+	a := make([]*LintFile, 0, len(lintFiles)+len(modules))
+	for _, b := range lintFiles {
+		a = append(a, &LintFile{
 			Path: b,
-		}
+		})
+	}
+	for _, mod := range modules {
+		a = append(a, &LintFile{
+			Path: filepath.Join(rootDir, filepath.FromSlash(mod.ID()), filepath.FromSlash(mod.Path)),
+		})
 	}
 	return &Target{
 		LintFiles: a,
@@ -96,7 +102,7 @@ func (c *Controller) convertStringsToTargets(logE *logrus.Entry, ruleBaseDir str
 	}, nil
 }
 
-func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, ruleBaseDir string, dataFiles []string) ([]*Target, error) {
+func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, modulesList [][]*Module, ruleBaseDir string, dataFiles []string, rootDir string) ([]*Target, error) {
 	if ruleBaseDir != "" {
 		return c.convertStringsToTargets(logE, ruleBaseDir, dataFiles)
 	}
@@ -106,7 +112,8 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, ruleBaseD
 
 	targets := make([]*Target, len(cfg.Targets))
 	for i, target := range cfg.Targets {
-		t, err := c.findTarget(target)
+		modules := modulesList[i]
+		t, err := c.findTarget(target, modules, rootDir)
 		if err != nil {
 			return nil, err
 		}

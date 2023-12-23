@@ -23,7 +23,7 @@ func (lc *initCommand) command() *cli.Command {
 }
 
 func (lc *initCommand) action(c *cli.Context) error {
-	ctrl := lint.NewController(afero.NewOsFs(), os.Stdout)
+	ctrl := lint.NewController(afero.NewOsFs(), os.Stdout, nil, nil)
 	logE := lc.logE
 	log.SetLevel(c.String("log-level"), logE)
 	log.SetColor(c.String("log-color"), logE)
