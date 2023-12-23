@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/controller/lint"
 	"github.com/lintnet/lintnet/pkg/github"
+	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
@@ -57,7 +57,7 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		rootDir = dir
 	}
 	modInstaller := module.NewInstaller(fs, github.New(c.Context), http.DefaultClient)
-	importer := lint.NewImporter(c.Context, logE, &module.ParamInstall{
+	importer := jsonnet.NewImporter(c.Context, logE, &module.ParamInstall{
 		BaseDir: rootDir,
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},

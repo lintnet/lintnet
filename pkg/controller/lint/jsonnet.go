@@ -1,17 +1,14 @@
 package lint
 
 import (
-	"context"
 	"fmt"
-	"io/fs"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
-	"github.com/google/go-jsonnet"
-	"github.com/google/go-jsonnet/ast"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -89,9 +86,9 @@ func (c *Controller) findFilesFromPaths(files string) ([]string, error) {
 }
 
 func (c *Controller) convertStringsToTargets(logE *logrus.Entry, ruleBaseDir string, dataFiles []string) ([]*Target, error) {
-	lintFiles, err := c.findJsonnetFromBaseDir(logE, ruleBaseDir)
+	lintFiles, err := jsonnet.FindFiles(logE, c.fs, ruleBaseDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find lint files: %w", err)
 	}
 	arr := make([]*LintFile, len(lintFiles))
 	for i, lintFile := range lintFiles {
@@ -127,31 +124,10 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, modulesLi
 	return targets, nil
 }
 
-func (c *Controller) findJsonnetFromBaseDir(logE *logrus.Entry, baseDir string) ([]string, error) {
-	filePaths := []string{}
-	if err := fs.WalkDir(afero.NewIOFS(c.fs), baseDir, func(p string, dirEntry fs.DirEntry, e error) error {
-		if e != nil {
-			logE.WithError(e).Warn("error occurred while searching files")
-			return nil
-		}
-		if dirEntry.Type().IsDir() {
-			return nil
-		}
-		if !strings.HasSuffix(p, ".jsonnet") {
-			return nil
-		}
-		filePaths = append(filePaths, p)
-		return nil
-	}); err != nil {
-		return nil, fmt.Errorf("walks the file tree of the unarchived package: %w", err)
-	}
-	return filePaths, nil
-}
-
-func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, error) {
-	jsonnetAsts := make(map[string]ast.Node, len(filePaths))
+func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]jsonnet.Node, error) {
+	jsonnetAsts := make(map[string]jsonnet.Node, len(filePaths))
 	for _, filePath := range filePaths {
-		ja, err := c.readJsonnet(filePath.Path)
+		ja, err := jsonnet.Read(c.fs, filePath.Path)
 		if err != nil {
 			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"file_path": filePath,
@@ -166,67 +142,8 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, e
 	return jsonnetAsts, nil
 }
 
-type Importer struct {
-	ctx             context.Context //nolint:containedctx
-	logE            *logrus.Entry
-	param           *module.ParamInstall
-	importer        jsonnet.Importer
-	moduleInstaller *module.Installer
-}
-
-func NewImporter(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, importer jsonnet.Importer, installer *module.Installer) *Importer {
-	return &Importer{
-		ctx:             ctx,
-		logE:            logE,
-		param:           param,
-		importer:        importer,
-		moduleInstaller: installer,
-	}
-}
-
-func (ip *Importer) Import(importedFrom, importedPath string) (jsonnet.Contents, string, error) {
-	contents, foundAt, err := ip.importer.Import(importedFrom, importedPath)
-	if err == nil {
-		return contents, foundAt, nil
-	}
-	if !strings.HasPrefix(importedPath, "github.com/") {
-		return contents, foundAt, err //nolint:wrapcheck
-	}
-	mod, err := module.ParseModuleLine(importedPath)
-	if err != nil {
-		return contents, foundAt, fmt.Errorf("parse a module import path: %w", err)
-	}
-	if err := ip.moduleInstaller.Install(ip.ctx, ip.logE, ip.param, mod.ID(), mod); err != nil {
-		return contents, foundAt, fmt.Errorf("install a module: %w", logerr.WithFields(err, logrus.Fields{
-			"module_id": mod.ID(),
-			"import":    importedPath,
-		}))
-	}
-	return ip.importer.Import(importedFrom, path.Join(mod.ID(), mod.Path)) //nolint:wrapcheck
-}
-
-func newVM(param string, importer jsonnet.Importer) *jsonnet.VM {
-	vm := jsonnet.MakeVM()
-	vm.TLACode("param", param)
-	setNativeFunctions(vm)
-	vm.Importer(importer)
-	return vm
-}
-
-func (c *Controller) readJsonnet(filePath string) (ast.Node, error) {
-	b, err := afero.ReadFile(c.fs, filePath)
-	if err != nil {
-		return nil, fmt.Errorf("read a jsonnet file: %w", err)
-	}
-	ja, err := jsonnet.SnippetToAST(filePath, string(b))
-	if err != nil {
-		return nil, fmt.Errorf("parse a jsonnet file: %w", err)
-	}
-	return ja, nil
-}
-
-func (c *Controller) evaluate(tla string, jsonnetAsts map[string]ast.Node) map[string]*JsonnetEvaluateResult {
-	vm := newVM(tla, c.importer)
+func (c *Controller) evaluate(tla string, jsonnetAsts map[string]jsonnet.Node) map[string]*JsonnetEvaluateResult {
+	vm := jsonnet.NewVM(tla, c.importer)
 
 	results := make(map[string]*JsonnetEvaluateResult, len(jsonnetAsts))
 	for k, ja := range jsonnetAsts {
