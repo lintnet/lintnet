@@ -56,7 +56,9 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		rootDir = dir
 	}
 	modInstaller := lint.NewModuleInstaller(fs, github.New(c.Context), http.DefaultClient)
-	importer := lint.NewImporter(c.Context, logE, &lint.ParamDownloadModule{}, &jsonnet.FileImporter{
+	importer := lint.NewImporter(c.Context, logE, &lint.ParamDownloadModule{
+		BaseDir: rootDir,
+	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
 	}, modInstaller)
 	ctrl := lint.NewController(fs, os.Stdout, modInstaller, importer)

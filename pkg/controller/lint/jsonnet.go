@@ -198,7 +198,7 @@ func (ip *Importer) Import(importedFrom, importedPath string) (jsonnet.Contents,
 	if err := ip.moduleInstaller.Install(ip.ctx, ip.logE, ip.param, mod.ID(), mod); err != nil {
 		return contents, foundAt, err
 	}
-	return ip.importer.Import(importedFrom, importedPath) //nolint:wrapcheck
+	return ip.importer.Import(importedFrom, path.Join(mod.ID(), mod.Path)) //nolint:wrapcheck
 }
 
 func newVM(param string, importer jsonnet.Importer) *jsonnet.VM {
