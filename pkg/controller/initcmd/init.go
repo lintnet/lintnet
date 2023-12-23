@@ -1,4 +1,4 @@
-package lint
+package initcmd
 
 import (
 	"context"
