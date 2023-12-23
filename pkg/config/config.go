@@ -8,6 +8,7 @@ type Config struct {
 }
 
 type Output struct {
+	ID       string
 	Type     string
 	Renderer string
 	Path     string
