@@ -9,6 +9,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/controller/lint"
 	"github.com/lintnet/lintnet/pkg/github"
 	"github.com/lintnet/lintnet/pkg/log"
+	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -55,8 +56,8 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		}
 		rootDir = dir
 	}
-	modInstaller := lint.NewModuleInstaller(fs, github.New(c.Context), http.DefaultClient)
-	importer := lint.NewImporter(c.Context, logE, &lint.ParamDownloadModule{
+	modInstaller := module.NewInstaller(fs, github.New(c.Context), http.DefaultClient)
+	importer := lint.NewImporter(c.Context, logE, &module.ParamInstall{
 		BaseDir: rootDir,
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
