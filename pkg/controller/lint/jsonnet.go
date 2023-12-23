@@ -194,10 +194,13 @@ func (ip *Importer) Import(importedFrom, importedPath string) (jsonnet.Contents,
 	}
 	mod, err := module.ParseModuleLine(importedPath)
 	if err != nil {
-		return contents, foundAt, err
+		return contents, foundAt, fmt.Errorf("parse a module import path: %w", err)
 	}
 	if err := ip.moduleInstaller.Install(ip.ctx, ip.logE, ip.param, mod.ID(), mod); err != nil {
-		return contents, foundAt, err
+		return contents, foundAt, fmt.Errorf("install a module: %w", logerr.WithFields(err, logrus.Fields{
+			"module_id": mod.ID(),
+			"import":    importedPath,
+		}))
 	}
 	return ip.importer.Import(importedFrom, path.Join(mod.ID(), mod.Path)) //nolint:wrapcheck
 }

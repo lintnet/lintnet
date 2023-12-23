@@ -3,6 +3,7 @@ package lint
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/google/go-jsonnet/ast"
@@ -31,7 +32,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 
 	modulesList, modMap, err := module.ListModules(cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("list modules: %w", err)
 	}
 	if err := c.installModules(ctx, logE, &module.ParamInstall{
 		BaseDir: param.RootDir,
