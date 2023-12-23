@@ -13,16 +13,16 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel ErrorLevel, results map[string]*FileResult, outputIDs []string) error {
+func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel ErrorLevel, results map[string]*FileResult, outputIDs []string, outputSuccess bool) error {
 	fes := c.formatResultToOutput(results)
-	if len(fes.Errors) == 0 {
+	if !outputSuccess && len(fes.Errors) == 0 {
 		return nil
 	}
 	failed, err := isFailed(fes.Errors, errLevel)
 	if err != nil {
 		return err
 	}
-	if !failed {
+	if !outputSuccess && !failed {
 		return nil
 	}
 	outputs, err := c.getOutputs(cfg, outputIDs)
@@ -34,7 +34,10 @@ func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel Err
 			logE.WithError(err).Error("output errors")
 		}
 	}
-	return errors.New("lint failed")
+	if failed {
+		return errors.New("lint failed")
+	}
+	return nil
 }
 
 func (c *Controller) getOutputs(cfg *config.Config, outputIDs []string) ([]*config.Output, error) {

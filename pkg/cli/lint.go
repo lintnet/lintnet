@@ -29,6 +29,10 @@ func (lc *lintCommand) command() *cli.Command {
 				Aliases: []string{"e"},
 				EnvVars: []string{"LINTNET_ERROR_LEVEL"},
 			},
+			&cli.BoolFlag{
+				Name:    "output-success",
+				EnvVars: []string{"LINTNET_OUTPUT_SUCCESS"},
+			},
 		},
 	}
 }
@@ -43,5 +47,6 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		RuleBaseDir:    c.String("rule-base-dir"),
 		ErrorLevel:     c.String("error-level"),
 		ConfigFilePath: c.String("config"),
+		OutputSuccess:  c.Bool("output-success"),
 	})
 }

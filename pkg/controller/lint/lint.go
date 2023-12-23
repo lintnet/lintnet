@@ -16,6 +16,7 @@ type ParamLint struct {
 	ConfigFilePath string
 	FilePaths      []string
 	Outputs        []string
+	OutputSuccess  bool
 }
 
 func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
@@ -64,7 +65,7 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 		}
 	}
 
-	return c.Output(logE, cfg, errLevel, results, param.Outputs)
+	return c.Output(logE, cfg, errLevel, results, param.Outputs, param.OutputSuccess)
 }
 
 func (c *Controller) lint(dataFile string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {

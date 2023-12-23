@@ -29,11 +29,11 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 		compiledDate = time.Now()
 	}
 	app := cli.App{
-		Name:           "lintnet",
-		Usage:          "Lint with Jsonnet. https://github.com/lintnet/lintnet",
-		Version:        r.LDFlags.Version + " (" + r.LDFlags.Commit + ")",
-		Compiled:       compiledDate,
-		DefaultCommand: "lint",
+		Name:     "lintnet",
+		Usage:    "Lint with Jsonnet. https://github.com/lintnet/lintnet",
+		Version:  r.LDFlags.Version + " (" + r.LDFlags.Commit + ")",
+		Compiled: compiledDate,
+		// DefaultCommand: "lint",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "log-level",
