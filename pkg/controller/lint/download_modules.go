@@ -39,12 +39,12 @@ func (c *Controller) downloadModules(ctx context.Context, logE *logrus.Entry, pa
 	return nil
 }
 
-func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, param *ParamDownloadModule, modID string, mod *Module) error {
+func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, param *ParamDownloadModule, modID string, mod *Module) error { //nolint:funlen,cyclop
 	// Check if the module is already downloaded
 	dest := filepath.Join(param.BaseDir, filepath.FromSlash(modID))
 	f, err := afero.DirExists(c.fs, dest)
 	if err != nil {
-		return err
+		return fmt.Errorf("check if the module is already installed: %w", err)
 	}
 	if f {
 		return nil
@@ -57,7 +57,6 @@ func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, par
 	if err != nil {
 		return fmt.Errorf("get an archive link by GitHub API: %w", err)
 	}
-	fmt.Println(u.String())
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return fmt.Errorf("create a HTTP request: %w", err)
@@ -74,7 +73,11 @@ func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, par
 	if err != nil {
 		return fmt.Errorf("create a temporal directory: %w", err)
 	}
-	defer c.fs.RemoveAll(tempDir)
+	defer func() {
+		if err := c.fs.RemoveAll(tempDir); err != nil {
+			logE.WithError(err).Warn("delete a temporal directory")
+		}
+	}()
 	tempDest := filepath.Join(tempDir, "module.tar.gz")
 	tempFile, err := c.fs.Create(tempDest)
 	if err != nil {
@@ -98,7 +101,7 @@ func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, par
 		return fmt.Errorf("the number of sub directories must be one")
 	}
 	if err := osfile.Copy(c.fs, filepath.Join(unarchiveDest, dirs[0].Name()), dest); err != nil {
-		return err
+		return fmt.Errorf("copy a module from a teporal directory: %w", err)
 	}
 	return nil
 }

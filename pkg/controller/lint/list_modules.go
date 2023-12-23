@@ -46,7 +46,7 @@ func parseModuleLine(line string) (*Module, error) {
 	}, nil
 }
 
-func (c *Controller) listModules(logE *logrus.Entry, cfg *config.Config) ([][]*Module, map[string]*Module, error) {
+func (c *Controller) listModules(cfg *config.Config) ([][]*Module, map[string]*Module, error) {
 	modulesList := make([][]*Module, len(cfg.Targets))
 	modules := map[string]*Module{}
 	for i, target := range cfg.Targets {

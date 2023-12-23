@@ -20,7 +20,7 @@ type ParamLint struct {
 	OutputSuccess  bool
 }
 
-func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error {
+func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop
 	cfg := &config.Config{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
@@ -28,7 +28,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		}
 	}
 
-	modulesList, modMap, err := c.listModules(logE, cfg)
+	modulesList, modMap, err := c.listModules(cfg)
 	if err != nil {
 		return err
 	}
