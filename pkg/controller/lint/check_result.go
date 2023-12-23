@@ -1,13 +1,20 @@
 package lint
 
-func isFailed(results map[string]*FileResult) bool {
-	// data file -> result
+func isFailed(results []*FlatError, errLevel ErrorLevel) (bool, error) {
 	for _, result := range results {
-		if result.isFailed() {
-			return true
+		e := result.Level
+		if e == "" {
+			e = "error"
+		}
+		feErrLevel, err := newErrorLevel(e)
+		if err != nil {
+			return false, err
+		}
+		if feErrLevel >= errLevel {
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 func (r *JsonnetResult) isFailed() bool {

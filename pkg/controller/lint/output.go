@@ -13,22 +13,43 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, logLevel ErrorLevel, results map[string]*FileResult) error {
-	if !isFailed(results) {
-		return nil
-	}
-	fes := c.formatResultToOutput(logLevel, results)
+func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel ErrorLevel, results map[string]*FileResult, outputIDs []string) error {
+	fes := c.formatResultToOutput(results)
 	if len(fes) == 0 {
 		return nil
 	}
-	outputs := cfg.Outputs
-	if len(cfg.Outputs) == 0 {
-		outputs = []*config.Output{
+	failed, err := isFailed(fes, errLevel)
+	if err != nil {
+		return err
+	}
+	if !failed {
+		return nil
+	}
+	outputList := cfg.Outputs
+	if len(outputList) == 0 {
+		outputList = []*config.Output{
 			{
 				Type:     "stdout",
 				Renderer: "jsonnet",
 			},
 		}
+	}
+	if len(outputIDs) == 0 {
+		outputIDs = []string{
+			"stdout",
+		}
+	}
+	outputs := make([]*config.Output, len(outputIDs))
+	outputMap := make(map[string]*config.Output, len(outputList))
+	for _, output := range outputList {
+		outputMap[output.ID] = output
+	}
+	for i, outputID := range outputIDs {
+		output, ok := outputMap[outputID]
+		if !ok {
+			return errors.New("unknown output id")
+		}
+		outputs[i] = output
 	}
 	for _, output := range outputs {
 		if err := c.output(output, fes); err != nil {
@@ -116,10 +137,10 @@ type FlatError struct {
 	Location     interface{} `json:"location,omitempty"`
 }
 
-func (c *Controller) formatResultToOutput(logLevel ErrorLevel, results map[string]*FileResult) []*FlatError {
+func (c *Controller) formatResultToOutput(results map[string]*FileResult) []*FlatError {
 	list := make([]*FlatError, 0, len(results))
 	for dataFilePath, fileResult := range results {
-		list = append(list, fileResult.flattenError(logLevel, dataFilePath)...)
+		list = append(list, fileResult.flattenError(dataFilePath)...)
 	}
 	if len(list) == 0 {
 		return nil

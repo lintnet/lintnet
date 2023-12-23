@@ -15,6 +15,7 @@ type ParamLint struct {
 	ErrorLevel     string
 	ConfigFilePath string
 	FilePaths      []string
+	Outputs        []string
 }
 
 func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
@@ -34,7 +35,7 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 		return err
 	}
 
-	errLevel := infoLevel
+	errLevel := errorLevel
 	if param.ErrorLevel != "" {
 		ll, err := newErrorLevel(param.ErrorLevel)
 		if err != nil {
@@ -63,7 +64,7 @@ func (c *Controller) Lint(_ context.Context, logE *logrus.Entry, param *ParamLin
 		}
 	}
 
-	return c.Output(logE, cfg, errLevel, results)
+	return c.Output(logE, cfg, errLevel, results, param.Outputs)
 }
 
 func (c *Controller) lint(dataFile string, jsonnetAsts map[string]ast.Node) (map[string]*Result, error) {

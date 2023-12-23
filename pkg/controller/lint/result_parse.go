@@ -40,7 +40,7 @@ type (
 	}
 )
 
-func (r *FileResult) flattenError(logLevel ErrorLevel, dataFilePath string) []*FlatError {
+func (r *FileResult) flattenError(dataFilePath string) []*FlatError {
 	if r.Error != "" {
 		return []*FlatError{
 			{
@@ -51,7 +51,7 @@ func (r *FileResult) flattenError(logLevel ErrorLevel, dataFilePath string) []*F
 	}
 	list := make([]*FlatError, 0, len(r.Results))
 	for lintFilePath, result := range r.Results {
-		list = append(list, result.flattenError(logLevel, dataFilePath, lintFilePath)...)
+		list = append(list, result.flattenError(dataFilePath, lintFilePath)...)
 	}
 	if len(list) == 0 {
 		return nil
@@ -59,7 +59,7 @@ func (r *FileResult) flattenError(logLevel ErrorLevel, dataFilePath string) []*F
 	return list
 }
 
-func (r *Result) flattenError(logLevel ErrorLevel, dataFilePath, lintFilePath string) []*FlatError {
+func (r *Result) flattenError(dataFilePath, lintFilePath string) []*FlatError {
 	if r.Error != "" {
 		return []*FlatError{
 			{
@@ -71,43 +71,25 @@ func (r *Result) flattenError(logLevel ErrorLevel, dataFilePath, lintFilePath st
 	}
 	arr := make([]*FlatError, 0, len(r.RawResult))
 	for _, result := range r.RawResult {
-		arr = append(arr, result.flattenError(logLevel, dataFilePath, lintFilePath)...)
+		arr = append(arr, result.flattenError(dataFilePath, lintFilePath)...)
 	}
 	return arr
 }
 
-func (r *JsonnetResult) flattenError(logLevel ErrorLevel, dataFilePath, lintFilePath string) []*FlatError {
+func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatError {
 	if !r.Failed {
 		return nil
 	}
-	fe := &FlatError{
-		DataFilePath: dataFilePath,
-		LintFilePath: lintFilePath,
-		RuleName:     r.Name,
-		Message:      r.Message,
-		Location:     r.Location,
-		Level:        r.Level,
+	return []*FlatError{
+		{
+			DataFilePath: dataFilePath,
+			LintFilePath: lintFilePath,
+			RuleName:     r.Name,
+			Message:      r.Message,
+			Location:     r.Location,
+			Level:        r.Level,
+		},
 	}
-	if r.Level == "" {
-		return []*FlatError{fe}
-	}
-	ll, err := newErrorLevel(r.Level)
-	if err != nil {
-		return []*FlatError{
-			fe,
-			{
-				DataFilePath: dataFilePath,
-				LintFilePath: lintFilePath,
-				RuleName:     r.Name,
-				Message:      err.Error(),
-				Location:     r.Location,
-			},
-		}
-	}
-	if ll < logLevel {
-		return nil
-	}
-	return []*FlatError{fe}
 }
 
 func (r *FileResult) isFailed() bool {
