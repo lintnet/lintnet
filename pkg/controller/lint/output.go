@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel ErrorLevel, results map[string]*FileResult, outputIDs []string) error { //nolint:cyclop
+func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel ErrorLevel, results map[string]*FileResult, outputIDs []string) error {
 	fes := c.formatResultToOutput(results)
 	if len(fes) == 0 {
 		return nil
@@ -25,6 +25,19 @@ func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel Err
 	if !failed {
 		return nil
 	}
+	outputs, err := c.getOutputs(cfg, outputIDs)
+	if err != nil {
+		return err
+	}
+	for _, output := range outputs {
+		if err := c.output(output, fes); err != nil {
+			logE.WithError(err).Error("output errors")
+		}
+	}
+	return errors.New("lint failed")
+}
+
+func (c *Controller) getOutputs(cfg *config.Config, outputIDs []string) ([]*config.Output, error) {
 	outputList := cfg.Outputs
 	if len(outputList) == 0 {
 		outputList = []*config.Output{
@@ -47,16 +60,11 @@ func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel Err
 	for i, outputID := range outputIDs {
 		output, ok := outputMap[outputID]
 		if !ok {
-			return errors.New("unknown output id")
+			return nil, errors.New("unknown output id")
 		}
 		outputs[i] = output
 	}
-	for _, output := range outputs {
-		if err := c.output(output, fes); err != nil {
-			logE.WithError(err).Error("output errors")
-		}
-	}
-	return errors.New("lint failed")
+	return outputs, nil
 }
 
 func (c *Controller) outputByJsonnet(output *config.Output, fes []*FlatError) error {
