@@ -154,9 +154,6 @@ func (c *Controller) formatResultToOutput(results map[string]*FileResult) *Outpu
 	for dataFilePath, fileResult := range results {
 		list = append(list, fileResult.flattenError(dataFilePath)...)
 	}
-	if len(list) == 0 {
-		return nil
-	}
 	return &Output{
 		Errors: list,
 	}
