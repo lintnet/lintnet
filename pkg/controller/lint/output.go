@@ -15,10 +15,10 @@ import (
 
 func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel ErrorLevel, results map[string]*FileResult, outputIDs []string) error {
 	fes := c.formatResultToOutput(results)
-	if len(fes) == 0 {
+	if len(fes.Errors) == 0 {
 		return nil
 	}
-	failed, err := isFailed(fes, errLevel)
+	failed, err := isFailed(fes.Errors, errLevel)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (c *Controller) getOutputs(cfg *config.Config, outputIDs []string) ([]*conf
 	return outputs, nil
 }
 
-func (c *Controller) outputByJsonnet(output *config.Output, fes []*FlatError) error {
+func (c *Controller) outputByJsonnet(output *config.Output, result *Output) error {
 	out := c.stdout
 	if output.Type == "file" {
 		f, err := c.fs.Create(output.Path)
@@ -82,7 +82,7 @@ func (c *Controller) outputByJsonnet(output *config.Output, fes []*FlatError) er
 		if err != nil {
 			return fmt.Errorf("read a template as Jsonnet: %w", err)
 		}
-		b, err := json.Marshal(fes)
+		b, err := json.Marshal(result)
 		if err != nil {
 			return fmt.Errorf("marshal results as JSON: %w", err)
 		}
@@ -96,10 +96,10 @@ func (c *Controller) outputByJsonnet(output *config.Output, fes []*FlatError) er
 		fmt.Fprintln(out, result)
 		return nil
 	}
-	return c.outputJSON(out, fes)
+	return c.outputJSON(out, result)
 }
 
-func (c *Controller) outputByTemplate(output *config.Output, fes []*FlatError, renderer render.TemplateRenderer) error {
+func (c *Controller) outputByTemplate(output *config.Output, result *Output, renderer render.TemplateRenderer) error {
 	out := c.stdout
 	if output.Type == "file" {
 		f, err := c.fs.Create(output.Path)
@@ -115,7 +115,7 @@ func (c *Controller) outputByTemplate(output *config.Output, fes []*FlatError, r
 			return fmt.Errorf("read a template: %w", err)
 		}
 		if err := renderer.Render(out, string(b), map[string]interface{}{
-			"input": fes,
+			"result": result,
 		}); err != nil {
 			return fmt.Errorf("render a template: %w", err)
 		}
@@ -124,14 +124,14 @@ func (c *Controller) outputByTemplate(output *config.Output, fes []*FlatError, r
 	return nil
 }
 
-func (c *Controller) output(output *config.Output, fes []*FlatError) error {
+func (c *Controller) output(output *config.Output, out *Output) error {
 	switch output.Renderer {
 	case "jsonnet":
-		return c.outputByJsonnet(output, fes)
+		return c.outputByJsonnet(output, out)
 	case "text/template":
-		return c.outputByTemplate(output, fes, &render.TextTemplateRenderer{})
+		return c.outputByTemplate(output, out, &render.TextTemplateRenderer{})
 	case "html/template":
-		return c.outputByTemplate(output, fes, &render.HTMLTemplateRenderer{})
+		return c.outputByTemplate(output, out, &render.HTMLTemplateRenderer{})
 	}
 	return errors.New("unknown renderer")
 }
@@ -145,15 +145,18 @@ type FlatError struct {
 	Location     interface{} `json:"location,omitempty"`
 }
 
-func (c *Controller) formatResultToOutput(results map[string]*FileResult) []*FlatError {
+type Output struct {
+	Errors []*FlatError `json:"errors,omitempty"`
+}
+
+func (c *Controller) formatResultToOutput(results map[string]*FileResult) *Output {
 	list := make([]*FlatError, 0, len(results))
 	for dataFilePath, fileResult := range results {
 		list = append(list, fileResult.flattenError(dataFilePath)...)
 	}
-	if len(list) == 0 {
-		return nil
+	return &Output{
+		Errors: list,
 	}
-	return list
 }
 
 func (c *Controller) outputJSON(w io.Writer, result interface{}) error {
