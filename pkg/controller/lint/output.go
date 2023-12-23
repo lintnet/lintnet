@@ -147,6 +147,7 @@ type FlatError struct {
 	LintFilePath string      `json:"lint_file,omitempty"`
 	DataFilePath string      `json:"data_file,omitempty"`
 	Location     interface{} `json:"location,omitempty"`
+	Custom       interface{} `json:"custom,omitempty"`
 }
 
 type Output struct {

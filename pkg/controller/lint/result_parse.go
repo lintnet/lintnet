@@ -20,7 +20,7 @@ type (
 		Message     string      `json:"message,omitempty"`
 		Level       string      `json:"level,omitempty"`
 		Location    interface{} `json:"location,omitempty"`
-		Metadata    interface{} `json:"metadata,omitempty"`
+		Custom      interface{} `json:"custom,omitempty"`
 		Failed      bool        `json:"failed,omitempty"`
 	}
 
@@ -88,6 +88,7 @@ func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatE
 			Message:      r.Message,
 			Location:     r.Location,
 			Level:        r.Level,
+			Custom:       r.Custom,
 		},
 	}
 }

@@ -23,6 +23,8 @@ func NewUnmarshaler(fileName string) (Unmarshaler, string, error) {
 		}, "tsv", nil
 	case ".yml", ".yaml":
 		return &yamlUnmarshaler{}, "yaml", nil
+	case ".hcl":
+		return &hcl2Unmarshaler{}, "hcl2", nil
 	default:
 		return &plainUnmarshaler{}, "plain_text", nil
 	}
