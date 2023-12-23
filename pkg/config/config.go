@@ -2,9 +2,8 @@ package config
 
 type Config struct {
 	ErrorLevel string `yaml:"error_level"`
-	// Modules    []*Module
-	Targets []*Target
-	Outputs []*Output
+	Targets    []*Target
+	Outputs    []*Output
 }
 
 type Output struct {
@@ -21,9 +20,9 @@ type Module struct {
 }
 
 type Target struct {
-	LintFiles string   `yaml:"lint_files"`
+	LintFiles []string `yaml:"lint_files"`
 	Modules   []string `yaml:"modules"`
-	DataFiles string   `yaml:"data_files"`
+	DataFiles []string `yaml:"data_files"`
 }
 
 type Import struct {
