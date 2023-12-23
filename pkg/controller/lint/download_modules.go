@@ -11,12 +11,11 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-github/v57/github"
+	"github.com/lintnet/lintnet/pkg/osfile"
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-const dirPermission os.FileMode = 0o775
 
 type ParamDownloadModule struct {
 	BaseDir string
@@ -32,6 +31,7 @@ type HTTPClient interface {
 
 func (c *Controller) downloadModules(ctx context.Context, logE *logrus.Entry, param *ParamDownloadModule, modMap map[string]*Module) error {
 	for modID, mod := range modMap {
+		logE := logE.WithField("module_id", modID)
 		if err := c.downloadModule(ctx, logE, param, modID, mod); err != nil {
 			return err
 		}
@@ -49,7 +49,7 @@ func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, par
 	if f {
 		return nil
 	}
-	if err := c.fs.MkdirAll(filepath.Dir(dest), dirPermission); err != nil {
+	if err := osfile.MkdirAll(c.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create parent directories: %w", err)
 	}
 	// Download Module
@@ -57,6 +57,7 @@ func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, par
 	if err != nil {
 		return fmt.Errorf("get an archive link by GitHub API: %w", err)
 	}
+	fmt.Println(u.String())
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return fmt.Errorf("create a HTTP request: %w", err)
@@ -80,12 +81,24 @@ func (c *Controller) downloadModule(ctx context.Context, logE *logrus.Entry, par
 		return fmt.Errorf("create a temporal file: %w", err)
 	}
 	defer tempFile.Close()
+	logE.Info("downloading a module")
 	if _, err := io.Copy(tempFile, resp.Body); err != nil {
 		return fmt.Errorf("download a module on a temporal directory: %w", err)
 	}
 	tarGz := archiver.NewTarGz()
-	if err := tarGz.Unarchive(tempDest, dest); err != nil {
+	unarchiveDest := filepath.Join(tempDir, "unarchived_dir")
+	if err := tarGz.Unarchive(tempDest, unarchiveDest); err != nil {
 		return fmt.Errorf("unarchive a tarball: %w", err)
+	}
+	dirs, err := os.ReadDir(unarchiveDest)
+	if err != nil {
+		return fmt.Errorf("read a directory: %w", err)
+	}
+	if len(dirs) != 1 {
+		return fmt.Errorf("the number of sub directories must be one")
+	}
+	if err := osfile.Copy(c.fs, filepath.Join(unarchiveDest, dirs[0].Name()), dest); err != nil {
+		return err
 	}
 	return nil
 }

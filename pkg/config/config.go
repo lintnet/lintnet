@@ -21,9 +21,9 @@ type Module struct {
 }
 
 type Target struct {
-	LintFiles string `yaml:"lint_files"`
-	Modules   string `yaml:"modules"`
-	DataFiles string `yaml:"data_files"`
+	LintFiles string   `yaml:"lint_files"`
+	Modules   []string `yaml:"modules"`
+	DataFiles string   `yaml:"data_files"`
 }
 
 type Import struct {

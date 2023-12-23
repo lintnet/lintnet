@@ -17,8 +17,9 @@ import (
 )
 
 type LintFile struct { //nolint:revive
-	Path    string
-	Imports map[string]string
+	Path     string
+	ModuleID string
+	Imports  map[string]string
 }
 
 func (c *Controller) findTarget(target *config.Target, modules []*Module, rootDir string) (*Target, error) {
@@ -38,7 +39,8 @@ func (c *Controller) findTarget(target *config.Target, modules []*Module, rootDi
 	}
 	for _, mod := range modules {
 		a = append(a, &LintFile{
-			Path: filepath.Join(rootDir, filepath.FromSlash(mod.ID()), filepath.FromSlash(mod.Path)),
+			ModuleID: mod.ID(),
+			Path:     filepath.Join(rootDir, filepath.FromSlash(mod.ID()), filepath.FromSlash(mod.Path)),
 		})
 	}
 	return &Target{
@@ -151,6 +153,10 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]ast.Node, e
 			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"file_path": filePath,
 			})
+		}
+		if filePath.ModuleID != "" {
+			jsonnetAsts[filePath.ModuleID] = ja
+			continue
 		}
 		jsonnetAsts[filePath.Path] = ja
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Module struct {
@@ -49,16 +50,13 @@ func (c *Controller) listModules(logE *logrus.Entry, cfg *config.Config) ([][]*M
 	modulesList := make([][]*Module, len(cfg.Targets))
 	modules := map[string]*Module{}
 	for i, target := range cfg.Targets {
-		lines := strings.Split(target.Modules, "\n")
-		arr := make([]*Module, 0, len(lines))
-		for _, line := range lines {
-			if strings.HasPrefix(line, "#") {
-				// ignore comments
-				continue
-			}
+		arr := make([]*Module, 0, len(target.Modules))
+		for _, line := range target.Modules {
 			mod, err := parseModuleLine(line)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+					"module": line,
+				})
 			}
 			arr = append(arr, mod)
 			modules[mod.ID()] = mod
