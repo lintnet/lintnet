@@ -12,6 +12,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/render"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel errlevel.Level, results map[string]*FileResult, outputIDs []string, outputSuccess bool) error {
@@ -46,6 +47,7 @@ func (c *Controller) getOutputs(cfg *config.Config, outputIDs []string) ([]*conf
 	if len(outputList) == 0 {
 		outputList = []*config.Output{
 			{
+				ID:       "stdout",
 				Type:     "stdout",
 				Renderer: "jsonnet",
 			},
@@ -64,7 +66,9 @@ func (c *Controller) getOutputs(cfg *config.Config, outputIDs []string) ([]*conf
 	for i, outputID := range outputIDs {
 		output, ok := outputMap[outputID]
 		if !ok {
-			return nil, errors.New("unknown output id")
+			return nil, logerr.WithFields(errors.New("unknown output id"), logrus.Fields{ //nolint:wrapcheck
+				"output_id": outputID,
+			})
 		}
 		outputs[i] = output
 	}

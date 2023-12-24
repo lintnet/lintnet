@@ -1,32 +1,21 @@
 package config
 
 type Config struct {
-	ErrorLevel string `yaml:"error_level"`
-	Targets    []*Target
-	Outputs    []*Output
+	ErrorLevel string    `json:"error_level" yaml:"error_level"`
+	Targets    []*Target `json:"targets"`
+	Outputs    []*Output `json:"outputs"`
 }
 
 type Output struct {
-	ID       string
-	Type     string
-	Renderer string
-	Path     string
-	Template string
-}
-
-type Module struct {
-	ID     string
-	Source string
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Renderer string `json:"renderer"`
+	Path     string `json:"path"`
+	Template string `json:"template"`
 }
 
 type Target struct {
-	LintFiles []string `yaml:"lint_files"`
-	Modules   []string `yaml:"modules"`
-	DataFiles []string `yaml:"data_files"`
-}
-
-type Import struct {
-	Module string
-	Path   string
-	Import string
+	LintFiles []string `json:"lint_files" yaml:"lint_files"`
+	Modules   []string `json:"modules"`
+	DataFiles []string `json:"data_files" yaml:"data_files"`
 }
