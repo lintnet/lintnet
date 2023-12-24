@@ -82,7 +82,10 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, modulesLi
 
 	targets := make([]*Target, len(cfg.Targets))
 	for i, target := range cfg.Targets {
-		modules := modulesList[i]
+		var modules []*module.Module
+		if modulesList != nil {
+			modules = modulesList[i]
+		}
 		t, err := c.findTarget(target, modules, rootDir)
 		if err != nil {
 			return nil, err
