@@ -1,4 +1,4 @@
-local hello = import 'github.com/suzuki-shunsuke/example-lintnet-modules/hello.jsonnet@923da72cf3330c7710393b86a0e2f4bea533ff51';
+local hello = import 'github.com/suzuki-shunsuke/example-lintnet-modules/hello.jsonnet@03d2ecad06b8c7a980e677ce81387f0c3fe6461b:v0.1.1';
 
 function(param) [{
   message: hello.message,

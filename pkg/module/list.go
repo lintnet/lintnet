@@ -2,6 +2,7 @@ package module
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/lintnet/lintnet/pkg/config"
@@ -16,14 +17,16 @@ type Module struct {
 	RepoName  string
 	Path      string
 	Ref       string
+	Tag       string
 }
 
+var fullCommitHashPattern = regexp.MustCompile("[a-fA-F0-9]{40}")
+
 func validateRef(ref string) error {
-	switch ref {
-	case "master", "main", "develop", "staging", "edge":
-		return errors.New("ref must be full commit hash or tag")
+	if fullCommitHashPattern.MatchString(ref) {
+		return nil
 	}
-	return nil
+	return errors.New("ref must be full commit hash")
 }
 
 func (m *Module) ID() string {
@@ -31,7 +34,7 @@ func (m *Module) ID() string {
 }
 
 func ParseModuleLine(line string) (*Module, error) {
-	// github.com/<repo owner>/<repo name>/<path>@<ref>
+	// github.com/<repo owner>/<repo name>/<path>@<commit hash>[:<tag>]
 	elems := strings.Split(line, "/")
 	if len(elems) < 4 { //nolint:gomnd
 		return nil, errors.New("line is invalid")
@@ -40,10 +43,11 @@ func ParseModuleLine(line string) (*Module, error) {
 		return nil, errors.New("module must start with 'github.com/'")
 	}
 	size := len(elems)
-	baseName, ref, ok := strings.Cut(elems[size-1], "@")
+	baseName, refAndTag, ok := strings.Cut(elems[size-1], "@")
 	if !ok {
 		return nil, errors.New("ref is required")
 	}
+	ref, tag, _ := strings.Cut(refAndTag, ":")
 	if err := validateRef(ref); err != nil {
 		return nil, err
 	}
@@ -54,6 +58,7 @@ func ParseModuleLine(line string) (*Module, error) {
 		RepoName:  elems[2],
 		Path:      strings.Join(append(elems[3:size-1], baseName), "/"),
 		Ref:       ref,
+		Tag:       tag,
 	}, nil
 }
 
