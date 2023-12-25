@@ -4,9 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -24,9 +22,7 @@ var testResultTemplateByte []byte
 func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:funlen,cyclop
 	cfg := &config.Config{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			return err
-		}
+		return err
 	}
 
 	testResultTemplate, err := template.New("_").Parse(string(testResultTemplateByte))
@@ -34,7 +30,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 		return fmt.Errorf("parse the template of test result: %w", err)
 	}
 
-	targets, err := c.findFiles(logE, cfg, nil, param.RuleBaseDir, param.FilePaths, param.RootDir)
+	targets, err := c.findFiles(cfg, nil, param.RootDir)
 	if err != nil {
 		return err
 	}

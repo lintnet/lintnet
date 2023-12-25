@@ -56,7 +56,6 @@ func (lc *testCommand) action(c *cli.Context) error { //nolint:dupl
 	ctrl := lint.NewController(fs, os.Stdout, modInstaller, importer)
 	return ctrl.Test(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
 		FilePaths:      c.Args().Slice(),
-		RuleBaseDir:    c.String("rule-base-dir"),
 		ErrorLevel:     c.String("error-level"),
 		ConfigFilePath: c.String("config"),
 		OutputSuccess:  c.Bool("output-success"),
