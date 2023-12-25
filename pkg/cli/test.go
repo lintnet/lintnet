@@ -17,7 +17,8 @@ import (
 )
 
 type testCommand struct {
-	logE *logrus.Entry
+	logE    *logrus.Entry
+	version string
 }
 
 func (lc *testCommand) command() *cli.Command {
@@ -34,9 +35,9 @@ func (lc *testCommand) command() *cli.Command {
 	}
 }
 
-func (lc *testCommand) action(c *cli.Context) error { //nolint:dupl
+func (tc *testCommand) action(c *cli.Context) error { //nolint:dupl
 	fs := afero.NewOsFs()
-	logE := lc.logE
+	logE := tc.logE
 	log.SetLevel(c.String("log-level"), logE)
 	log.SetColor(c.String("log-color"), logE)
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
@@ -53,7 +54,10 @@ func (lc *testCommand) action(c *cli.Context) error { //nolint:dupl
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
 	}, modInstaller)
-	ctrl := lint.NewController(fs, os.Stdout, modInstaller, importer)
+	param := &lint.ParamController{
+		Version: tc.version,
+	}
+	ctrl := lint.NewController(param, fs, os.Stdout, modInstaller, importer)
 	return ctrl.Test(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
 		FilePaths:      c.Args().Slice(),
 		ErrorLevel:     c.String("error-level"),

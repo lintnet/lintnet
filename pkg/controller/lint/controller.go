@@ -13,10 +13,16 @@ type Controller struct {
 	stdout          io.Writer
 	moduleInstaller *module.Installer
 	importer        *jsonnet.Importer
+	param           *ParamController
 }
 
-func NewController(fs afero.Fs, stdout io.Writer, moduleInstaller *module.Installer, importer *jsonnet.Importer) *Controller {
+type ParamController struct {
+	Version string
+}
+
+func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, moduleInstaller *module.Installer, importer *jsonnet.Importer) *Controller {
 	return &Controller{
+		param:           param,
 		fs:              fs,
 		stdout:          stdout,
 		moduleInstaller: moduleInstaller,
