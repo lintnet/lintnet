@@ -21,11 +21,11 @@ type testCommand struct {
 	version string
 }
 
-func (lc *testCommand) command() *cli.Command {
+func (tc *testCommand) command() *cli.Command {
 	return &cli.Command{
 		Name:   "test",
 		Usage:  "Test lint files",
-		Action: lc.action,
+		Action: tc.action,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "output-success",
