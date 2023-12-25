@@ -1,0 +1,9 @@
+{{range . -}}
+{{if .Name}}Test Name: {{.Name}}{{end}}
+Lint file: {{.LintFilePath}}
+Test file: {{.TestFilePath}}
+{{if .Error}}Error: {{.Error}}{{end -}}
+{{if .Diff}}Diff (- Expected + Actual)
+{{.Diff}}{{end}}
+==========
+{{end}}

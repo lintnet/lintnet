@@ -1,7 +1,6 @@
 package lint
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -11,19 +10,7 @@ import (
 )
 
 func (c *Controller) readConfig(p string, cfg *config.Config) error {
-	vm := jsonnet.NewVM("{}", c.importer)
-	node, err := jsonnet.Read(c.fs, p)
-	if err != nil {
-		return fmt.Errorf("parse a configuration file as Jsonnet: %w", err)
-	}
-	result, err := vm.Evaluate(node)
-	if err != nil {
-		return fmt.Errorf("evaluate a configuration file as Jsonnet: %w", err)
-	}
-	if err := json.Unmarshal([]byte(result), cfg); err != nil {
-		return fmt.Errorf("unmarshal config as JSON: %w", err)
-	}
-	return nil
+	return jsonnet.Read(c.fs, p, "{}", c.importer, cfg) //nolint:wrapcheck
 }
 
 func (c *Controller) findAndReadConfig(p string, cfg *config.Config) error {

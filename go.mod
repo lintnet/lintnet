@@ -6,6 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/adrg/xdg v0.4.0
 	github.com/bmatcuk/doublestar/v4 v4.6.1
+	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v57 v57.0.0
 	github.com/google/go-jsonnet v0.20.0
 	github.com/mattn/go-colorable v0.1.13

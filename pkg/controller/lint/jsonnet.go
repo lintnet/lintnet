@@ -9,7 +9,7 @@ import (
 func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]jsonnet.Node, error) {
 	jsonnetAsts := make(map[string]jsonnet.Node, len(filePaths))
 	for _, filePath := range filePaths {
-		ja, err := jsonnet.Read(c.fs, filePath.Path)
+		ja, err := jsonnet.ReadToNode(c.fs, filePath.Path)
 		if err != nil {
 			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"file_path": filePath,

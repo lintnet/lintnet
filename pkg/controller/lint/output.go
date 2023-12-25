@@ -86,7 +86,7 @@ func (c *Controller) outputByJsonnet(output *config.Output, result *Output) erro
 		out = f
 	}
 	if output.Template != "" {
-		node, err := jsonnet.Read(c.fs, output.Template)
+		node, err := jsonnet.ReadToNode(c.fs, output.Template)
 		if err != nil {
 			return fmt.Errorf("read a template as Jsonnet: %w", err)
 		}
@@ -95,7 +95,7 @@ func (c *Controller) outputByJsonnet(output *config.Output, result *Output) erro
 			return fmt.Errorf("marshal results as JSON: %w", err)
 		}
 		vm := jsonnet.MakeVM()
-		vm.ExtCode("input", string(b))
+		vm.TLACode("param", string(b))
 		jsonnet.SetNativeFunctions(vm)
 		result, err := vm.Evaluate(node)
 		if err != nil {
