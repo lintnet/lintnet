@@ -8,9 +8,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/lintnet/lintnet/pkg/config"
-	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/module"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"golang.org/x/exp/maps"
 )
@@ -53,31 +51,9 @@ type Target struct {
 	DataFiles []string
 }
 
-func (c *Controller) convertStringsToTargets(logE *logrus.Entry, ruleBaseDir string, dataFiles []string) ([]*Target, error) {
-	lintFiles, err := jsonnet.FindFiles(logE, c.fs, ruleBaseDir)
-	if err != nil {
-		return nil, fmt.Errorf("find lint files: %w", err)
-	}
-	arr := make([]*LintFile, len(lintFiles))
-	for i, lintFile := range lintFiles {
-		arr[i] = &LintFile{
-			Path: lintFile,
-		}
-	}
-	return []*Target{
-		{
-			LintFiles: arr,
-			DataFiles: dataFiles,
-		},
-	}, nil
-}
-
-func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, modulesList [][]*module.Module, ruleBaseDir string, dataFiles []string, rootDir string) ([]*Target, error) {
-	if ruleBaseDir != "" {
-		return c.convertStringsToTargets(logE, ruleBaseDir, dataFiles)
-	}
+func (c *Controller) findFiles(cfg *config.Config, modulesList [][]*module.Module, rootDir string) ([]*Target, error) {
 	if len(cfg.Targets) == 0 {
-		return c.convertStringsToTargets(logE, "lintnet", dataFiles)
+		return nil, nil
 	}
 
 	targets := make([]*Target, len(cfg.Targets))

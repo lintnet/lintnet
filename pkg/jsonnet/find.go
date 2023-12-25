@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/afero"
 )
 
-func FindFiles(logE *logrus.Entry, afs afero.Fs, baseDir string) ([]string, error) {
+func FindFiles(logE *logrus.Entry, afs afero.Fs) ([]string, error) {
 	filePaths := []string{}
-	if err := fs.WalkDir(afero.NewIOFS(afs), baseDir, func(p string, dirEntry fs.DirEntry, e error) error {
+	if err := fs.WalkDir(afero.NewIOFS(afs), "", func(p string, dirEntry fs.DirEntry, e error) error {
 		if e != nil {
 			logE.WithError(e).Warn("error occurred while searching files")
 			return nil

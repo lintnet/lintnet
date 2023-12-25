@@ -2,9 +2,7 @@ package lint
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"os"
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/errlevel"
@@ -14,7 +12,6 @@ import (
 )
 
 type ParamLint struct {
-	RuleBaseDir    string
 	ErrorLevel     string
 	RootDir        string
 	ConfigFilePath string
@@ -26,9 +23,7 @@ type ParamLint struct {
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error {
 	cfg := &config.Config{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			return err
-		}
+		return err
 	}
 
 	modulesList, modMap, err := module.ListModules(cfg)
@@ -41,7 +36,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	targets, err := c.findFiles(logE, cfg, modulesList, param.RuleBaseDir, param.FilePaths, param.RootDir)
+	targets, err := c.findFiles(cfg, modulesList, param.RootDir)
 	if err != nil {
 		return err
 	}
