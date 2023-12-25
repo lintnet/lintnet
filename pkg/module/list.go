@@ -18,6 +18,14 @@ type Module struct {
 	Ref       string
 }
 
+func validateRef(ref string) error {
+	switch ref {
+	case "master", "main", "develop", "staging", "edge":
+		return errors.New("ref must be full commit hash or tag")
+	}
+	return nil
+}
+
 func (m *Module) ID() string {
 	return strings.Join([]string{m.Host, m.RepoOwner, m.RepoName, m.Ref}, "/")
 }
@@ -35,6 +43,9 @@ func ParseModuleLine(line string) (*Module, error) {
 	baseName, ref, ok := strings.Cut(elems[size-1], "@")
 	if !ok {
 		return nil, errors.New("ref is required")
+	}
+	if err := validateRef(ref); err != nil {
+		return nil, err
 	}
 	return &Module{
 		Type:      "github",
