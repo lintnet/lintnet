@@ -23,31 +23,38 @@ type TopLevelArgment struct {
 }
 
 func (c *Controller) parse(filePath string) (string, error) {
-	unmarshaler, fileType, err := encoding.NewUnmarshaler(filePath)
+	tla, err := c.parseDataFile(filePath)
 	if err != nil {
-		return "", logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-			"file_path": filePath,
-		})
-	}
-	b, err := afero.ReadFile(c.fs, filePath)
-	if err != nil {
-		return "", fmt.Errorf("read a file: %w", err)
-	}
-	input, err := unmarshaler.Unmarshal(b)
-	if err != nil {
-		return "", fmt.Errorf("decode a file: %w", err)
-	}
-	tla := &TopLevelArgment{
-		Data: &Data{
-			Text:     string(b),
-			FilePath: filePath,
-			FileType: fileType,
-			Value:    input,
-		},
+		return "", err
 	}
 	dataB, err := json.Marshal(tla)
 	if err != nil {
 		return "", fmt.Errorf("marshal data as JSON: %w", err)
 	}
 	return string(dataB), nil
+}
+
+func (c *Controller) parseDataFile(filePath string) (*TopLevelArgment, error) {
+	unmarshaler, fileType, err := encoding.NewUnmarshaler(filePath)
+	if err != nil {
+		return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+			"file_path": filePath,
+		})
+	}
+	b, err := afero.ReadFile(c.fs, filePath)
+	if err != nil {
+		return nil, fmt.Errorf("read a file: %w", err)
+	}
+	input, err := unmarshaler.Unmarshal(b)
+	if err != nil {
+		return nil, fmt.Errorf("decode a file: %w", err)
+	}
+	return &TopLevelArgment{
+		Data: &Data{
+			Text:     string(b),
+			FilePath: filePath,
+			FileType: fileType,
+			Value:    input,
+		},
+	}, nil
 }
