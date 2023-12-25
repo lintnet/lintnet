@@ -2,12 +2,14 @@ package lint
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/lintnet/lintnet/pkg/config"
@@ -16,12 +18,20 @@ import (
 	"github.com/spf13/afero"
 )
 
+//go:embed test_diff.txt
+var testResultTemplateByte []byte
+
 func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:funlen,cyclop
 	cfg := &config.Config{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
+	}
+
+	testResultTemplate, err := template.New("_").Parse(string(testResultTemplateByte))
+	if err != nil {
+		return fmt.Errorf("parse the template of test result: %w", err)
 	}
 
 	targets, err := c.findFiles(logE, cfg, nil, param.RuleBaseDir, param.FilePaths, param.RootDir)
@@ -42,10 +52,10 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 			continue
 		}
 		for _, td := range testData {
-			var result interface{}
 			tlaB, err := json.Marshal(td.Param)
 			if err != nil {
 				failedResults = append(failedResults, &FailedResult{
+					Name:         td.Name,
 					LintFilePath: pair.LintFilePath,
 					TestFilePath: pair.TestFilePath,
 					Param:        td.Param,
@@ -53,8 +63,10 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 				})
 				continue
 			}
+			var result interface{}
 			if err := jsonnet.Read(c.fs, pair.LintFilePath, string(tlaB), c.importer, &result); err != nil {
 				failedResults = append(failedResults, &FailedResult{
+					Name:         td.Name,
 					LintFilePath: pair.LintFilePath,
 					TestFilePath: pair.TestFilePath,
 					Param:        td.Param,
@@ -64,6 +76,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 			}
 			if diff := cmp.Diff(td.Result, result); diff != "" {
 				failedResults = append(failedResults, &FailedResult{
+					Name:         td.Name,
 					LintFilePath: pair.LintFilePath,
 					TestFilePath: pair.TestFilePath,
 					Wanted:       td.Result,
@@ -77,18 +90,9 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 	if len(failedResults) == 0 {
 		return nil
 	}
-	for _, failedResult := range failedResults {
-		fmt.Fprintf(c.stdout, `name: %s
-lint file: %s
-test file: %s
-param: %v
-error: %s
-wanted: %v
-got: %v
-diff: %s
-`, failedResult.Name, failedResult.LintFilePath, failedResult.TestFilePath, failedResult.Param, failedResult.Error, failedResult.Wanted, failedResult.Got, failedResult.Diff)
+	if err := testResultTemplate.Execute(c.stdout, failedResults); err != nil {
+		return fmt.Errorf("render the result: %w", err)
 	}
-
 	return nil
 }
 
