@@ -9,15 +9,13 @@ import (
 	"github.com/spf13/afero"
 )
 
-//go:embed init.yaml
+//go:embed init.jsonnet
 var cfgTemplate []byte
 
 func (c *Controller) Init(_ context.Context, _ *logrus.Entry) error {
 	paths := []string{
-		"lintnet.yaml",
-		"lintnet.yml",
-		".lintnet.yaml",
-		".lintnet.yml",
+		"lintnet.jsonnet",
+		".lintnet.jsonnet",
 	}
 	for _, path := range paths {
 		f, err := afero.Exists(c.fs, path)
@@ -28,7 +26,7 @@ func (c *Controller) Init(_ context.Context, _ *logrus.Entry) error {
 			return nil
 		}
 	}
-	f, err := c.fs.Create("lintnet.yaml")
+	f, err := c.fs.Create("lintnet.jsonnet")
 	if err != nil {
 		return fmt.Errorf("create a configuration file: %w", err)
 	}
