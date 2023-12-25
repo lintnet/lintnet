@@ -19,7 +19,7 @@ import (
 //go:embed test_diff.txt
 var testResultTemplateByte []byte
 
-func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:funlen,cyclop
+func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:funlen,cyclop,gocognit
 	cfg := &config.Config{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
 		return err
@@ -48,6 +48,24 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 			continue
 		}
 		for _, td := range testData {
+			if td.DataFile != "" {
+				dataFilePath := filepath.Join(filepath.Dir(pair.TestFilePath), td.DataFile)
+				data, err := c.parseDataFile(dataFilePath)
+				if err != nil {
+					failedResults = append(failedResults, &FailedResult{
+						Name:         td.Name,
+						LintFilePath: pair.LintFilePath,
+						TestFilePath: pair.TestFilePath,
+						Param:        td.Param,
+						Error:        fmt.Errorf("read a data file: %w", err).Error(),
+					})
+					continue
+				}
+				if td.Param != nil && td.Param.Data != nil && td.Param.Data.FilePath != "" {
+					data.Data.FilePath = td.Param.Data.FilePath
+				}
+				td.Param = data
+			}
 			tlaB, err := json.Marshal(td.Param)
 			if err != nil {
 				failedResults = append(failedResults, &FailedResult{
@@ -93,9 +111,10 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 }
 
 type TestData struct {
-	Name   string      `json:"name,omitempty"`
-	Param  interface{} `json:"param,omitempty"`
-	Result interface{} `json:"result,omitempty"`
+	Name     string           `json:"name,omitempty"`
+	DataFile string           `json:"data_file,omitempty"`
+	Param    *TopLevelArgment `json:"param,omitempty"`
+	Result   interface{}      `json:"result,omitempty"`
 }
 
 type TestPair struct {
