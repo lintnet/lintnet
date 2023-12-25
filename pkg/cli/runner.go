@@ -56,13 +56,15 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 		Commands: []*cli.Command{
 			(&versionCommand{}).command(),
 			(&lintCommand{
-				logE: r.LogE,
+				logE:    r.LogE,
+				version: r.LDFlags.Version,
 			}).command(),
 			(&initCommand{
 				logE: r.LogE,
 			}).command(),
 			(&testCommand{
-				logE: r.LogE,
+				logE:    r.LogE,
+				version: r.LDFlags.Version,
 			}).command(),
 		},
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"runtime"
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/errlevel"
@@ -155,7 +156,9 @@ type FlatError struct {
 }
 
 type Output struct {
-	Errors []*FlatError `json:"errors,omitempty"`
+	LintnetVersion string       `json:"lintnet_version"`
+	Env            string       `json:"env"`
+	Errors         []*FlatError `json:"errors,omitempty"`
 }
 
 func (c *Controller) formatResultToOutput(results map[string]*FileResult) *Output {
@@ -164,7 +167,9 @@ func (c *Controller) formatResultToOutput(results map[string]*FileResult) *Outpu
 		list = append(list, fileResult.flattenError(dataFilePath)...)
 	}
 	return &Output{
-		Errors: list,
+		LintnetVersion: c.param.Version,
+		Env:            fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+		Errors:         list,
 	}
 }
 

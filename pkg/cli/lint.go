@@ -17,7 +17,8 @@ import (
 )
 
 type lintCommand struct {
-	logE *logrus.Entry
+	logE    *logrus.Entry
+	version string
 }
 
 func (lc *lintCommand) command() *cli.Command {
@@ -62,7 +63,10 @@ func (lc *lintCommand) action(c *cli.Context) error { //nolint:dupl
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
 	}, modInstaller)
-	ctrl := lint.NewController(fs, os.Stdout, modInstaller, importer)
+	param := &lint.ParamController{
+		Version: lc.version,
+	}
+	ctrl := lint.NewController(param, fs, os.Stdout, modInstaller, importer)
 	return ctrl.Lint(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
 		FilePaths:      c.Args().Slice(),
 		ErrorLevel:     c.String("error-level"),
