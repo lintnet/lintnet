@@ -1,10 +1,6 @@
 function(param) [
   {
     name: 'fail',
-    data_file: 'foo.csv',
-    data_text: |||
-      mike,1
-    |||,
     param: {
       data: {
         file_type: 'csv',
@@ -17,7 +13,7 @@ function(param) [
       {
         message: 'age must be greater or equal than 18',
         failed: true,
-        level: 'warn',
+        level: 'error',
         location: {
           index: 0,
           line: 'mike,1',
@@ -39,7 +35,7 @@ function(param) [
       {
         message: 'age must be greater or equal than 18',
         failed: false,
-        level: 'warn',
+        level: 'error',
         location: {
           index: 0,
           line: 'mike,20',
@@ -55,5 +51,20 @@ function(param) [
       },
     },
     result: null,
+  },
+  {
+    name: 'data_file',
+    data_file: '../data/hello.csv',
+    result: [
+      {
+        message: 'age must be greater or equal than 18',
+        failed: true,
+        level: 'error',
+        location: {
+          index: 0,
+          line: 'mike,10',
+        },
+      },
+    ],
   },
 ]
