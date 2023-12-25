@@ -86,7 +86,7 @@ func (c *Controller) findFilesFromPaths(files []string) ([]string, error) {
 			}
 			continue
 		}
-		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), line)
+		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), line, doublestar.WithFilesOnly())
 		if err != nil {
 			return nil, fmt.Errorf("search files: %w", err)
 		}
