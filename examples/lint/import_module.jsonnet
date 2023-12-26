@@ -2,5 +2,4 @@ local hello = import 'github.com/suzuki-shunsuke/example-lintnet-modules/hello.j
 
 function(param) [{
   message: hello.message,
-  failed: true,
 }]
