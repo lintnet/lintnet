@@ -12,7 +12,6 @@ function(param) [
     result: [
       {
         message: 'age must be greater or equal than 18',
-        failed: true,
         level: 'error',
         location: {
           index: 0,
@@ -34,7 +33,7 @@ function(param) [
     result: [
       {
         message: 'age must be greater or equal than 18',
-        failed: false,
+        excluded: true,
         level: 'error',
         location: {
           index: 0,
@@ -58,7 +57,7 @@ function(param) [
     result: [
       {
         message: 'age must be greater or equal than 18',
-        failed: true,
+        excluded: false,
         level: 'error',
         location: {
           index: 0,

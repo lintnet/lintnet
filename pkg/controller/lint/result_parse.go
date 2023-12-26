@@ -21,7 +21,7 @@ type (
 		Level       string      `json:"level,omitempty"`
 		Location    interface{} `json:"location,omitempty"`
 		Custom      interface{} `json:"custom,omitempty"`
-		Failed      bool        `json:"failed,omitempty"`
+		Excluded    bool        `json:"excluded,omitempty"`
 	}
 
 	// Aggregate results
@@ -77,7 +77,7 @@ func (r *Result) flattenError(dataFilePath, lintFilePath string) []*FlatError {
 }
 
 func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatError {
-	if !r.Failed {
+	if r.Excluded {
 		return nil
 	}
 	return []*FlatError{

@@ -1,6 +1,6 @@
 function(param)
-  local message = 'TOML requires the field "name"';
-  [{
-    message: message,
-    failed: param.data.file_type == 'toml' && !std.objectHas(param.data.value, 'name'),
-  }]
+  local name = 'TOML requires the field "name"';
+  if param.data.file_type == 'toml' && !std.objectHas(param.data.value, 'name') then
+    [{
+      name: name,
+    }] else []
