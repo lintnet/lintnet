@@ -1,6 +1,9 @@
 package lint
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -17,29 +20,43 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) ([]*Node, error) {
 		}
 		if filePath.ModulePath != "" {
 			jsonnetAsts = append(jsonnetAsts, &Node{
-				Node: ja,
-				Key:  filePath.ModulePath,
+				Node:  ja,
+				Key:   filePath.ModulePath,
+				Param: filePath.Param,
 			})
 			continue
 		}
 		jsonnetAsts = append(jsonnetAsts, &Node{
-			Node: ja,
-			Key:  filePath.Path,
+			Node:  ja,
+			Key:   filePath.Path,
+			Param: filePath.Param,
 		})
 	}
 	return jsonnetAsts, nil
 }
 
 type Node struct {
-	Node jsonnet.Node
-	Key  string
+	Node  jsonnet.Node
+	Param interface{}
+	Key   string
 }
 
-func (c *Controller) evaluate(tla string, jsonnetAsts []*Node) []*JsonnetEvaluateResult {
-	vm := jsonnet.NewVM(tla, c.importer)
-
+func (c *Controller) evaluate(tla *TopLevelArgment, jsonnetAsts []*Node) []*JsonnetEvaluateResult {
 	results := make([]*JsonnetEvaluateResult, 0, len(jsonnetAsts))
 	for _, ja := range jsonnetAsts {
+		tla := &TopLevelArgment{
+			Data:  tla.Data,
+			Param: ja.Param,
+		}
+		tlaB, err := json.Marshal(tla)
+		if err != nil {
+			results = append(results, &JsonnetEvaluateResult{
+				Key:   ja.Key,
+				Error: fmt.Errorf("marshal a top level argument as JSON: %w", err).Error(),
+			})
+			continue
+		}
+		vm := jsonnet.NewVM(string(tlaB), c.importer)
 		result, err := vm.Evaluate(ja.Node)
 		if err != nil {
 			results = append(results, &JsonnetEvaluateResult{

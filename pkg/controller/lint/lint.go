@@ -95,12 +95,12 @@ func (c *Controller) getErrorLevel(errorLevel string) (errlevel.Level, error) {
 }
 
 func (c *Controller) lint(dataFile string, jsonnetAsts []*Node) ([]*Result, error) {
-	data, err := c.parse(dataFile)
+	tla, err := c.parseDataFile(dataFile)
 	if err != nil {
 		return nil, err
 	}
 
-	results := c.evaluate(data, jsonnetAsts)
+	results := c.evaluate(tla, jsonnetAsts)
 	rs := make([]*Result, len(results))
 
 	for i, result := range results {
