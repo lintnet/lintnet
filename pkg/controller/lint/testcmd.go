@@ -65,7 +65,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 					data.Data.FilePath = td.Param.Data.FilePath
 				}
 				if td.Param != nil {
-					data.Param = td.Param.Param
+					data.Custom = td.Param.Custom
 				}
 				td.Param = data
 			}

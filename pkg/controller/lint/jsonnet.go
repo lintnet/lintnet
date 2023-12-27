@@ -20,33 +20,33 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) ([]*Node, error) {
 		}
 		if filePath.ModulePath != "" {
 			jsonnetAsts = append(jsonnetAsts, &Node{
-				Node:  ja,
-				Key:   filePath.ModulePath,
-				Param: filePath.Param,
+				Node:   ja,
+				Key:    filePath.ModulePath,
+				Custom: filePath.Param,
 			})
 			continue
 		}
 		jsonnetAsts = append(jsonnetAsts, &Node{
-			Node:  ja,
-			Key:   filePath.Path,
-			Param: filePath.Param,
+			Node:   ja,
+			Key:    filePath.Path,
+			Custom: filePath.Param,
 		})
 	}
 	return jsonnetAsts, nil
 }
 
 type Node struct {
-	Node  jsonnet.Node
-	Param interface{}
-	Key   string
+	Node   jsonnet.Node
+	Custom interface{}
+	Key    string
 }
 
 func (c *Controller) evaluate(tla *TopLevelArgment, jsonnetAsts []*Node) []*JsonnetEvaluateResult {
 	results := make([]*JsonnetEvaluateResult, 0, len(jsonnetAsts))
 	for _, ja := range jsonnetAsts {
 		tla := &TopLevelArgment{
-			Data:  tla.Data,
-			Param: ja.Param,
+			Data:   tla.Data,
+			Custom: ja.Custom,
 		}
 		tlaB, err := json.Marshal(tla)
 		if err != nil {
