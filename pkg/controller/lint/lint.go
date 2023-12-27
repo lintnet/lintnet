@@ -2,7 +2,9 @@ package lint
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/errlevel"
@@ -17,6 +19,14 @@ type ParamLint struct {
 	FilePaths      []string
 	Outputs        []string
 	OutputSuccess  bool
+}
+
+func debug(data any) {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(data); err != nil {
+		fmt.Println("ERROR", err)
+	}
 }
 
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error {
@@ -38,6 +48,10 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	targets, err := c.findFiles(cfg, modulesList, param.RootDir)
 	if err != nil {
 		return err
+	}
+
+	if len(param.FilePaths) > 0 {
+		targets = c.filterTargets(targets, param.FilePaths)
 	}
 
 	errLevel, err := c.getErrorLevel(param.ErrorLevel)

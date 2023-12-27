@@ -53,6 +53,45 @@ type Target struct {
 	DataFiles []string
 }
 
+func (c *Controller) filterTargets(targets []*Target, filePaths []string) []*Target {
+	newTargets := make([]*Target, 0, len(targets))
+	for _, target := range targets {
+		newTarget := &Target{}
+		for _, lintFile := range target.LintFiles {
+			for _, filePath := range filePaths {
+				if lintFile.Path == filePath || lintFile.ModulePath == filePath {
+					newTarget.LintFiles = append(newTarget.LintFiles, lintFile)
+					break
+				}
+			}
+		}
+		lintChanged := false
+		if len(newTarget.LintFiles) > 0 {
+			newTarget.DataFiles = target.DataFiles
+			lintChanged = true
+			continue
+		}
+		dataChanged := false
+		for _, dataFile := range target.DataFiles {
+			for _, filePath := range filePaths {
+				if dataFile == filePath {
+					dataChanged = true
+					if !lintChanged {
+						newTarget.DataFiles = append(newTarget.DataFiles, dataFile)
+					}
+				}
+			}
+		}
+		if dataChanged {
+			newTarget.LintFiles = target.LintFiles
+		}
+		if len(newTarget.LintFiles) > 0 {
+			newTargets = append(newTargets, newTarget)
+		}
+	}
+	return newTargets
+}
+
 func (c *Controller) findFiles(cfg *config.Config, modulesList [][]*module.Module, rootDir string) ([]*Target, error) {
 	if len(cfg.Targets) == 0 {
 		return nil, nil
