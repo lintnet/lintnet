@@ -19,7 +19,8 @@ type Data struct {
 }
 
 type TopLevelArgment struct {
-	Data *Data `json:"data,omitempty"`
+	Data  *Data       `json:"data,omitempty"`
+	Param interface{} `json:"param,omitempty"`
 }
 
 func (c *Controller) parse(filePath string) (string, error) {
