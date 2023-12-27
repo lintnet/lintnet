@@ -64,6 +64,9 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 				if td.Param != nil && td.Param.Data != nil && td.Param.Data.FilePath != "" {
 					data.Data.FilePath = td.Param.Data.FilePath
 				}
+				if td.Param != nil {
+					data.Param = td.Param.Param
+				}
 				td.Param = data
 			}
 			tlaB, err := json.Marshal(td.Param)
