@@ -69,6 +69,9 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 				}
 				td.Param = data
 			}
+			if td.Param.Custom == nil {
+				td.Param.Custom = map[string]interface{}{}
+			}
 			tlaB, err := json.Marshal(td.Param)
 			if err != nil {
 				failedResults = append(failedResults, &FailedResult{

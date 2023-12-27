@@ -37,7 +37,7 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) ([]*Node, error) {
 
 type Node struct {
 	Node   jsonnet.Node
-	Custom interface{}
+	Custom map[string]interface{}
 	Key    string
 }
 
@@ -47,6 +47,9 @@ func (c *Controller) evaluate(tla *TopLevelArgment, jsonnetAsts []*Node) []*Json
 		tla := &TopLevelArgment{
 			Data:   tla.Data,
 			Custom: ja.Custom,
+		}
+		if tla.Custom == nil {
+			tla.Custom = map[string]interface{}{}
 		}
 		tlaB, err := json.Marshal(tla)
 		if err != nil {

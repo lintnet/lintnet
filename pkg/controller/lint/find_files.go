@@ -16,7 +16,7 @@ import (
 type LintFile struct { //nolint:revive
 	Path       string
 	ModulePath string
-	Param      interface{}
+	Param      map[string]interface{}
 }
 
 func (c *Controller) findTarget(target *config.Target, modules []*module.Module, rootDir string) (*Target, error) {

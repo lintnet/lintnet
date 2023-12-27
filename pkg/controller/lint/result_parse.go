@@ -98,6 +98,7 @@ func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatE
 func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 	if result.Error != "" {
 		return &Result{
+			Key:       result.Key,
 			RawOutput: result.Result,
 			Error:     result.Error,
 		}
@@ -107,6 +108,7 @@ func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 	var rs interface{}
 	if err := json.Unmarshal(rb, &rs); err != nil {
 		return &Result{
+			Key:       result.Key,
 			RawOutput: result.Result,
 			Error:     result.Error,
 		}
@@ -115,12 +117,14 @@ func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 	out := []*JsonnetResult{}
 	if err := json.Unmarshal(rb, &out); err != nil {
 		return &Result{
+			Key:       result.Key,
 			RawOutput: result.Result,
 			Interface: rs,
 			Error:     fmt.Errorf("unmarshal the result as JSON: %w", err).Error(),
 		}
 	}
 	return &Result{
+		Key:       result.Key,
 		RawOutput: result.Result,
 		RawResult: out,
 		Interface: rs,

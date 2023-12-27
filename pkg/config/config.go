@@ -27,8 +27,8 @@ type Target struct {
 }
 
 type Module struct {
-	Path  string      `json:"path"`
-	Param interface{} `json:"param"`
+	Path  string                 `json:"path"`
+	Param map[string]interface{} `json:"param"`
 }
 
 func (m *Module) UnmarshalJSON(b []byte) error {
@@ -53,7 +53,11 @@ func (m *Module) UnmarshalJSON(b []byte) error {
 
 		param, ok := c["param"]
 		if ok {
-			m.Param = param
+			a, ok := param.(map[string]interface{})
+			if !ok {
+				return errors.New("param must be a map[string]interface{}")
+			}
+			m.Param = a
 		}
 		return nil
 	}
