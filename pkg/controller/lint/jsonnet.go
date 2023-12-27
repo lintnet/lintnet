@@ -6,8 +6,8 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]jsonnet.Node, error) {
-	jsonnetAsts := make(map[string]jsonnet.Node, len(filePaths))
+func (c *Controller) readJsonnets(filePaths []*LintFile) ([]*Node, error) {
+	jsonnetAsts := make([]*Node, 0, len(filePaths))
 	for _, filePath := range filePaths {
 		ja, err := jsonnet.ReadToNode(c.fs, filePath.Path)
 		if err != nil {
@@ -16,29 +16,42 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]jsonnet.Nod
 			})
 		}
 		if filePath.ModulePath != "" {
-			jsonnetAsts[filePath.ModulePath] = ja
+			jsonnetAsts = append(jsonnetAsts, &Node{
+				Node: ja,
+				Key:  filePath.ModulePath,
+			})
 			continue
 		}
-		jsonnetAsts[filePath.Path] = ja
+		jsonnetAsts = append(jsonnetAsts, &Node{
+			Node: ja,
+			Key:  filePath.Path,
+		})
 	}
 	return jsonnetAsts, nil
 }
 
-func (c *Controller) evaluate(tla string, jsonnetAsts map[string]jsonnet.Node) map[string]*JsonnetEvaluateResult {
+type Node struct {
+	Node jsonnet.Node
+	Key  string
+}
+
+func (c *Controller) evaluate(tla string, jsonnetAsts []*Node) []*JsonnetEvaluateResult {
 	vm := jsonnet.NewVM(tla, c.importer)
 
-	results := make(map[string]*JsonnetEvaluateResult, len(jsonnetAsts))
-	for k, ja := range jsonnetAsts {
-		result, err := vm.Evaluate(ja)
+	results := make([]*JsonnetEvaluateResult, 0, len(jsonnetAsts))
+	for _, ja := range jsonnetAsts {
+		result, err := vm.Evaluate(ja.Node)
 		if err != nil {
-			results[k] = &JsonnetEvaluateResult{
+			results = append(results, &JsonnetEvaluateResult{
+				Key:   ja.Key,
 				Error: err.Error(),
-			}
+			})
 			continue
 		}
-		results[k] = &JsonnetEvaluateResult{
+		results = append(results, &JsonnetEvaluateResult{
+			Key:    ja.Key,
 			Result: result,
-		}
+		})
 	}
 	return results
 }

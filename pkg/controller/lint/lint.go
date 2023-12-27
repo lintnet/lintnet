@@ -6,7 +6,6 @@ import (
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/errlevel"
-	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 )
@@ -95,17 +94,17 @@ func (c *Controller) getErrorLevel(errorLevel string) (errlevel.Level, error) {
 	return ll, nil
 }
 
-func (c *Controller) lint(dataFile string, jsonnetAsts map[string]jsonnet.Node) (map[string]*Result, error) {
+func (c *Controller) lint(dataFile string, jsonnetAsts []*Node) ([]*Result, error) {
 	data, err := c.parse(dataFile)
 	if err != nil {
 		return nil, err
 	}
 
 	results := c.evaluate(data, jsonnetAsts)
-	rs := make(map[string]*Result, len(results))
+	rs := make([]*Result, len(results))
 
-	for k, result := range results {
-		rs[k] = c.parseResult(result)
+	for i, result := range results {
+		rs[i] = c.parseResult(result)
 	}
 	return rs, nil
 }
