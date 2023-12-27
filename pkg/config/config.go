@@ -21,7 +21,7 @@ type Output struct {
 }
 
 type Target struct {
-	LintFiles []string  `json:"lint_files" yaml:"lint_files"`
+	LintFiles []*Module `json:"lint_files" yaml:"lint_files"`
 	Modules   []*Module `json:"modules"`
 	DataFiles []string  `json:"data_files" yaml:"data_files"`
 }
@@ -43,7 +43,7 @@ func (m *Module) UnmarshalJSON(b []byte) error {
 	case map[string]interface{}:
 		p, ok := c["path"]
 		if !ok {
-			return errors.New("module requires path")
+			return errors.New("path is required")
 		}
 		a, ok := p.(string)
 		if !ok {

@@ -20,7 +20,7 @@ type LintFile struct { //nolint:revive
 }
 
 func (c *Controller) findTarget(target *config.Target, modules []*module.Module, rootDir string) (*Target, error) {
-	lintFiles, err := c.findFilesFromPaths(target.LintFiles)
+	lintFiles, err := c.findFilesFromModules(target.LintFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -31,13 +31,15 @@ func (c *Controller) findTarget(target *config.Target, modules []*module.Module,
 	a := make([]*LintFile, 0, len(lintFiles)+len(modules))
 	for _, b := range lintFiles {
 		a = append(a, &LintFile{
-			Path: b,
+			Path:  b.Path,
+			Param: b.Param,
 		})
 	}
 	for _, mod := range modules {
 		a = append(a, &LintFile{
 			ModulePath: path.Join(mod.ID(), mod.Path),
 			Path:       filepath.Join(rootDir, filepath.FromSlash(mod.ID()), filepath.FromSlash(mod.Path)),
+			Param:      mod.Param,
 		})
 	}
 	return &Target{
@@ -69,6 +71,39 @@ func (c *Controller) findFiles(cfg *config.Config, modulesList [][]*module.Modul
 		targets[i] = t
 	}
 	return targets, nil
+}
+
+func (c *Controller) findFilesFromModules(modules []*config.Module) ([]*config.Module, error) {
+	matchFiles := map[string][]*config.Module{}
+	for _, m := range modules {
+		if pattern := strings.TrimPrefix(m.Path, "!"); pattern != m.Path {
+			for file := range matchFiles {
+				matched, err := doublestar.Match(pattern, file)
+				if err != nil {
+					return nil, fmt.Errorf("check file match: %w", err)
+				}
+				if matched {
+					delete(matchFiles, file)
+				}
+			}
+			continue
+		}
+		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), m.Path, doublestar.WithFilesOnly())
+		if err != nil {
+			return nil, fmt.Errorf("search files: %w", err)
+		}
+		for _, file := range matches {
+			matchFiles[file] = append(matchFiles[file], &config.Module{
+				Path:  file,
+				Param: m.Param,
+			})
+		}
+	}
+	arr := []*config.Module{}
+	for _, m := range matchFiles {
+		arr = append(arr, m...)
+	}
+	return arr, nil
 }
 
 func (c *Controller) findFilesFromPaths(files []string) ([]string, error) {
