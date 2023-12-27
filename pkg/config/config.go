@@ -9,7 +9,7 @@ import (
 type Config struct {
 	ErrorLevel string    `json:"error_level" yaml:"error_level"`
 	Targets    []*Target `json:"targets"`
-	Outputs    []*Output `json:"outputs"`
+	Outputs    []*Output `json:"outputs,omitempty"`
 }
 
 type Output struct {

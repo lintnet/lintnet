@@ -49,10 +49,11 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	}
 
 	if len(param.FilePaths) > 0 {
+		logE.Debug("filtering targets by given files")
 		targets = filterTargets(targets, param.FilePaths)
 	}
 
-	errLevel, err := c.getErrorLevel(param.ErrorLevel)
+	errLevel, err := c.getErrorLevel(cfg, param)
 	if err != nil {
 		return err
 	}
@@ -95,11 +96,15 @@ func (c *Controller) lintTarget(target *Target, results map[string]*FileResult) 
 	return nil
 }
 
-func (c *Controller) getErrorLevel(errorLevel string) (errlevel.Level, error) {
-	if errorLevel == "" {
+func (c *Controller) getErrorLevel(cfg *config.Config, param *ParamLint) (errlevel.Level, error) {
+	el := cfg.ErrorLevel
+	if param.ErrorLevel != "" {
+		el = param.ErrorLevel
+	}
+	if el == "" {
 		return errlevel.Error, nil
 	}
-	ll, err := errlevel.New(errorLevel)
+	ll, err := errlevel.New(el)
 	if err != nil {
 		return ll, err //nolint:wrapcheck
 	}
