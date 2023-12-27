@@ -10,6 +10,7 @@ type (
 
 	// return of vm.Evaluate()
 	JsonnetEvaluateResult struct {
+		Key    string
 		Result string
 		Error  string
 	}
@@ -28,11 +29,12 @@ type (
 
 	FileResult struct {
 		// lint file -> result
-		Results map[string]*Result `json:"results,omitempty"`
-		Error   string             `json:"error,omitempty"`
+		Results []*Result `json:"results,omitempty"`
+		Error   string    `json:"error,omitempty"`
 	}
 
 	Result struct {
+		Key       string           `json:"-"`
 		RawResult []*JsonnetResult `json:"-"`
 		RawOutput string           `json:"-"`
 		Interface interface{}      `json:"result,omitempty"`
@@ -50,8 +52,8 @@ func (r *FileResult) flattenError(dataFilePath string) []*FlatError {
 		}
 	}
 	list := make([]*FlatError, 0, len(r.Results))
-	for lintFilePath, result := range r.Results {
-		list = append(list, result.flattenError(dataFilePath, lintFilePath)...)
+	for _, result := range r.Results {
+		list = append(list, result.flattenError(dataFilePath, result.Key)...)
 	}
 	if len(list) == 0 {
 		return nil
@@ -96,6 +98,7 @@ func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatE
 func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 	if result.Error != "" {
 		return &Result{
+			Key:       result.Key,
 			RawOutput: result.Result,
 			Error:     result.Error,
 		}
@@ -105,6 +108,7 @@ func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 	var rs interface{}
 	if err := json.Unmarshal(rb, &rs); err != nil {
 		return &Result{
+			Key:       result.Key,
 			RawOutput: result.Result,
 			Error:     result.Error,
 		}
@@ -113,12 +117,14 @@ func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 	out := []*JsonnetResult{}
 	if err := json.Unmarshal(rb, &out); err != nil {
 		return &Result{
+			Key:       result.Key,
 			RawOutput: result.Result,
 			Interface: rs,
 			Error:     fmt.Errorf("unmarshal the result as JSON: %w", err).Error(),
 		}
 	}
 	return &Result{
+		Key:       result.Key,
 		RawOutput: result.Result,
 		RawResult: out,
 		Interface: rs,

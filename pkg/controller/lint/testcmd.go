@@ -64,7 +64,13 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 				if td.Param != nil && td.Param.Data != nil && td.Param.Data.FilePath != "" {
 					data.Data.FilePath = td.Param.Data.FilePath
 				}
+				if td.Param != nil {
+					data.Custom = td.Param.Custom
+				}
 				td.Param = data
+			}
+			if td.Param.Custom == nil {
+				td.Param.Custom = map[string]interface{}{}
 			}
 			tlaB, err := json.Marshal(td.Param)
 			if err != nil {

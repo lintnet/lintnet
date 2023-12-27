@@ -18,6 +18,7 @@ type Module struct {
 	Path      string
 	Ref       string
 	Tag       string
+	Param     map[string]interface{}
 }
 
 var fullCommitHashPattern = regexp.MustCompile("[a-fA-F0-9]{40}")
@@ -67,13 +68,14 @@ func ListModules(cfg *config.Config) ([][]*Module, map[string]*Module, error) {
 	modules := map[string]*Module{}
 	for i, target := range cfg.Targets {
 		arr := make([]*Module, 0, len(target.Modules))
-		for _, line := range target.Modules {
-			mod, err := ParseModuleLine(line)
+		for _, m := range target.Modules {
+			mod, err := ParseModuleLine(m.Path)
 			if err != nil {
 				return nil, nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-					"module": line,
+					"module": m.Path,
 				})
 			}
+			mod.Param = m.Param
 			arr = append(arr, mod)
 			modules[mod.ID()] = mod
 		}

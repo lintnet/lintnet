@@ -1,7 +1,6 @@
 package lint
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/lintnet/lintnet/pkg/encoding"
@@ -19,19 +18,8 @@ type Data struct {
 }
 
 type TopLevelArgment struct {
-	Data *Data `json:"data,omitempty"`
-}
-
-func (c *Controller) parse(filePath string) (string, error) {
-	tla, err := c.parseDataFile(filePath)
-	if err != nil {
-		return "", err
-	}
-	dataB, err := json.Marshal(tla)
-	if err != nil {
-		return "", fmt.Errorf("marshal data as JSON: %w", err)
-	}
-	return string(dataB), nil
+	Data   *Data                  `json:"data"`
+	Custom map[string]interface{} `json:"custom"`
 }
 
 func (c *Controller) parseDataFile(filePath string) (*TopLevelArgment, error) {

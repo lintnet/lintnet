@@ -1,13 +1,16 @@
 package lint
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]jsonnet.Node, error) {
-	jsonnetAsts := make(map[string]jsonnet.Node, len(filePaths))
+func (c *Controller) readJsonnets(filePaths []*LintFile) ([]*Node, error) {
+	jsonnetAsts := make([]*Node, 0, len(filePaths))
 	for _, filePath := range filePaths {
 		ja, err := jsonnet.ReadToNode(c.fs, filePath.Path)
 		if err != nil {
@@ -16,29 +19,59 @@ func (c *Controller) readJsonnets(filePaths []*LintFile) (map[string]jsonnet.Nod
 			})
 		}
 		if filePath.ModulePath != "" {
-			jsonnetAsts[filePath.ModulePath] = ja
+			jsonnetAsts = append(jsonnetAsts, &Node{
+				Node:   ja,
+				Key:    filePath.ModulePath,
+				Custom: filePath.Param,
+			})
 			continue
 		}
-		jsonnetAsts[filePath.Path] = ja
+		jsonnetAsts = append(jsonnetAsts, &Node{
+			Node:   ja,
+			Key:    filePath.Path,
+			Custom: filePath.Param,
+		})
 	}
 	return jsonnetAsts, nil
 }
 
-func (c *Controller) evaluate(tla string, jsonnetAsts map[string]jsonnet.Node) map[string]*JsonnetEvaluateResult {
-	vm := jsonnet.NewVM(tla, c.importer)
+type Node struct {
+	Node   jsonnet.Node
+	Custom map[string]interface{}
+	Key    string
+}
 
-	results := make(map[string]*JsonnetEvaluateResult, len(jsonnetAsts))
-	for k, ja := range jsonnetAsts {
-		result, err := vm.Evaluate(ja)
+func (c *Controller) evaluate(tla *TopLevelArgment, jsonnetAsts []*Node) []*JsonnetEvaluateResult {
+	results := make([]*JsonnetEvaluateResult, 0, len(jsonnetAsts))
+	for _, ja := range jsonnetAsts {
+		tla := &TopLevelArgment{
+			Data:   tla.Data,
+			Custom: ja.Custom,
+		}
+		if tla.Custom == nil {
+			tla.Custom = map[string]interface{}{}
+		}
+		tlaB, err := json.Marshal(tla)
 		if err != nil {
-			results[k] = &JsonnetEvaluateResult{
-				Error: err.Error(),
-			}
+			results = append(results, &JsonnetEvaluateResult{
+				Key:   ja.Key,
+				Error: fmt.Errorf("marshal a top level argument as JSON: %w", err).Error(),
+			})
 			continue
 		}
-		results[k] = &JsonnetEvaluateResult{
-			Result: result,
+		vm := jsonnet.NewVM(string(tlaB), c.importer)
+		result, err := vm.Evaluate(ja.Node)
+		if err != nil {
+			results = append(results, &JsonnetEvaluateResult{
+				Key:   ja.Key,
+				Error: err.Error(),
+			})
+			continue
 		}
+		results = append(results, &JsonnetEvaluateResult{
+			Key:    ja.Key,
+			Result: result,
+		})
 	}
 	return results
 }
