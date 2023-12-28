@@ -33,8 +33,8 @@ func TestModule_UnmarshalJSON(t *testing.T) {
 				}`,
 			exp: &config.Module{
 				Path: "github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
-				Param: map[string]interface{}{
-					"excludes": []interface{}{"foo"},
+				Param: map[string]any{
+					"excludes": []any{"foo"},
 				},
 			},
 		},

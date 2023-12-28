@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func Read(fs afero.Fs, filePath, tla string, importer jsonnet.Importer, dest interface{}) error {
+func Read(fs afero.Fs, filePath, tla string, importer jsonnet.Importer, dest any) error {
 	vm := NewVM(tla, importer)
 	node, err := ReadToNode(fs, filePath)
 	if err != nil {

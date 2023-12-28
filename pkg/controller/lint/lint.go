@@ -33,6 +33,16 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
+	outputters, err := c.getOutputters(cfg, param.Outputs)
+	if err != nil {
+		return err
+	}
+
+	errLevel, err := c.getErrorLevel(cfg, param)
+	if err != nil {
+		return err
+	}
+
 	modulesList, modMap, err := module.ListModules(cfg)
 	if err != nil {
 		return fmt.Errorf("list modules: %w", err)
@@ -53,17 +63,28 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		targets = filterTargets(targets, param.FilePaths)
 	}
 
-	errLevel, err := c.getErrorLevel(cfg, param)
-	if err != nil {
-		return err
-	}
-
 	results, err := c.getResults(targets)
 	if err != nil {
 		return err
 	}
 
-	return c.Output(logE, cfg, errLevel, results, param.Outputs, param.OutputSuccess)
+	return c.Output(logE, errLevel, results, outputters, param.OutputSuccess)
+}
+
+func (c *Controller) getOutputters(cfg *config.Config, outputIDs []string) ([]Outputter, error) {
+	outputs, err := c.getOutputs(cfg, outputIDs)
+	if err != nil {
+		return nil, err
+	}
+	outputters := make([]Outputter, len(outputs))
+	for i, output := range outputs {
+		o, err := c.getOutputter(output)
+		if err != nil {
+			return nil, err
+		}
+		outputters[i] = o
+	}
+	return outputters, nil
 }
 
 func (c *Controller) getResults(targets []*Target) (map[string]*FileResult, error) {
@@ -77,12 +98,12 @@ func (c *Controller) getResults(targets []*Target) (map[string]*FileResult, erro
 }
 
 func (c *Controller) lintTarget(target *Target, results map[string]*FileResult) error {
-	jsonnetAsts, err := c.readJsonnets(target.LintFiles)
+	lintFiles, err := c.parseLintFiles(target.LintFiles)
 	if err != nil {
 		return err
 	}
 	for _, dataFile := range target.DataFiles {
-		rs, err := c.lint(dataFile, jsonnetAsts)
+		rs, err := c.lint(dataFile, lintFiles)
 		if err != nil {
 			results[dataFile] = &FileResult{
 				Error: err.Error(),
@@ -117,7 +138,7 @@ func (c *Controller) lint(dataFile string, jsonnetAsts []*Node) ([]*Result, erro
 		return nil, err
 	}
 
-	results := c.evaluate(tla, jsonnetAsts)
+	results := c.evaluate(tla.Data, jsonnetAsts)
 	rs := make([]*Result, len(results))
 
 	for i, result := range results {

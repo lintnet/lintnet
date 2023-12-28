@@ -10,7 +10,7 @@ type csvUnmarshaler struct {
 	TSV bool
 }
 
-func (c *csvUnmarshaler) Unmarshal(b []byte) (interface{}, error) {
+func (c *csvUnmarshaler) Unmarshal(b []byte) (any, error) {
 	reader := csv.NewReader(strings.NewReader(string(b)))
 	if c.TSV {
 		reader.Comma = '	'

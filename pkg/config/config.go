@@ -27,12 +27,12 @@ type Target struct {
 }
 
 type Module struct {
-	Path  string                 `json:"path"`
-	Param map[string]interface{} `json:"param"`
+	Path  string         `json:"path"`
+	Param map[string]any `json:"param"`
 }
 
 func (m *Module) UnmarshalJSON(b []byte) error {
-	var a interface{}
+	var a any
 	if err := json.Unmarshal(b, &a); err != nil {
 		return fmt.Errorf("unmarshal as JSON: %w", err)
 	}
@@ -40,7 +40,7 @@ func (m *Module) UnmarshalJSON(b []byte) error {
 	case string:
 		m.Path = c
 		return nil
-	case map[string]interface{}:
+	case map[string]any:
 		p, ok := c["path"]
 		if !ok {
 			return errors.New("path is required")
@@ -53,13 +53,13 @@ func (m *Module) UnmarshalJSON(b []byte) error {
 
 		param, ok := c["param"]
 		if ok {
-			a, ok := param.(map[string]interface{})
+			a, ok := param.(map[string]any)
 			if !ok {
-				return errors.New("param must be a map[string]interface{}")
+				return errors.New("param must be a map[string]any")
 			}
 			m.Param = a
 		}
 		return nil
 	}
-	return errors.New("module must be either string or map[string]interface{}")
+	return errors.New("module must be either string or map[string]any")
 }

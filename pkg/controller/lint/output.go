@@ -16,7 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel errlevel.Level, results map[string]*FileResult, outputIDs []string, outputSuccess bool) error {
+func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results map[string]*FileResult, outputters []Outputter, outputSuccess bool) error {
 	fes := c.formatResultToOutput(results)
 	if !outputSuccess && len(fes.Errors) == 0 {
 		return nil
@@ -28,12 +28,8 @@ func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel err
 	if !outputSuccess && !failed {
 		return nil
 	}
-	outputs, err := c.getOutputs(cfg, outputIDs)
-	if err != nil {
-		return err
-	}
-	for _, output := range outputs {
-		if err := c.output(output, fes); err != nil {
+	for _, outputter := range outputters {
+		if err := outputter.Output(fes); err != nil {
 			logE.WithError(err).Error("output errors")
 		}
 	}
@@ -76,21 +72,41 @@ func (c *Controller) getOutputs(cfg *config.Config, outputIDs []string) ([]*conf
 	return outputs, nil
 }
 
-func (c *Controller) outputByJsonnet(output *config.Output, result *Output) error {
-	out := c.stdout
-	if output.Type == "file" {
-		f, err := c.fs.Create(output.Path)
+type jsonnetOutputter struct {
+	fs     afero.Fs
+	stdout io.Writer
+	output *config.Output
+	node   jsonnet.Node
+}
+
+func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output) (*jsonnetOutputter, error) {
+	var node jsonnet.Node
+	if output.Template != "" {
+		n, err := jsonnet.ReadToNode(fs, output.Template)
+		if err != nil {
+			return nil, fmt.Errorf("read a template as Jsonnet: %w", err)
+		}
+		node = n
+	}
+	return &jsonnetOutputter{
+		fs:     fs,
+		stdout: stdout,
+		output: output,
+		node:   node,
+	}, nil
+}
+
+func (o *jsonnetOutputter) Output(result *Output) error {
+	out := o.stdout
+	if o.output.Type == "file" {
+		f, err := o.fs.Create(o.output.Path)
 		if err != nil {
 			return fmt.Errorf("create a file: %w", err)
 		}
 		defer f.Close()
 		out = f
 	}
-	if output.Template != "" {
-		node, err := jsonnet.ReadToNode(c.fs, output.Template)
-		if err != nil {
-			return fmt.Errorf("read a template as Jsonnet: %w", err)
-		}
+	if o.output.Template != "" {
 		b, err := json.Marshal(result)
 		if err != nil {
 			return fmt.Errorf("marshal results as JSON: %w", err)
@@ -98,61 +114,107 @@ func (c *Controller) outputByJsonnet(output *config.Output, result *Output) erro
 		vm := jsonnet.MakeVM()
 		vm.TLACode("param", string(b))
 		jsonnet.SetNativeFunctions(vm)
-		result, err := vm.Evaluate(node)
+		result, err := vm.Evaluate(o.node)
 		if err != nil {
 			return fmt.Errorf("evaluate a Jsonnet: %w", err)
 		}
 		fmt.Fprintln(out, result)
 		return nil
 	}
-	return c.outputJSON(out, result)
+	return outputJSON(out, result)
 }
 
-func (c *Controller) outputByTemplate(output *config.Output, result *Output, renderer render.TemplateRenderer) error {
-	out := c.stdout
-	if output.Type == "file" {
-		f, err := c.fs.Create(output.Path)
+func outputJSON(w io.Writer, result any) error {
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(result); err != nil {
+		return fmt.Errorf("encode the result as JSON: %w", err)
+	}
+	return nil
+}
+
+type Outputter interface {
+	Output(result *Output) error
+}
+
+type templateOutputter struct {
+	stdout   io.Writer
+	fs       afero.Fs
+	output   *config.Output
+	template render.Template
+}
+
+func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output) (*templateOutputter, error) {
+	if output.Template == "" {
+		return nil, errors.New("template is required")
+	}
+	b, err := afero.ReadFile(fs, output.Template)
+	if err != nil {
+		return nil, fmt.Errorf("read a template: %w", err)
+	}
+	tpl, err := renderer.Compile(string(b))
+	if err != nil {
+		return nil, fmt.Errorf("parse a template: %w", err)
+	}
+	return &templateOutputter{
+		stdout:   stdout,
+		fs:       fs,
+		output:   output,
+		template: tpl,
+	}, nil
+}
+
+func (o *templateOutputter) Output(result *Output) error {
+	out := o.stdout
+	if o.output.Type == "file" {
+		f, err := o.fs.Create(o.output.Path)
 		if err != nil {
 			return fmt.Errorf("create a file: %w", err)
 		}
 		defer f.Close()
 		out = f
 	}
-	if output.Template != "" {
-		b, err := afero.ReadFile(c.fs, output.Template)
-		if err != nil {
-			return fmt.Errorf("read a template: %w", err)
-		}
-		if err := renderer.Render(out, string(b), map[string]interface{}{
-			"result": result,
-		}); err != nil {
-			return fmt.Errorf("render a template: %w", err)
-		}
-		return nil
+	if err := o.template.Execute(out, map[string]any{
+		"result": result,
+	}); err != nil {
+		return fmt.Errorf("render a template: %w", err)
 	}
 	return nil
 }
 
-func (c *Controller) output(output *config.Output, out *Output) error {
+func (c *Controller) getOutputter(output *config.Output) (Outputter, error) {
 	switch output.Renderer {
 	case "jsonnet":
-		return c.outputByJsonnet(output, out)
+		return newJsonnetOutputter(c.fs, c.stdout, output)
 	case "text/template":
-		return c.outputByTemplate(output, out, &render.TextTemplateRenderer{})
+		return newTemplateOutputter(c.stdout, c.fs, &render.TextTemplateRenderer{}, output)
 	case "html/template":
-		return c.outputByTemplate(output, out, &render.HTMLTemplateRenderer{})
+		return newTemplateOutputter(c.stdout, c.fs, &render.HTMLTemplateRenderer{}, output)
 	}
-	return errors.New("unknown renderer")
+	return nil, errors.New("unknown renderer")
 }
 
 type FlatError struct {
-	RuleName     string      `json:"rule,omitempty"`
-	Level        string      `json:"level,omitempty"`
-	Message      string      `json:"message,omitempty"`
-	LintFilePath string      `json:"lint_file,omitempty"`
-	DataFilePath string      `json:"data_file,omitempty"`
-	Location     interface{} `json:"location,omitempty"`
-	Custom       interface{} `json:"custom,omitempty"`
+	RuleName     string `json:"rule,omitempty"`
+	Level        string `json:"level,omitempty"`
+	Message      string `json:"message,omitempty"`
+	LintFilePath string `json:"lint_file,omitempty"`
+	DataFilePath string `json:"data_file,omitempty"`
+	Location     any    `json:"location,omitempty"`
+	Custom       any    `json:"custom,omitempty"`
+}
+
+func (e *FlatError) Failed(errLevel errlevel.Level) (bool, error) {
+	level := errlevel.Error
+	if e.Level != "" {
+		feErrLevel, err := errlevel.New(e.Level)
+		if err != nil {
+			return false, fmt.Errorf("verify the error level of a result: %w", err)
+		}
+		level = feErrLevel
+	}
+	return level >= errLevel, nil
 }
 
 type Output struct {
@@ -171,14 +233,4 @@ func (c *Controller) formatResultToOutput(results map[string]*FileResult) *Outpu
 		Env:            fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		Errors:         list,
 	}
-}
-
-func (c *Controller) outputJSON(w io.Writer, result interface{}) error {
-	encoder := json.NewEncoder(w)
-	encoder.SetEscapeHTML(false)
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(result); err != nil {
-		return fmt.Errorf("encode the result as JSON: %w", err)
-	}
-	return nil
 }

@@ -18,7 +18,7 @@ type Module struct {
 	Path      string
 	Ref       string
 	Tag       string
-	Param     map[string]interface{}
+	Param     map[string]any
 }
 
 var fullCommitHashPattern = regexp.MustCompile("[a-fA-F0-9]{40}")

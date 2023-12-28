@@ -16,13 +16,13 @@ type (
 	}
 	// unmarshal Jsonnet as JSON
 	JsonnetResult struct {
-		Name        string      `json:"name,omitempty"`
-		Description string      `json:"description,omitempty"`
-		Message     string      `json:"message,omitempty"`
-		Level       string      `json:"level,omitempty"`
-		Location    interface{} `json:"location,omitempty"`
-		Custom      interface{} `json:"custom,omitempty"`
-		Excluded    bool        `json:"excluded,omitempty"`
+		Name        string `json:"name,omitempty"`
+		Description string `json:"description,omitempty"`
+		Message     string `json:"message,omitempty"`
+		Level       string `json:"level,omitempty"`
+		Location    any    `json:"location,omitempty"`
+		Custom      any    `json:"custom,omitempty"`
+		Excluded    bool   `json:"excluded,omitempty"`
 	}
 
 	// Aggregate results
@@ -37,7 +37,7 @@ type (
 		Key       string           `json:"-"`
 		RawResult []*JsonnetResult `json:"-"`
 		RawOutput string           `json:"-"`
-		Interface interface{}      `json:"result,omitempty"`
+		Interface any              `json:"result,omitempty"`
 		Error     string           `json:"error,omitempty"`
 	}
 )
@@ -96,6 +96,8 @@ func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatE
 }
 
 func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
+	// jsonnet VM returns the result as JSON string,
+	// so parse the JSON string to structured data
 	if result.Error != "" {
 		return &Result{
 			Key:       result.Key,
@@ -105,7 +107,7 @@ func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
 	}
 	rb := []byte(result.Result)
 
-	var rs interface{}
+	var rs any
 	if err := json.Unmarshal(rb, &rs); err != nil {
 		return &Result{
 			Key:       result.Key,

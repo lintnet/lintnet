@@ -10,16 +10,16 @@ import (
 )
 
 type Data struct {
-	Text     string      `json:"text"`
-	Value    interface{} `json:"value"`
-	FilePath string      `json:"file_path"`
-	FileType string      `json:"file_type"`
-	JSON     []byte      `json:"-"`
+	Text     string `json:"text"`
+	Value    any    `json:"value"`
+	FilePath string `json:"file_path"`
+	FileType string `json:"file_type"`
+	JSON     []byte `json:"-"`
 }
 
 type TopLevelArgment struct {
-	Data   *Data                  `json:"data"`
-	Custom map[string]interface{} `json:"custom"`
+	Data   *Data          `json:"data"`
+	Custom map[string]any `json:"custom"`
 }
 
 func (c *Controller) parseDataFile(filePath string) (*TopLevelArgment, error) {

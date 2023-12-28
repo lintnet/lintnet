@@ -5,5 +5,9 @@ import (
 )
 
 type TemplateRenderer interface {
-	Render(out io.Writer, s string, param interface{}) error
+	Compile(s string) (Template, error)
+}
+
+type Template interface {
+	Execute(wr io.Writer, data any) error
 }
