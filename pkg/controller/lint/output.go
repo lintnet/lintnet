@@ -155,6 +155,18 @@ type FlatError struct {
 	Custom       interface{} `json:"custom,omitempty"`
 }
 
+func (e *FlatError) Failed(errLevel errlevel.Level) (bool, error) {
+	level := errlevel.Error
+	if e.Level != "" {
+		feErrLevel, err := errlevel.New(e.Level)
+		if err != nil {
+			return false, fmt.Errorf("verify the error level of a result: %w", err)
+		}
+		level = feErrLevel
+	}
+	return level >= errLevel, nil
+}
+
 type Output struct {
 	LintnetVersion string       `json:"lintnet_version"`
 	Env            string       `json:"env"`
