@@ -13,7 +13,7 @@ func TestNewUnmarshaler(t *testing.T) { //nolint:funlen
 		name     string
 		fileName string
 		data     string
-		exp      interface{}
+		exp      any
 		fileType string
 		isErr    bool
 	}{
@@ -46,7 +46,7 @@ func TestNewUnmarshaler(t *testing.T) { //nolint:funlen
 			fileName: "hello.json",
 			data: `{"name": "hello"}
 `,
-			exp: map[string]interface{}{
+			exp: map[string]any{
 				"name": "hello",
 			},
 			fileType: "json",
@@ -62,7 +62,7 @@ func TestNewUnmarshaler(t *testing.T) { //nolint:funlen
 			fileName: "hello.toml",
 			data: `name = "hello"
 `,
-			exp: map[string]interface{}{
+			exp: map[string]any{
 				"name": "hello",
 			},
 			fileType: "toml",
@@ -72,7 +72,7 @@ func TestNewUnmarshaler(t *testing.T) { //nolint:funlen
 			fileName: "hello.yaml",
 			data: `name: hello
 `,
-			exp: map[string]interface{}{
+			exp: map[string]any{
 				"name": "hello",
 			},
 			fileType: "yaml",

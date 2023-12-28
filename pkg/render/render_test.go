@@ -13,7 +13,7 @@ func TestRenderer_Render(t *testing.T) {
 	data := []struct {
 		name     string
 		s        string
-		param    interface{}
+		param    any
 		renderer render.TemplateRenderer
 		exp      string
 		isErr    bool

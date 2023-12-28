@@ -5,7 +5,7 @@ import (
 )
 
 type Unmarshaler interface {
-	Unmarshal(b []byte) (interface{}, error)
+	Unmarshal(b []byte) (any, error)
 }
 
 func NewUnmarshaler(fileName string) (Unmarshaler, string, error) {

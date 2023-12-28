@@ -70,7 +70,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 				td.Param = data
 			}
 			if td.Param.Custom == nil {
-				td.Param.Custom = map[string]interface{}{}
+				td.Param.Custom = map[string]any{}
 			}
 			tlaB, err := json.Marshal(td.Param)
 			if err != nil {
@@ -83,7 +83,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 				})
 				continue
 			}
-			var result interface{}
+			var result any
 			if err := jsonnet.Read(c.fs, pair.LintFilePath, string(tlaB), c.importer, &result); err != nil {
 				failedResults = append(failedResults, &FailedResult{
 					Name:         td.Name,
@@ -120,7 +120,7 @@ type TestData struct {
 	Name     string           `json:"name,omitempty"`
 	DataFile string           `json:"data_file,omitempty"`
 	Param    *TopLevelArgment `json:"param,omitempty"`
-	Result   interface{}      `json:"result,omitempty"`
+	Result   any              `json:"result,omitempty"`
 }
 
 type TestPair struct {
@@ -129,14 +129,14 @@ type TestPair struct {
 }
 
 type FailedResult struct {
-	Name         string      `json:"name,omitempty"`
-	LintFilePath string      `json:"lint_file_path,omitempty"`
-	TestFilePath string      `json:"test_file_path,omitempty"`
-	Param        interface{} `json:"param,omitempty"`
-	Wanted       interface{} `json:"wanted,omitempty"`
-	Got          interface{} `json:"got,omitempty"`
-	Diff         string      `json:"diff,omitempty"`
-	Error        string      `json:"error,omitempty"`
+	Name         string `json:"name,omitempty"`
+	LintFilePath string `json:"lint_file_path,omitempty"`
+	TestFilePath string `json:"test_file_path,omitempty"`
+	Param        any    `json:"param,omitempty"`
+	Wanted       any    `json:"wanted,omitempty"`
+	Got          any    `json:"got,omitempty"`
+	Diff         string `json:"diff,omitempty"`
+	Error        string `json:"error,omitempty"`
 }
 
 func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*Target) []*TestPair {

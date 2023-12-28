@@ -41,7 +41,7 @@ func (c *Controller) parseLintFile(lintFile *LintFile) (*Node, error) {
 
 type Node struct {
 	Node   jsonnet.Node
-	Custom map[string]interface{}
+	Custom map[string]any
 	Key    string
 }
 
@@ -51,7 +51,7 @@ func (c *Controller) evaluateNode(data *Data, ja *Node) *JsonnetEvaluateResult {
 		Custom: ja.Custom,
 	}
 	if tla.Custom == nil {
-		tla.Custom = map[string]interface{}{}
+		tla.Custom = map[string]any{}
 	}
 	tlaB, err := json.Marshal(tla)
 	if err != nil {

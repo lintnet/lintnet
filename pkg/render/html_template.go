@@ -8,7 +8,7 @@ import (
 
 type HTMLTemplateRenderer struct{}
 
-func (t *HTMLTemplateRenderer) Render(out io.Writer, s string, param interface{}) error {
+func (t *HTMLTemplateRenderer) Render(out io.Writer, s string, param any) error {
 	tpl, err := hTemplate.New("_").Parse(s)
 	if err != nil {
 		return fmt.Errorf("parse a template: %w", err)

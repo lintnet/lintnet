@@ -8,8 +8,8 @@ import (
 
 type yamlUnmarshaler struct{}
 
-func (d *yamlUnmarshaler) Unmarshal(b []byte) (interface{}, error) {
-	var dest interface{}
+func (d *yamlUnmarshaler) Unmarshal(b []byte) (any, error) {
+	var dest any
 	if err := yaml.Unmarshal(b, &dest); err != nil {
 		return nil, fmt.Errorf("parse a file as YAML: %w", err)
 	}

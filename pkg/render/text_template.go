@@ -8,7 +8,7 @@ import (
 
 type TextTemplateRenderer struct{}
 
-func (t *TextTemplateRenderer) Render(out io.Writer, s string, param interface{}) error {
+func (t *TextTemplateRenderer) Render(out io.Writer, s string, param any) error {
 	tpl, err := template.New("_").Parse(s)
 	if err != nil {
 		return fmt.Errorf("parse a template: %w", err)

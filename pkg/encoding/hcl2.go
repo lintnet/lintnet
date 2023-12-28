@@ -9,12 +9,12 @@ import (
 
 type hcl2Unmarshaler struct{}
 
-func (d *hcl2Unmarshaler) Unmarshal(b []byte) (interface{}, error) {
+func (d *hcl2Unmarshaler) Unmarshal(b []byte) (any, error) {
 	hclBytes, err := convert.Bytes(b, "", convert.Options{})
 	if err != nil {
 		return nil, fmt.Errorf("convert hcl2 to JSON: %w", err)
 	}
-	var dest interface{}
+	var dest any
 	if err := json.Unmarshal(hclBytes, &dest); err != nil {
 		return nil, fmt.Errorf("unmarshal hcl2: %w", err)
 	}

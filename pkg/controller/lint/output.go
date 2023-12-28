@@ -124,7 +124,7 @@ func (o *jsonnetOutputter) Output(result *Output) error {
 	return outputJSON(out, result)
 }
 
-func outputJSON(w io.Writer, result interface{}) error {
+func outputJSON(w io.Writer, result any) error {
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
 	encoder.SetIndent("", "  ")
@@ -173,7 +173,7 @@ func (o *templateOutputter) Output(result *Output) error {
 		defer f.Close()
 		out = f
 	}
-	if err := o.renderer.Render(out, o.template, map[string]interface{}{
+	if err := o.renderer.Render(out, o.template, map[string]any{
 		"result": result,
 	}); err != nil {
 		return fmt.Errorf("render a template: %w", err)
@@ -194,13 +194,13 @@ func (c *Controller) getOutputter(output *config.Output) (Outputter, error) {
 }
 
 type FlatError struct {
-	RuleName     string      `json:"rule,omitempty"`
-	Level        string      `json:"level,omitempty"`
-	Message      string      `json:"message,omitempty"`
-	LintFilePath string      `json:"lint_file,omitempty"`
-	DataFilePath string      `json:"data_file,omitempty"`
-	Location     interface{} `json:"location,omitempty"`
-	Custom       interface{} `json:"custom,omitempty"`
+	RuleName     string `json:"rule,omitempty"`
+	Level        string `json:"level,omitempty"`
+	Message      string `json:"message,omitempty"`
+	LintFilePath string `json:"lint_file,omitempty"`
+	DataFilePath string `json:"data_file,omitempty"`
+	Location     any    `json:"location,omitempty"`
+	Custom       any    `json:"custom,omitempty"`
 }
 
 func (e *FlatError) Failed(errLevel errlevel.Level) (bool, error) {
