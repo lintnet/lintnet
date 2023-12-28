@@ -8,6 +8,14 @@ import (
 
 type HTMLTemplateRenderer struct{}
 
+func (t *HTMLTemplateRenderer) Compile(s string) (Template, error) {
+	tpl, err := hTemplate.New("_").Parse(s)
+	if err != nil {
+		return nil, fmt.Errorf("parse a template: %w", err)
+	}
+	return tpl, nil
+}
+
 func (t *HTMLTemplateRenderer) Render(out io.Writer, s string, param any) error {
 	tpl, err := hTemplate.New("_").Parse(s)
 	if err != nil {

@@ -141,9 +141,8 @@ type Outputter interface {
 type templateOutputter struct {
 	stdout   io.Writer
 	fs       afero.Fs
-	renderer render.TemplateRenderer
 	output   *config.Output
-	template string
+	template render.Template
 }
 
 func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output) (*templateOutputter, error) {
@@ -154,12 +153,15 @@ func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.Templat
 	if err != nil {
 		return nil, fmt.Errorf("read a template: %w", err)
 	}
+	tpl, err := renderer.Compile(string(b))
+	if err != nil {
+		return nil, fmt.Errorf("parse a template: %w", err)
+	}
 	return &templateOutputter{
 		stdout:   stdout,
 		fs:       fs,
-		renderer: renderer,
 		output:   output,
-		template: string(b),
+		template: tpl,
 	}, nil
 }
 
@@ -173,7 +175,7 @@ func (o *templateOutputter) Output(result *Output) error {
 		defer f.Close()
 		out = f
 	}
-	if err := o.renderer.Render(out, o.template, map[string]any{
+	if err := o.template.Execute(out, map[string]any{
 		"result": result,
 	}); err != nil {
 		return fmt.Errorf("render a template: %w", err)

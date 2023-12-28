@@ -8,6 +8,14 @@ import (
 
 type TextTemplateRenderer struct{}
 
+func (t *TextTemplateRenderer) Compile(s string) (Template, error) {
+	tpl, err := template.New("_").Parse(s)
+	if err != nil {
+		return nil, fmt.Errorf("parse a template: %w", err)
+	}
+	return tpl, nil
+}
+
 func (t *TextTemplateRenderer) Render(out io.Writer, s string, param any) error {
 	tpl, err := template.New("_").Parse(s)
 	if err != nil {
