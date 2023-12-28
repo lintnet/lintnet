@@ -16,7 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel errlevel.Level, results map[string]*FileResult, outputs []*config.Output, outputSuccess bool) error {
+func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results map[string]*FileResult, outputs []*config.Output, outputSuccess bool) error {
 	fes := c.formatResultToOutput(results)
 	if !outputSuccess && len(fes.Errors) == 0 {
 		return nil

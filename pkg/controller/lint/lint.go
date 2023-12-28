@@ -68,7 +68,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	return c.Output(logE, cfg, errLevel, results, outputs, param.OutputSuccess)
+	return c.Output(logE, errLevel, results, outputs, param.OutputSuccess)
 }
 
 func (c *Controller) getResults(targets []*Target) (map[string]*FileResult, error) {
