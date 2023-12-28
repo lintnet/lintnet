@@ -33,7 +33,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	outputs, err := c.getOutputs(cfg, param.Outputs)
+	outputters, err := c.getOutputters(cfg, param.Outputs)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,23 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	return c.Output(logE, errLevel, results, outputs, param.OutputSuccess)
+	return c.Output(logE, errLevel, results, outputters, param.OutputSuccess)
+}
+
+func (c *Controller) getOutputters(cfg *config.Config, outputIDs []string) ([]Outputter, error) {
+	outputs, err := c.getOutputs(cfg, outputIDs)
+	if err != nil {
+		return nil, err
+	}
+	outputters := make([]Outputter, len(outputs))
+	for i, output := range outputs {
+		o, err := c.getOutputter(output)
+		if err != nil {
+			return nil, err
+		}
+		outputters[i] = o
+	}
+	return outputters, nil
 }
 
 func (c *Controller) getResults(targets []*Target) (map[string]*FileResult, error) {
