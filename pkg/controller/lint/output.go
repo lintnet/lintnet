@@ -16,7 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel errlevel.Level, results map[string]*FileResult, outputIDs []string, outputSuccess bool) error {
+func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel errlevel.Level, results map[string]*FileResult, outputs []*config.Output, outputSuccess bool) error {
 	fes := c.formatResultToOutput(results)
 	if !outputSuccess && len(fes.Errors) == 0 {
 		return nil
@@ -27,10 +27,6 @@ func (c *Controller) Output(logE *logrus.Entry, cfg *config.Config, errLevel err
 	}
 	if !outputSuccess && !failed {
 		return nil
-	}
-	outputs, err := c.getOutputs(cfg, outputIDs)
-	if err != nil {
-		return err
 	}
 	for _, output := range outputs {
 		if err := c.output(output, fes); err != nil {

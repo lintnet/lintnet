@@ -9,30 +9,34 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) readJsonnets(filePaths []*LintFile) ([]*Node, error) {
-	jsonnetAsts := make([]*Node, 0, len(filePaths))
-	for _, filePath := range filePaths {
-		ja, err := jsonnet.ReadToNode(c.fs, filePath.Path)
+func (c *Controller) parseLintFiles(lintFiles []*LintFile) ([]*Node, error) {
+	jsonnetAsts := make([]*Node, 0, len(lintFiles))
+	for _, lintFile := range lintFiles {
+		node, err := c.parseLintFile(lintFile)
 		if err != nil {
 			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"file_path": filePath,
+				"file_path": lintFile.Path,
 			})
 		}
-		if filePath.ModulePath != "" {
-			jsonnetAsts = append(jsonnetAsts, &Node{
-				Node:   ja,
-				Key:    filePath.ModulePath,
-				Custom: filePath.Param,
-			})
-			continue
-		}
-		jsonnetAsts = append(jsonnetAsts, &Node{
-			Node:   ja,
-			Key:    filePath.Path,
-			Custom: filePath.Param,
-		})
+		jsonnetAsts = append(jsonnetAsts, node)
 	}
 	return jsonnetAsts, nil
+}
+
+func (c *Controller) parseLintFile(lintFile *LintFile) (*Node, error) {
+	ja, err := jsonnet.ReadToNode(c.fs, lintFile.Path)
+	if err != nil {
+		return nil, err //nolint:wrapcheck
+	}
+	key := lintFile.Path
+	if lintFile.ModulePath != "" {
+		key = lintFile.ModulePath
+	}
+	return &Node{
+		Node:   ja,
+		Key:    key,
+		Custom: lintFile.Param,
+	}, nil
 }
 
 type Node struct {
@@ -41,37 +45,39 @@ type Node struct {
 	Key    string
 }
 
-func (c *Controller) evaluate(tla *TopLevelArgment, jsonnetAsts []*Node) []*JsonnetEvaluateResult {
-	results := make([]*JsonnetEvaluateResult, 0, len(jsonnetAsts))
-	for _, ja := range jsonnetAsts {
-		tla := &TopLevelArgment{
-			Data:   tla.Data,
-			Custom: ja.Custom,
+func (c *Controller) evaluateNode(data *Data, ja *Node) *JsonnetEvaluateResult {
+	tla := &TopLevelArgment{
+		Data:   data,
+		Custom: ja.Custom,
+	}
+	if tla.Custom == nil {
+		tla.Custom = map[string]interface{}{}
+	}
+	tlaB, err := json.Marshal(tla)
+	if err != nil {
+		return &JsonnetEvaluateResult{
+			Key:   ja.Key,
+			Error: fmt.Errorf("marshal a top level argument as JSON: %w", err).Error(),
 		}
-		if tla.Custom == nil {
-			tla.Custom = map[string]interface{}{}
+	}
+	vm := jsonnet.NewVM(string(tlaB), c.importer)
+	result, err := vm.Evaluate(ja.Node)
+	if err != nil {
+		return &JsonnetEvaluateResult{
+			Key:   ja.Key,
+			Error: err.Error(),
 		}
-		tlaB, err := json.Marshal(tla)
-		if err != nil {
-			results = append(results, &JsonnetEvaluateResult{
-				Key:   ja.Key,
-				Error: fmt.Errorf("marshal a top level argument as JSON: %w", err).Error(),
-			})
-			continue
-		}
-		vm := jsonnet.NewVM(string(tlaB), c.importer)
-		result, err := vm.Evaluate(ja.Node)
-		if err != nil {
-			results = append(results, &JsonnetEvaluateResult{
-				Key:   ja.Key,
-				Error: err.Error(),
-			})
-			continue
-		}
-		results = append(results, &JsonnetEvaluateResult{
-			Key:    ja.Key,
-			Result: result,
-		})
+	}
+	return &JsonnetEvaluateResult{
+		Key:    ja.Key,
+		Result: result,
+	}
+}
+
+func (c *Controller) evaluate(data *Data, jsonnetAsts []*Node) []*JsonnetEvaluateResult {
+	results := make([]*JsonnetEvaluateResult, len(jsonnetAsts))
+	for i, ja := range jsonnetAsts {
+		results[i] = c.evaluateNode(data, ja)
 	}
 	return results
 }

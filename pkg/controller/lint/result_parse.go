@@ -96,6 +96,8 @@ func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatE
 }
 
 func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
+	// jsonnet VM returns the result as JSON string,
+	// so parse the JSON string to structured data
 	if result.Error != "" {
 		return &Result{
 			Key:       result.Key,
