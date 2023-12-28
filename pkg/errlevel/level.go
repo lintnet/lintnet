@@ -12,15 +12,14 @@ const (
 )
 
 func New(s string) (Level, error) {
-	switch s {
-	case "debug":
-		return Debug, nil
-	case "info":
-		return Info, nil
-	case "warn":
-		return Warn, nil
-	case "error":
-		return Error, nil
+	m := map[string]Level{
+		"debug": Debug,
+		"info":  Info,
+		"warn":  Warn,
+		"error": Error,
+	}
+	if l, ok := m[s]; ok {
+		return l, nil
 	}
 	return Error, errors.New("log level is invalid")
 }
