@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/lintnet/lintnet/pkg/errlevel"
-	"github.com/lintnet/lintnet/pkg/module"
 )
 
 type RawConfig struct {
@@ -28,7 +27,7 @@ func (rc *RawConfig) Parse() (*Config, error) {
 		}
 		cfg.ErrorLevel = level
 	}
-	moduleArchives := map[string]*module.Archive{}
+	moduleArchives := map[string]*ModuleArchive{}
 	for i, rt := range rc.Targets {
 		target, err := rt.Parse()
 		if err != nil {
@@ -47,7 +46,7 @@ type Config struct {
 	ErrorLevel     errlevel.Level
 	Targets        []*Target
 	Outputs        []*Output
-	ModuleArchives map[string]*module.Archive
+	ModuleArchives map[string]*ModuleArchive
 }
 
 type RawOutput struct {
@@ -67,9 +66,9 @@ type Output struct {
 }
 
 type Target struct {
-	LintFiles      []*module.Glob
-	Modules        []*module.Glob
-	ModuleArchives map[string]*module.Archive
+	LintFiles      []*ModuleGlob
+	Modules        []*ModuleGlob
+	ModuleArchives map[string]*ModuleArchive
 	DataFiles      []string
 }
 
@@ -94,9 +93,9 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (lg *LintGlob) ToModule() *module.Glob {
+func (lg *LintGlob) ToModule() *ModuleGlob {
 	p := strings.TrimPrefix(lg.Glob, "!")
-	return &module.Glob{
+	return &ModuleGlob{
 		ID:        p,
 		SlashPath: p,
 		Param:     lg.Param,
@@ -105,16 +104,16 @@ func (lg *LintGlob) ToModule() *module.Glob {
 }
 
 func (rt *RawTarget) Parse() (*Target, error) {
-	lintFiles := make([]*module.Glob, len(rt.LintGlobs))
+	lintFiles := make([]*ModuleGlob, len(rt.LintGlobs))
 	for i, lintGlob := range rt.LintGlobs {
 		lintFiles[i] = lintGlob.ToModule()
 	}
 	target := &Target{
 		LintFiles: lintFiles,
-		Modules:   make([]*module.Glob, len(rt.Modules)),
+		Modules:   make([]*ModuleGlob, len(rt.Modules)),
 		DataFiles: rt.DataFiles,
 	}
-	archives := make(map[string]*module.Archive, len(rt.Modules))
+	archives := make(map[string]*ModuleArchive, len(rt.Modules))
 	for i, m := range rt.Modules {
 		a, err := m.Parse()
 		if err != nil {
@@ -132,8 +131,8 @@ type RawModule struct {
 	Param map[string]any `json:"param"`
 }
 
-func (rm *RawModule) Parse() (*module.Glob, error) {
-	m, err := module.ParseModuleLine(rm.Glob)
+func (rm *RawModule) Parse() (*ModuleGlob, error) {
+	m, err := ParseModuleLine(rm.Glob)
 	if err != nil {
 		return nil, fmt.Errorf("parse a module path: %w", err)
 	}

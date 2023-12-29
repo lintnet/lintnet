@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/go-jsonnet"
+	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -39,7 +40,7 @@ func (ip *Importer) Import(importedFrom, importedPath string) (jsonnet.Contents,
 	if !strings.HasPrefix(importedPath, "github.com/") {
 		return contents, foundAt, err //nolint:wrapcheck
 	}
-	mod, err := module.ParseModuleLine(importedPath)
+	mod, err := config.ParseModuleLine(importedPath)
 	if err != nil {
 		return contents, foundAt, fmt.Errorf("parse a module import path: %w", err)
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/log"
-	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"golang.org/x/exp/maps"
@@ -116,7 +115,7 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir s
 	return targets, nil
 }
 
-func (c *Controller) findFilesFromModules(modules []*module.Glob, rootDir string) ([]*config.LintFile, error) {
+func (c *Controller) findFilesFromModules(modules []*config.ModuleGlob, rootDir string) ([]*config.LintFile, error) {
 	matchFiles := map[string][]*config.LintFile{}
 	for _, m := range modules {
 		if m.Excluded {
