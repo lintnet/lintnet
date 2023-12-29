@@ -68,8 +68,8 @@ func ParseModuleLine(line string) (*Glob, error) {
 	if elems[0] != "github.com" {
 		return nil, errors.New("module must start with 'github.com/'")
 	}
-	size := len(elems)
-	baseName, refAndTag, ok := strings.Cut(elems[size-1], "@")
+	pathAndRefAndTag := strings.Join(elems[3:], "/")
+	path, refAndTag, ok := strings.Cut(pathAndRefAndTag, "@")
 	if !ok {
 		return nil, errors.New("ref is required")
 	}
@@ -79,7 +79,7 @@ func ParseModuleLine(line string) (*Glob, error) {
 	}
 	return &Glob{
 		ID:        line,
-		SlashPath: strings.Join(append(elems[:3], ref, baseName), "/"),
+		SlashPath: strings.Join(append(elems[:3], ref, path), "/"),
 		Archive: &Archive{
 			ID:        strings.Join(append(elems[:3], refAndTag), "/"),
 			Type:      "github",
@@ -89,7 +89,7 @@ func ParseModuleLine(line string) (*Glob, error) {
 			Ref:       ref,
 			Tag:       tag,
 		},
-		Glob:     baseName,
+		Glob:     path,
 		Excluded: excluded,
 	}, nil
 }

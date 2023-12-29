@@ -6,8 +6,8 @@ function(param) {
         '.github/workflows/*.yaml',
       ],
       modules: [
-        'github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/**/*.jsonnet@764ccddf94a5dcc1c9d619dedaebfc64f0251a04',
-        '!github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/**/*_test.jsonnet@764ccddf94a5dcc1c9d619dedaebfc64f0251a04',
+        'github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/**/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325',
+        '!github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/**/*_test.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325',
       ],
     },
   ],

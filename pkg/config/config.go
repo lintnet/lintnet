@@ -97,9 +97,11 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 func (lg *LintGlob) ToModule() *module.Glob {
 	p := strings.TrimPrefix(lg.Glob, "!")
 	return &module.Glob{
-		Glob:     p,
-		Param:    lg.Param,
-		Excluded: p != lg.Glob,
+		ID:        p,
+		Glob:      p,
+		SlashPath: p,
+		Param:     lg.Param,
+		Excluded:  p != lg.Glob,
 	}
 }
 
@@ -120,7 +122,7 @@ func (rt *RawTarget) Parse() (*Target, error) {
 			return nil, err
 		}
 		target.Modules[i] = a
-		archives[a.ID] = a.Archive
+		archives[a.Archive.ID] = a.Archive
 	}
 	target.ModuleArchives = archives
 	return target, nil

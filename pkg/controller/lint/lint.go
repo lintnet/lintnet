@@ -6,6 +6,7 @@ import (
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/errlevel"
+	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 )
@@ -53,7 +54,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	targets, err := c.findFiles(cfg, param.RootDir)
+	targets, err := c.findFiles(logE, cfg, param.RootDir)
 	if err != nil {
 		return err
 	}
@@ -67,6 +68,11 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	if err != nil {
 		return err
 	}
+	logE.WithFields(logrus.Fields{
+		"config":  log.JSON(cfg),
+		"results": log.JSON(results),
+		"targets": log.JSON(targets),
+	}).Debug("linted")
 
 	return c.Output(logE, errLevel, results, outputters, param.OutputSuccess)
 }

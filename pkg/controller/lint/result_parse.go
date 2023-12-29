@@ -68,6 +68,9 @@ func (r *Result) flattenError(dataFilePath, lintFilePath string) []*FlatError {
 				DataFilePath: dataFilePath,
 				LintFilePath: lintFilePath,
 				Message:      r.Error,
+				Custom: map[string]any{
+					"result": r.Interface,
+				},
 			},
 		}
 	}
