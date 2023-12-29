@@ -15,6 +15,7 @@ import (
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type ParamInstall struct {
@@ -43,9 +44,9 @@ func NewInstaller(fs afero.Fs, gh GitHub, httpClient HTTPClient) *Installer {
 	}
 }
 
-func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *ParamInstall, modID string, mod *Module) error { //nolint:funlen,cyclop
+func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *ParamInstall, mod *Archive) error { //nolint:funlen,cyclop
 	// Check if the module is already downloaded
-	dest := filepath.Join(param.BaseDir, filepath.FromSlash(modID))
+	dest := filepath.Join(param.BaseDir, filepath.FromSlash(mod.ID))
 	f, err := afero.DirExists(mi.fs, dest)
 	if err != nil {
 		return fmt.Errorf("check if the module is already installed: %w", err)
@@ -57,9 +58,15 @@ func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *Par
 		return fmt.Errorf("create parent directories: %w", err)
 	}
 	// Download Module
-	u, _, err := mi.gh.GetArchiveLink(ctx, mod.RepoOwner, mod.RepoName, github.Tarball, nil, 5) //nolint:gomnd
+	u, _, err := mi.gh.GetArchiveLink(ctx, mod.RepoOwner, mod.RepoName, github.Tarball, &github.RepositoryContentGetOptions{
+		Ref: mod.Ref,
+	}, 5) //nolint:gomnd
 	if err != nil {
-		return fmt.Errorf("get an archive link by GitHub API: %w", err)
+		return fmt.Errorf("get an archive link by GitHub API: %w", logerr.WithFields(err, logrus.Fields{
+			"moduel_repo_owner": mod.RepoOwner,
+			"moduel_repo_name":  mod.RepoName,
+			"moduel_ref":        mod.Ref,
+		}))
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {

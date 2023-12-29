@@ -18,9 +18,6 @@ import (
 
 func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results map[string]*FileResult, outputters []Outputter, outputSuccess bool) error {
 	fes := c.formatResultToOutput(results)
-	if !outputSuccess && len(fes.Errors) == 0 {
-		return nil
-	}
 	failed, err := isFailed(fes.Errors, errLevel)
 	if err != nil {
 		return err

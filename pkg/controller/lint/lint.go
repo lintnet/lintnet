@@ -28,9 +28,13 @@ type ParamLint struct {
 // }
 
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error {
-	cfg := &config.Config{}
-	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
+	rawCfg := &config.RawConfig{}
+	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
 		return err
+	}
+	cfg, err := rawCfg.Parse()
+	if err != nil {
+		return fmt.Errorf("parse a configuration file: %w", err)
 	}
 
 	outputters, err := c.getOutputters(cfg, param.Outputs)
@@ -43,17 +47,13 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	modulesList, modMap, err := module.ListModules(cfg)
-	if err != nil {
-		return fmt.Errorf("list modules: %w", err)
-	}
 	if err := c.installModules(ctx, logE, &module.ParamInstall{
 		BaseDir: param.RootDir,
-	}, modMap); err != nil {
+	}, cfg.ModuleArchives); err != nil {
 		return err
 	}
 
-	targets, err := c.findFiles(cfg, modulesList, param.RootDir)
+	targets, err := c.findFiles(cfg, param.RootDir)
 	if err != nil {
 		return err
 	}
@@ -118,14 +118,10 @@ func (c *Controller) lintTarget(target *Target, results map[string]*FileResult) 
 }
 
 func (c *Controller) getErrorLevel(cfg *config.Config, param *ParamLint) (errlevel.Level, error) {
-	el := cfg.ErrorLevel
-	if param.ErrorLevel != "" {
-		el = param.ErrorLevel
+	if param.ErrorLevel == "" {
+		return cfg.ErrorLevel, nil
 	}
-	if el == "" {
-		return errlevel.Error, nil
-	}
-	ll, err := errlevel.New(el)
+	ll, err := errlevel.New(param.ErrorLevel)
 	if err != nil {
 		return ll, err //nolint:wrapcheck
 	}

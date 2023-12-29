@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) parseLintFiles(lintFiles []*LintFile) ([]*Node, error) {
+func (c *Controller) parseLintFiles(lintFiles []*config.LintFile) ([]*Node, error) {
 	jsonnetAsts := make([]*Node, 0, len(lintFiles))
 	for _, lintFile := range lintFiles {
 		node, err := c.parseLintFile(lintFile)
@@ -23,18 +24,14 @@ func (c *Controller) parseLintFiles(lintFiles []*LintFile) ([]*Node, error) {
 	return jsonnetAsts, nil
 }
 
-func (c *Controller) parseLintFile(lintFile *LintFile) (*Node, error) {
+func (c *Controller) parseLintFile(lintFile *config.LintFile) (*Node, error) {
 	ja, err := jsonnet.ReadToNode(c.fs, lintFile.Path)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-	key := lintFile.Path
-	if lintFile.ModulePath != "" {
-		key = lintFile.ModulePath
-	}
 	return &Node{
 		Node:   ja,
-		Key:    key,
+		Key:    lintFile.ID,
 		Custom: lintFile.Param,
 	}, nil
 }
