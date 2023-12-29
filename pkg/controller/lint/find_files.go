@@ -120,7 +120,7 @@ func (c *Controller) findFilesFromModules(modules []*module.Glob, rootDir string
 	matchFiles := map[string][]*config.LintFile{}
 	for _, m := range modules {
 		if m.Excluded {
-			pattern := filepath.Join(rootDir, m.SlashPath)
+			pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 			for file := range matchFiles {
 				matched, err := doublestar.Match(pattern, file)
 				if err != nil {
@@ -132,7 +132,7 @@ func (c *Controller) findFilesFromModules(modules []*module.Glob, rootDir string
 			}
 			continue
 		}
-		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), filepath.Join(rootDir, m.SlashPath), doublestar.WithFilesOnly())
+		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), doublestar.WithFilesOnly())
 		if err != nil {
 			return nil, fmt.Errorf("search files: %w", err)
 		}
