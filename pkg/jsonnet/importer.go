@@ -50,5 +50,5 @@ func (ip *Importer) Import(importedFrom, importedPath string) (jsonnet.Contents,
 			"import":    importedPath,
 		}))
 	}
-	return ip.importer.Import(importedFrom, mod.Path) //nolint:wrapcheck
+	return ip.importer.Import(importedFrom, mod.SlashPath) //nolint:wrapcheck
 }

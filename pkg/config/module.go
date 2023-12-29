@@ -8,10 +8,10 @@ import (
 )
 
 type Module struct {
-	ID      string
-	Archive *ModuleArchive
-	Path    string
-	Param   map[string]interface{}
+	ID        string
+	Archive   *ModuleArchive
+	SlashPath string
+	Param     map[string]interface{}
 }
 
 type ModuleGlob struct {
@@ -24,9 +24,9 @@ type ModuleGlob struct {
 
 func (m *Module) FilePath() string {
 	if m.Archive == nil {
-		return filepath.FromSlash(m.Path)
+		return filepath.FromSlash(m.SlashPath)
 	}
-	return filepath.Join(m.Archive.FilePath(), filepath.FromSlash(m.Path))
+	return filepath.Join(m.Archive.FilePath(), filepath.FromSlash(m.SlashPath))
 }
 
 type ModuleArchive struct {
@@ -58,9 +58,9 @@ func ParseImport(line string) (*Module, error) {
 		return nil, err
 	}
 	return &Module{
-		ID:      mg.ID,
-		Archive: mg.Archive,
-		Path:    mg.SlashPath,
+		ID:        mg.ID,
+		Archive:   mg.Archive,
+		SlashPath: mg.SlashPath,
 	}, nil
 }
 
