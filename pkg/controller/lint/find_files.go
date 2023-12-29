@@ -7,7 +7,9 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"golang.org/x/exp/maps"
 )
@@ -18,19 +20,31 @@ type LintFile struct { //nolint:revive
 	Param      map[string]any
 }
 
-func (c *Controller) findTarget(target *config.Target, rootDir string) (*Target, error) {
+func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootDir string) (*Target, error) {
 	lintFiles, err := c.findFilesFromModules(target.LintFiles, "")
 	if err != nil {
 		return nil, err
 	}
+	logE.WithFields(logrus.Fields{
+		"lint_globs": log.JSON(target.LintFiles),
+		"lint_files": log.JSON(lintFiles),
+	}).Debug("found lint files")
 	dataFiles, err := c.findFilesFromPaths(target.DataFiles)
 	if err != nil {
 		return nil, err
 	}
+	logE.WithFields(logrus.Fields{
+		"data_globs": log.JSON(target.DataFiles),
+		"data_files": log.JSON(dataFiles),
+	}).Debug("found data files")
 	modules, err := c.findFilesFromModules(target.Modules, rootDir)
 	if err != nil {
 		return nil, err
 	}
+	logE.WithFields(logrus.Fields{
+		"module_globs": log.JSON(target.Modules),
+		"modules":      log.JSON(modules),
+	}).Debug("found modules")
 	lintFiles = append(lintFiles, modules...)
 	return &Target{
 		LintFiles: lintFiles,
@@ -86,14 +100,14 @@ func filterTarget(target *Target, filePaths []string) *Target {
 	return newTarget
 }
 
-func (c *Controller) findFiles(cfg *config.Config, rootDir string) ([]*Target, error) {
+func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir string) ([]*Target, error) {
 	if len(cfg.Targets) == 0 {
 		return nil, nil
 	}
 
 	targets := make([]*Target, len(cfg.Targets))
 	for i, target := range cfg.Targets {
-		t, err := c.findTarget(target, rootDir)
+		t, err := c.findTarget(logE, target, rootDir)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +120,7 @@ func (c *Controller) findFilesFromModules(modules []*module.Glob, rootDir string
 	matchFiles := map[string][]*config.LintFile{}
 	for _, m := range modules {
 		if m.Excluded {
-			pattern := filepath.Join(rootDir, m.Glob)
+			pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 			for file := range matchFiles {
 				matched, err := doublestar.Match(pattern, file)
 				if err != nil {
@@ -118,7 +132,7 @@ func (c *Controller) findFilesFromModules(modules []*module.Glob, rootDir string
 			}
 			continue
 		}
-		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), filepath.Join(rootDir, m.Glob), doublestar.WithFilesOnly())
+		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), doublestar.WithFilesOnly())
 		if err != nil {
 			return nil, fmt.Errorf("search files: %w", err)
 		}

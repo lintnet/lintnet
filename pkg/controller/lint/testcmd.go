@@ -34,7 +34,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 		return fmt.Errorf("parse the template of test result: %w", err)
 	}
 
-	targets, err := c.findFiles(cfg, param.RootDir)
+	targets, err := c.findFiles(logE, cfg, param.RootDir)
 	if err != nil {
 		return err
 	}

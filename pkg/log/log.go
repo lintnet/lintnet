@@ -1,6 +1,8 @@
 package log
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"runtime"
 
@@ -8,7 +10,11 @@ import (
 )
 
 func New(version string) *logrus.Entry {
-	return logrus.WithFields(logrus.Fields{
+	logger := logrus.New()
+	logger.Formatter = &logrus.TextFormatter{
+		DisableQuote: true,
+	}
+	return logger.WithFields(logrus.Fields{
 		"version": version,
 		"program": "lintnet",
 		"env":     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
@@ -43,4 +49,24 @@ func SetColor(color string, logE *logrus.Entry) {
 		logE.WithField("log_color", color).Error("log_color is invalid")
 		return
 	}
+}
+
+func JSON(data any) any {
+	return &jsonData{
+		data: data,
+	}
+}
+
+type jsonData struct {
+	data any
+}
+
+func (j *jsonData) String() string {
+	buf := &bytes.Buffer{}
+	encoder := json.NewEncoder(buf)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(j.data); err != nil {
+		return err.Error()
+	}
+	return buf.String()
 }
