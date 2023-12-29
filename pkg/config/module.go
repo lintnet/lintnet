@@ -52,6 +52,18 @@ func (m *ModuleArchive) FilePath() string {
 	return filepath.Join(m.Host, m.RepoOwner, m.RepoName, m.Ref)
 }
 
+func ParseImport(line string) (*Module, error) {
+	mg, err := ParseModuleLine(line)
+	if err != nil {
+		return nil, err
+	}
+	return &Module{
+		ID:      mg.ID,
+		Archive: mg.Archive,
+		Path:    mg.SlashPath,
+	}, nil
+}
+
 func ParseModuleLine(line string) (*ModuleGlob, error) {
 	// github.com/<repo owner>/<repo name>/<path>@<commit hash>[:<tag>]
 	line = strings.TrimSpace(line)
