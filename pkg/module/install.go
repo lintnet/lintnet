@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-github/v57/github"
+	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/osfile"
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
@@ -44,7 +45,7 @@ func NewInstaller(fs afero.Fs, gh GitHub, httpClient HTTPClient) *Installer {
 	}
 }
 
-func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *ParamInstall, mod *Archive) error { //nolint:funlen,cyclop
+func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *ParamInstall, mod *config.ModuleArchive) error { //nolint:funlen,cyclop
 	// Check if the module is already downloaded
 	dest := filepath.Join(param.BaseDir, filepath.FromSlash(mod.ID))
 	f, err := afero.DirExists(mi.fs, dest)

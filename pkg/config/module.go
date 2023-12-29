@@ -1,4 +1,4 @@
-package module
+package config
 
 import (
 	"errors"
@@ -9,16 +9,15 @@ import (
 
 type Module struct {
 	ID      string
-	Archive *Archive
+	Archive *ModuleArchive
 	Path    string
 	Param   map[string]interface{}
 }
 
-type Glob struct {
+type ModuleGlob struct {
 	ID        string
 	SlashPath string
-	Archive   *Archive
-	Glob      string
+	Archive   *ModuleArchive
 	Param     map[string]interface{}
 	Excluded  bool
 }
@@ -30,7 +29,7 @@ func (m *Module) FilePath() string {
 	return filepath.Join(m.Archive.FilePath(), filepath.FromSlash(m.Path))
 }
 
-type Archive struct {
+type ModuleArchive struct {
 	ID        string
 	Type      string
 	Host      string
@@ -49,11 +48,23 @@ func validateRef(ref string) error {
 	return errors.New("ref must be full commit hash")
 }
 
-func (m *Archive) FilePath() string {
+func (m *ModuleArchive) FilePath() string {
 	return filepath.Join(m.Host, m.RepoOwner, m.RepoName, m.Ref)
 }
 
-func ParseModuleLine(line string) (*Glob, error) {
+func ParseImport(line string) (*Module, error) {
+	mg, err := ParseModuleLine(line)
+	if err != nil {
+		return nil, err
+	}
+	return &Module{
+		ID:      mg.ID,
+		Archive: mg.Archive,
+		Path:    mg.SlashPath,
+	}, nil
+}
+
+func ParseModuleLine(line string) (*ModuleGlob, error) {
 	// github.com/<repo owner>/<repo name>/<path>@<commit hash>[:<tag>]
 	line = strings.TrimSpace(line)
 	excluded := false
@@ -77,10 +88,10 @@ func ParseModuleLine(line string) (*Glob, error) {
 	if err := validateRef(ref); err != nil {
 		return nil, err
 	}
-	return &Glob{
+	return &ModuleGlob{
 		ID:        line,
 		SlashPath: strings.Join(append(elems[:3], ref, path), "/"),
-		Archive: &Archive{
+		Archive: &ModuleArchive{
 			ID:        strings.Join(append(elems[:3], refAndTag), "/"),
 			Type:      "github",
 			Host:      "github.com",
@@ -89,7 +100,6 @@ func ParseModuleLine(line string) (*Glob, error) {
 			Ref:       ref,
 			Tag:       tag,
 		},
-		Glob:     path,
 		Excluded: excluded,
 	}, nil
 }
