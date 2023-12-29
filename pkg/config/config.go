@@ -84,6 +84,16 @@ type LintGlob struct {
 	Param map[string]any `json:"param"`
 }
 
+func (lg *LintGlob) UnmarshalJSON(b []byte) error {
+	rm := &RawModule{}
+	if err := json.Unmarshal(b, rm); err != nil {
+		return err //nolint:wrapcheck
+	}
+	lg.Param = rm.Param
+	lg.Glob = rm.Glob
+	return nil
+}
+
 func (lg *LintGlob) ToModule() *module.Glob {
 	p := strings.TrimPrefix(lg.Glob, "!")
 	return &module.Glob{
