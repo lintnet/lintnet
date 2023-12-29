@@ -9,11 +9,11 @@ import (
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 )
 
-func (c *Controller) readConfig(p string, cfg *config.Config) error {
+func (c *Controller) readConfig(p string, cfg *config.RawConfig) error {
 	return jsonnet.Read(c.fs, p, "{}", c.importer, cfg) //nolint:wrapcheck
 }
 
-func (c *Controller) findAndReadConfig(p string, cfg *config.Config) error {
+func (c *Controller) findAndReadConfig(p string, cfg *config.RawConfig) error {
 	if p != "" {
 		if err := c.readConfig(p, cfg); err != nil {
 			return fmt.Errorf("read a config file: %w", err)

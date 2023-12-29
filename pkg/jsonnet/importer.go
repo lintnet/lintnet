@@ -3,7 +3,6 @@ package jsonnet
 import (
 	"context"
 	"fmt"
-	"path"
 	"strings"
 
 	"github.com/google/go-jsonnet"
@@ -44,11 +43,11 @@ func (ip *Importer) Import(importedFrom, importedPath string) (jsonnet.Contents,
 	if err != nil {
 		return contents, foundAt, fmt.Errorf("parse a module import path: %w", err)
 	}
-	if err := ip.moduleInstaller.Install(ip.ctx, ip.logE, ip.param, mod.ID(), mod); err != nil {
+	if err := ip.moduleInstaller.Install(ip.ctx, ip.logE, ip.param, mod.Archive); err != nil {
 		return contents, foundAt, fmt.Errorf("install a module: %w", logerr.WithFields(err, logrus.Fields{
-			"module_id": mod.ID(),
+			"module_id": mod.Archive.ID,
 			"import":    importedPath,
 		}))
 	}
-	return ip.importer.Import(importedFrom, path.Join(mod.ID(), mod.Path)) //nolint:wrapcheck
+	return ip.importer.Import(importedFrom, mod.SlashPath) //nolint:wrapcheck
 }

@@ -2,23 +2,42 @@ package module
 
 import (
 	"errors"
+	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/lintnet/lintnet/pkg/config"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Module struct {
+	ID      string
+	Archive *Archive
+	Path    string
+	Param   map[string]interface{}
+}
+
+type Glob struct {
+	ID        string
+	SlashPath string
+	Archive   *Archive
+	Glob      string
+	Param     map[string]interface{}
+	Excluded  bool
+}
+
+func (m *Module) FilePath() string {
+	if m.Archive == nil {
+		return filepath.FromSlash(m.Path)
+	}
+	return filepath.Join(m.Archive.FilePath(), filepath.FromSlash(m.Path))
+}
+
+type Archive struct {
+	ID        string
 	Type      string
 	Host      string
 	RepoOwner string
 	RepoName  string
-	Path      string
 	Ref       string
 	Tag       string
-	Param     map[string]any
 }
 
 var fullCommitHashPattern = regexp.MustCompile("[a-fA-F0-9]{40}")
@@ -30,12 +49,18 @@ func validateRef(ref string) error {
 	return errors.New("ref must be full commit hash")
 }
 
-func (m *Module) ID() string {
-	return strings.Join([]string{m.Host, m.RepoOwner, m.RepoName, m.Ref}, "/")
+func (m *Archive) FilePath() string {
+	return filepath.Join(m.Host, m.RepoOwner, m.RepoName, m.Ref)
 }
 
-func ParseModuleLine(line string) (*Module, error) {
+func ParseModuleLine(line string) (*Glob, error) {
 	// github.com/<repo owner>/<repo name>/<path>@<commit hash>[:<tag>]
+	line = strings.TrimSpace(line)
+	excluded := false
+	if l := strings.TrimPrefix(line, "!"); l != line {
+		excluded = true
+		line = strings.TrimSpace(l)
+	}
 	elems := strings.Split(line, "/")
 	if len(elems) < 4 { //nolint:gomnd
 		return nil, errors.New("line is invalid")
@@ -52,34 +77,19 @@ func ParseModuleLine(line string) (*Module, error) {
 	if err := validateRef(ref); err != nil {
 		return nil, err
 	}
-	return &Module{
-		Type:      "github",
-		Host:      "github.com",
-		RepoOwner: elems[1],
-		RepoName:  elems[2],
-		Path:      strings.Join(append(elems[3:size-1], baseName), "/"),
-		Ref:       ref,
-		Tag:       tag,
+	return &Glob{
+		ID:        line,
+		SlashPath: strings.Join(append(elems[:3], ref, baseName), "/"),
+		Archive: &Archive{
+			ID:        strings.Join(append(elems[:3], refAndTag), "/"),
+			Type:      "github",
+			Host:      "github.com",
+			RepoOwner: elems[1],
+			RepoName:  elems[2],
+			Ref:       ref,
+			Tag:       tag,
+		},
+		Glob:     baseName,
+		Excluded: excluded,
 	}, nil
-}
-
-func ListModules(cfg *config.Config) ([][]*Module, map[string]*Module, error) {
-	modulesList := make([][]*Module, len(cfg.Targets))
-	modules := map[string]*Module{}
-	for i, target := range cfg.Targets {
-		arr := make([]*Module, 0, len(target.Modules))
-		for _, m := range target.Modules {
-			mod, err := ParseModuleLine(m.Path)
-			if err != nil {
-				return nil, nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-					"module": m.Path,
-				})
-			}
-			mod.Param = m.Param
-			arr = append(arr, mod)
-			modules[mod.ID()] = mod
-		}
-		modulesList[i] = arr
-	}
-	return modulesList, modules, nil
 }

@@ -20,9 +20,13 @@ import (
 var testResultTemplateByte []byte
 
 func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:funlen,cyclop,gocognit
-	cfg := &config.Config{}
-	if err := c.findAndReadConfig(param.ConfigFilePath, cfg); err != nil {
+	rawCfg := &config.RawConfig{}
+	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
 		return err
+	}
+	cfg, err := rawCfg.Parse()
+	if err != nil {
+		return fmt.Errorf("parse a configuration file: %w", err)
 	}
 
 	testResultTemplate, err := template.New("_").Parse(string(testResultTemplateByte))
@@ -30,7 +34,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 		return fmt.Errorf("parse the template of test result: %w", err)
 	}
 
-	targets, err := c.findFiles(cfg, nil, param.RootDir)
+	targets, err := c.findFiles(cfg, param.RootDir)
 	if err != nil {
 		return err
 	}

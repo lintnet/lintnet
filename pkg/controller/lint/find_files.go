@@ -2,7 +2,6 @@ package lint
 
 import (
 	"fmt"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -19,8 +18,8 @@ type LintFile struct { //nolint:revive
 	Param      map[string]any
 }
 
-func (c *Controller) findTarget(target *config.Target, modules []*module.Module, rootDir string) (*Target, error) {
-	lintFiles, err := c.findFilesFromModules(target.LintFiles)
+func (c *Controller) findTarget(target *config.Target, rootDir string) (*Target, error) {
+	lintFiles, err := c.findFilesFromModules(target.LintFiles, "")
 	if err != nil {
 		return nil, err
 	}
@@ -28,28 +27,19 @@ func (c *Controller) findTarget(target *config.Target, modules []*module.Module,
 	if err != nil {
 		return nil, err
 	}
-	a := make([]*LintFile, 0, len(lintFiles)+len(modules))
-	for _, b := range lintFiles {
-		a = append(a, &LintFile{
-			Path:  b.Path,
-			Param: b.Param,
-		})
+	modules, err := c.findFilesFromModules(target.Modules, rootDir)
+	if err != nil {
+		return nil, err
 	}
-	for _, mod := range modules {
-		a = append(a, &LintFile{
-			ModulePath: path.Join(mod.ID(), mod.Path),
-			Path:       filepath.Join(rootDir, filepath.FromSlash(mod.ID()), filepath.FromSlash(mod.Path)),
-			Param:      mod.Param,
-		})
-	}
+	lintFiles = append(lintFiles, modules...)
 	return &Target{
-		LintFiles: a,
+		LintFiles: lintFiles,
 		DataFiles: dataFiles,
 	}, nil
 }
 
 type Target struct {
-	LintFiles []*LintFile
+	LintFiles []*config.LintFile
 	DataFiles []string
 }
 
@@ -64,11 +54,11 @@ func filterTargets(targets []*Target, filePaths []string) []*Target {
 	return newTargets
 }
 
-func filterTarget(target *Target, filePaths []string) *Target { //nolint:cyclop
+func filterTarget(target *Target, filePaths []string) *Target {
 	newTarget := &Target{}
 	for _, lintFile := range target.LintFiles {
 		for _, filePath := range filePaths {
-			if lintFile.Path == filePath || lintFile.ModulePath == filePath {
+			if lintFile.Path == filePath {
 				newTarget.LintFiles = append(newTarget.LintFiles, lintFile)
 				break
 			}
@@ -96,18 +86,14 @@ func filterTarget(target *Target, filePaths []string) *Target { //nolint:cyclop
 	return newTarget
 }
 
-func (c *Controller) findFiles(cfg *config.Config, modulesList [][]*module.Module, rootDir string) ([]*Target, error) {
+func (c *Controller) findFiles(cfg *config.Config, rootDir string) ([]*Target, error) {
 	if len(cfg.Targets) == 0 {
 		return nil, nil
 	}
 
 	targets := make([]*Target, len(cfg.Targets))
 	for i, target := range cfg.Targets {
-		var modules []*module.Module
-		if modulesList != nil {
-			modules = modulesList[i]
-		}
-		t, err := c.findTarget(target, modules, rootDir)
+		t, err := c.findTarget(target, rootDir)
 		if err != nil {
 			return nil, err
 		}
@@ -116,10 +102,11 @@ func (c *Controller) findFiles(cfg *config.Config, modulesList [][]*module.Modul
 	return targets, nil
 }
 
-func (c *Controller) findFilesFromModules(modules []*config.Module) ([]*config.Module, error) {
-	matchFiles := map[string][]*config.Module{}
+func (c *Controller) findFilesFromModules(modules []*module.Glob, rootDir string) ([]*config.LintFile, error) {
+	matchFiles := map[string][]*config.LintFile{}
 	for _, m := range modules {
-		if pattern := strings.TrimPrefix(m.Path, "!"); pattern != m.Path {
+		if m.Excluded {
+			pattern := filepath.Join(rootDir, m.Glob)
 			for file := range matchFiles {
 				matched, err := doublestar.Match(pattern, file)
 				if err != nil {
@@ -131,18 +118,32 @@ func (c *Controller) findFilesFromModules(modules []*config.Module) ([]*config.M
 			}
 			continue
 		}
-		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), m.Path, doublestar.WithFilesOnly())
+		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), filepath.Join(rootDir, m.Glob), doublestar.WithFilesOnly())
 		if err != nil {
 			return nil, fmt.Errorf("search files: %w", err)
 		}
 		for _, file := range matches {
-			matchFiles[file] = append(matchFiles[file], &config.Module{
+			var id string
+			if m.Archive == nil {
+				id = filepath.ToSlash(file)
+			} else {
+				id = fmt.Sprintf(
+					"%s/%s/%s/%s@%s",
+					m.Archive.Host,
+					m.Archive.RepoOwner,
+					m.Archive.RepoName,
+					filepath.ToSlash(file),
+					m.Archive.Ref, // TODO add tag
+				)
+			}
+			matchFiles[file] = append(matchFiles[file], &config.LintFile{
+				ID:    id,
 				Path:  file,
 				Param: m.Param,
 			})
 		}
 	}
-	arr := []*config.Module{}
+	arr := []*config.LintFile{}
 	for _, m := range matchFiles {
 		arr = append(arr, m...)
 	}
