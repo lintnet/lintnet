@@ -18,7 +18,6 @@ type Glob struct {
 	ID        string
 	SlashPath string
 	Archive   *Archive
-	Glob      string
 	Param     map[string]interface{}
 	Excluded  bool
 }
@@ -89,7 +88,6 @@ func ParseModuleLine(line string) (*Glob, error) {
 			Ref:       ref,
 			Tag:       tag,
 		},
-		Glob:     path,
 		Excluded: excluded,
 	}, nil
 }

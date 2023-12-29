@@ -98,7 +98,6 @@ func (lg *LintGlob) ToModule() *module.Glob {
 	p := strings.TrimPrefix(lg.Glob, "!")
 	return &module.Glob{
 		ID:        p,
-		Glob:      p,
 		SlashPath: p,
 		Param:     lg.Param,
 		Excluded:  p != lg.Glob,
