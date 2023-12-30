@@ -20,14 +20,6 @@ type ParamLint struct {
 	OutputSuccess  bool
 }
 
-// func debug(data any) {
-// 	encoder := json.NewEncoder(os.Stdout)
-// 	encoder.SetIndent("", "  ")
-// 	if err := encoder.Encode(data); err != nil {
-// 		fmt.Println("ERROR", err)
-// 	}
-// }
-
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error {
 	rawCfg := &config.RawConfig{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {

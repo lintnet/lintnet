@@ -19,7 +19,7 @@ type Data struct {
 
 type TopLevelArgment struct {
 	Data   *Data          `json:"data"`
-	Custom map[string]any `json:"custom"`
+	Config map[string]any `json:"config"`
 }
 
 func (c *Controller) parseDataFile(filePath string) (*TopLevelArgment, error) {

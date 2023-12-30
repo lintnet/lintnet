@@ -69,12 +69,12 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 					data.Data.FilePath = td.Param.Data.FilePath
 				}
 				if td.Param != nil {
-					data.Custom = td.Param.Custom
+					data.Config = td.Param.Config
 				}
 				td.Param = data
 			}
-			if td.Param.Custom == nil {
-				td.Param.Custom = map[string]any{}
+			if td.Param.Config == nil {
+				td.Param.Config = map[string]any{}
 			}
 			tlaB, err := json.Marshal(td.Param)
 			if err != nil {
