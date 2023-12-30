@@ -61,7 +61,7 @@ func TestRawModule_UnmarshalJSON(t *testing.T) {
 	}
 }
 
-func TestRawConfig_Parse(t *testing.T) {
+func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name   string
