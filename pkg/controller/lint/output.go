@@ -223,7 +223,7 @@ type Output struct {
 func (c *Controller) formatResultToOutput(results map[string]*FileResult) *Output {
 	list := make([]*FlatError, 0, len(results))
 	for dataFilePath, fileResult := range results {
-		list = append(list, fileResult.flattenError(dataFilePath)...)
+		list = append(list, fileResult.FlattenError(dataFilePath)...)
 	}
 	return &Output{
 		LintnetVersion: c.param.Version,
