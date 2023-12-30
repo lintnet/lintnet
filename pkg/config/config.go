@@ -79,8 +79,8 @@ type RawTarget struct {
 }
 
 type LintGlob struct {
-	Glob  string         `json:"path"`
-	Param map[string]any `json:"param"`
+	Glob   string         `json:"path"`
+	Config map[string]any `json:"config"`
 }
 
 func (lg *LintGlob) UnmarshalJSON(b []byte) error {
@@ -88,7 +88,7 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, rm); err != nil {
 		return err //nolint:wrapcheck
 	}
-	lg.Param = rm.Param
+	lg.Config = rm.Config
 	lg.Glob = rm.Glob
 	return nil
 }
@@ -98,7 +98,7 @@ func (lg *LintGlob) ToModule() *ModuleGlob {
 	return &ModuleGlob{
 		ID:        p,
 		SlashPath: p,
-		Param:     lg.Param,
+		Config:    lg.Config,
 		Excluded:  p != lg.Glob,
 	}
 }
@@ -127,8 +127,8 @@ func (rt *RawTarget) Parse() (*Target, error) {
 }
 
 type RawModule struct {
-	Glob  string         `json:"path"`
-	Param map[string]any `json:"param"`
+	Glob   string         `json:"path"`
+	Config map[string]any `json:"config"`
 }
 
 func (rm *RawModule) Parse() (*ModuleGlob, error) {
@@ -136,14 +136,14 @@ func (rm *RawModule) Parse() (*ModuleGlob, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parse a module path: %w", err)
 	}
-	m.Param = rm.Param
+	m.Config = rm.Config
 	return m, nil
 }
 
 type LintFile struct {
-	ID    string
-	Path  string         `json:"path"`
-	Param map[string]any `json:"param"`
+	ID     string
+	Path   string         `json:"path"`
+	Config map[string]any `json:"config"`
 }
 
 func (rm *RawModule) UnmarshalJSON(b []byte) error {
@@ -172,7 +172,7 @@ func (rm *RawModule) UnmarshalJSON(b []byte) error {
 			if !ok {
 				return errors.New("param must be a map[string]any")
 			}
-			rm.Param = a
+			rm.Config = a
 		}
 		return nil
 	}

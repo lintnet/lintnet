@@ -16,7 +16,7 @@ import (
 type LintFile struct { //nolint:revive
 	Path       string
 	ModulePath string
-	Param      map[string]any
+	Config     map[string]any
 }
 
 func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootDir string) (*Target, error) {
@@ -145,9 +145,9 @@ func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, m
 			id = filepath.ToSlash(relPath) // TODO add tag
 		}
 		matchFiles[file] = append(matchFiles[file], &config.LintFile{
-			ID:    id,
-			Path:  file,
-			Param: m.Param,
+			ID:     id,
+			Path:   file,
+			Config: m.Config,
 		})
 	}
 	return nil
