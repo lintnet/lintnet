@@ -19,7 +19,7 @@ import (
 //go:embed test_diff.txt
 var testResultTemplateByte []byte
 
-func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:funlen,cyclop,gocognit
+func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
 	rawCfg := &config.RawConfig{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
 		return err
@@ -42,73 +42,8 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 	pairs := c.filterTargetsWithTest(logE, targets)
 	failedResults := make([]*FailedResult, 0, len(pairs))
 	for _, pair := range pairs {
-		testData := []*TestData{}
-		if err := jsonnet.Read(c.fs, pair.TestFilePath, "{}", c.importer, &testData); err != nil {
-			failedResults = append(failedResults, &FailedResult{
-				LintFilePath: pair.LintFilePath,
-				TestFilePath: pair.TestFilePath,
-				Error:        fmt.Errorf("read a test file: %w", err).Error(),
-			})
-			continue
-		}
-		for _, td := range testData {
-			if td.DataFile != "" {
-				dataFilePath := filepath.Join(filepath.Dir(pair.TestFilePath), td.DataFile)
-				data, err := c.parseDataFile(dataFilePath)
-				if err != nil {
-					failedResults = append(failedResults, &FailedResult{
-						Name:         td.Name,
-						LintFilePath: pair.LintFilePath,
-						TestFilePath: pair.TestFilePath,
-						Param:        td.Param,
-						Error:        fmt.Errorf("read a data file: %w", err).Error(),
-					})
-					continue
-				}
-				if td.Param != nil && td.Param.Data != nil && td.Param.Data.FilePath != "" {
-					data.Data.FilePath = td.Param.Data.FilePath
-				}
-				if td.Param != nil {
-					data.Config = td.Param.Config
-				}
-				td.Param = data
-			}
-			if td.Param.Config == nil {
-				td.Param.Config = map[string]any{}
-			}
-			tlaB, err := json.Marshal(td.Param)
-			if err != nil {
-				failedResults = append(failedResults, &FailedResult{
-					Name:         td.Name,
-					LintFilePath: pair.LintFilePath,
-					TestFilePath: pair.TestFilePath,
-					Param:        td.Param,
-					Error:        fmt.Errorf("marshal param as JSON: %w", err).Error(),
-				})
-				continue
-			}
-			var result any
-			if err := jsonnet.Read(c.fs, pair.LintFilePath, string(tlaB), c.importer, &result); err != nil {
-				failedResults = append(failedResults, &FailedResult{
-					Name:         td.Name,
-					LintFilePath: pair.LintFilePath,
-					TestFilePath: pair.TestFilePath,
-					Param:        td.Param,
-					Error:        fmt.Errorf("read a lint file: %w", err).Error(),
-				})
-				continue
-			}
-			if diff := cmp.Diff(td.Result, result); diff != "" {
-				failedResults = append(failedResults, &FailedResult{
-					Name:         td.Name,
-					LintFilePath: pair.LintFilePath,
-					TestFilePath: pair.TestFilePath,
-					Wanted:       td.Result,
-					Param:        td.Param,
-					Got:          result,
-					Diff:         diff,
-				})
-			}
+		if results := c.tests(pair); len(results) > 0 {
+			failedResults = append(failedResults, results...)
 		}
 	}
 	if len(failedResults) == 0 {
@@ -118,6 +53,72 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 		return fmt.Errorf("render the result: %w", err)
 	}
 	return nil
+}
+
+func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
+	if td.DataFile != "" {
+		dataFilePath := filepath.Join(filepath.Dir(pair.TestFilePath), td.DataFile)
+		data, err := c.parseDataFile(dataFilePath)
+		if err != nil {
+			return &FailedResult{
+				Error: fmt.Errorf("read a data file: %w", err).Error(),
+			}
+		}
+		if td.Param != nil && td.Param.Data != nil && td.Param.Data.FilePath != "" {
+			data.Data.FilePath = td.Param.Data.FilePath
+		}
+		if td.Param != nil {
+			data.Config = td.Param.Config
+		}
+		td.Param = data
+	}
+	if td.Param.Config == nil {
+		td.Param.Config = map[string]any{}
+	}
+	tlaB, err := json.Marshal(td.Param)
+	if err != nil {
+		return &FailedResult{
+			Error: fmt.Errorf("marshal param as JSON: %w", err).Error(),
+		}
+	}
+	var result any
+	if err := jsonnet.Read(c.fs, pair.LintFilePath, string(tlaB), c.importer, &result); err != nil {
+		return &FailedResult{
+			Error: fmt.Errorf("read a lint file: %w", err).Error(),
+		}
+	}
+	if diff := cmp.Diff(td.Result, result); diff != "" {
+		return &FailedResult{
+			Wanted: td.Result,
+			Got:    result,
+			Diff:   diff,
+		}
+	}
+	return nil
+}
+
+func (c *Controller) tests(pair *TestPair) []*FailedResult {
+	testData := []*TestData{}
+	if err := jsonnet.Read(c.fs, pair.TestFilePath, "{}", c.importer, &testData); err != nil {
+		return []*FailedResult{
+			{
+				LintFilePath: pair.LintFilePath,
+				TestFilePath: pair.TestFilePath,
+				Error:        fmt.Errorf("read a test file: %w", err).Error(),
+			},
+		}
+	}
+	results := make([]*FailedResult, 0, len(testData))
+	for _, td := range testData {
+		if result := c.test(pair, td); result != nil {
+			result.Name = td.Name
+			result.LintFilePath = pair.LintFilePath
+			result.TestFilePath = pair.TestFilePath
+			result.Param = td.Param
+			results = append(results, result)
+		}
+	}
+	return results
 }
 
 type TestData struct {
