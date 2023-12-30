@@ -11,7 +11,7 @@ import (
 )
 
 func (c *Controller) parseLintFiles(lintFiles []*config.LintFile) ([]*Node, error) {
-	jsonnetAsts := make([]*Node, 0, len(lintFiles))
+	nodes := make([]*Node, 0, len(lintFiles))
 	for _, lintFile := range lintFiles {
 		node, err := c.parseLintFile(lintFile)
 		if err != nil {
@@ -19,33 +19,33 @@ func (c *Controller) parseLintFiles(lintFiles []*config.LintFile) ([]*Node, erro
 				"file_path": lintFile.Path,
 			})
 		}
-		jsonnetAsts = append(jsonnetAsts, node)
+		nodes = append(nodes, node)
 	}
-	return jsonnetAsts, nil
+	return nodes, nil
 }
 
 func (c *Controller) parseLintFile(lintFile *config.LintFile) (*Node, error) {
-	ja, err := jsonnet.ReadToNode(c.fs, lintFile.Path)
+	node, err := jsonnet.ReadToNode(c.fs, lintFile.Path)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 	return &Node{
-		Node:   ja,
+		Node:   node,
 		Key:    lintFile.ID,
-		Custom: lintFile.Config,
+		Config: lintFile.Config,
 	}, nil
 }
 
 type Node struct {
 	Node   jsonnet.Node
-	Custom map[string]any
+	Config map[string]any
 	Key    string
 }
 
 func (c *Controller) evaluateLintFile(data *Data, lintFile *Node) *JsonnetEvaluateResult {
 	tla := &TopLevelArgment{
 		Data:   data,
-		Config: lintFile.Custom,
+		Config: lintFile.Config,
 	}
 	if tla.Config == nil {
 		tla.Config = map[string]any{}
