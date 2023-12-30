@@ -136,18 +136,15 @@ func (c *Controller) findFilesFromModules(modules []*config.ModuleGlob, rootDir 
 			return nil, fmt.Errorf("search files: %w", err)
 		}
 		for _, file := range matches {
+			relPath, err := filepath.Rel(rootDir, file)
+			if err != nil {
+				return nil, fmt.Errorf("get a relative path from the root directory to a module: %w", err)
+			}
 			var id string
 			if m.Archive == nil {
 				id = filepath.ToSlash(file)
 			} else {
-				id = fmt.Sprintf(
-					"%s/%s/%s/%s@%s",
-					m.Archive.Host,
-					m.Archive.RepoOwner,
-					m.Archive.RepoName,
-					filepath.ToSlash(file),
-					m.Archive.Ref, // TODO add tag
-				)
+				id = filepath.ToSlash(relPath) // TODO add tag
 			}
 			matchFiles[file] = append(matchFiles[file], &config.LintFile{
 				ID:    id,
