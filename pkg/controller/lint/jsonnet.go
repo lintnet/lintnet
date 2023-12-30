@@ -42,10 +42,10 @@ type Node struct {
 	Key    string
 }
 
-func (c *Controller) evaluateNode(data *Data, ja *Node) *JsonnetEvaluateResult {
+func (c *Controller) evaluateLintFile(data *Data, lintFile *Node) *JsonnetEvaluateResult {
 	tla := &TopLevelArgment{
 		Data:   data,
-		Config: ja.Custom,
+		Config: lintFile.Custom,
 	}
 	if tla.Config == nil {
 		tla.Config = map[string]any{}
@@ -53,28 +53,28 @@ func (c *Controller) evaluateNode(data *Data, ja *Node) *JsonnetEvaluateResult {
 	tlaB, err := json.Marshal(tla)
 	if err != nil {
 		return &JsonnetEvaluateResult{
-			Key:   ja.Key,
+			Key:   lintFile.Key,
 			Error: fmt.Errorf("marshal a top level argument as JSON: %w", err).Error(),
 		}
 	}
 	vm := jsonnet.NewVM(string(tlaB), c.importer)
-	result, err := vm.Evaluate(ja.Node)
+	result, err := vm.Evaluate(lintFile.Node)
 	if err != nil {
 		return &JsonnetEvaluateResult{
-			Key:   ja.Key,
+			Key:   lintFile.Key,
 			Error: err.Error(),
 		}
 	}
 	return &JsonnetEvaluateResult{
-		Key:    ja.Key,
+		Key:    lintFile.Key,
 		Result: result,
 	}
 }
 
-func (c *Controller) evaluate(data *Data, jsonnetAsts []*Node) []*JsonnetEvaluateResult {
-	results := make([]*JsonnetEvaluateResult, len(jsonnetAsts))
-	for i, ja := range jsonnetAsts {
-		results[i] = c.evaluateNode(data, ja)
+func (c *Controller) evaluate(data *Data, lintFiles []*Node) []*JsonnetEvaluateResult {
+	results := make([]*JsonnetEvaluateResult, len(lintFiles))
+	for i, lintFile := range lintFiles {
+		results[i] = c.evaluateLintFile(data, lintFile)
 	}
 	return results
 }
