@@ -115,45 +115,49 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir s
 	return targets, nil
 }
 
+func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile) error {
+	if m.Excluded {
+		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
+		for file := range matchFiles {
+			matched, err := doublestar.Match(pattern, file)
+			if err != nil {
+				return fmt.Errorf("check file match: %w", err)
+			}
+			if matched {
+				delete(matchFiles, file)
+			}
+		}
+		return nil
+	}
+	matches, err := doublestar.Glob(afero.NewIOFS(c.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), doublestar.WithFilesOnly())
+	if err != nil {
+		return fmt.Errorf("search files: %w", err)
+	}
+	for _, file := range matches {
+		relPath, err := filepath.Rel(rootDir, file)
+		if err != nil {
+			return fmt.Errorf("get a relative path from the root directory to a module: %w", err)
+		}
+		var id string
+		if m.Archive == nil {
+			id = filepath.ToSlash(file)
+		} else {
+			id = filepath.ToSlash(relPath) // TODO add tag
+		}
+		matchFiles[file] = append(matchFiles[file], &config.LintFile{
+			ID:    id,
+			Path:  file,
+			Param: m.Param,
+		})
+	}
+	return nil
+}
+
 func (c *Controller) findFilesFromModules(modules []*config.ModuleGlob, rootDir string) ([]*config.LintFile, error) {
 	matchFiles := map[string][]*config.LintFile{}
 	for _, m := range modules {
-		if m.Excluded {
-			pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
-			for file := range matchFiles {
-				matched, err := doublestar.Match(pattern, file)
-				if err != nil {
-					return nil, fmt.Errorf("check file match: %w", err)
-				}
-				if matched {
-					delete(matchFiles, file)
-				}
-			}
-			continue
-		}
-		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), doublestar.WithFilesOnly())
-		if err != nil {
-			return nil, fmt.Errorf("search files: %w", err)
-		}
-		for _, file := range matches {
-			var id string
-			if m.Archive == nil {
-				id = filepath.ToSlash(file)
-			} else {
-				id = fmt.Sprintf(
-					"%s/%s/%s/%s@%s",
-					m.Archive.Host,
-					m.Archive.RepoOwner,
-					m.Archive.RepoName,
-					filepath.ToSlash(file),
-					m.Archive.Ref, // TODO add tag
-				)
-			}
-			matchFiles[file] = append(matchFiles[file], &config.LintFile{
-				ID:    id,
-				Path:  file,
-				Param: m.Param,
-			})
+		if err := c.findFilesFromModule(m, rootDir, matchFiles); err != nil {
+			return nil, err
 		}
 	}
 	arr := []*config.LintFile{}
