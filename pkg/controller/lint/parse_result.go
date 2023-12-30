@@ -42,7 +42,7 @@ type (
 	}
 )
 
-func (r *FileResult) flattenError(dataFilePath string) []*FlatError {
+func (r *FileResult) FlattenError(dataFilePath string) []*FlatError {
 	if r.Error != "" {
 		return []*FlatError{
 			{
