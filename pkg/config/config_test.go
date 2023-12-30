@@ -34,7 +34,7 @@ func TestRawModule_UnmarshalJSON(t *testing.T) {
 				}`,
 			exp: &config.RawModule{
 				Glob: "github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
-				Param: map[string]any{
+				Config: map[string]any{
 					"excludes": []any{"foo"},
 				},
 			},
@@ -81,7 +81,7 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 							},
 							{
 								Glob: "zoo/*.jsonnet",
-								Param: map[string]any{
+								Config: map[string]any{
 									"limit": 10,
 								},
 							},
@@ -89,7 +89,7 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 						Modules: []*config.RawModule{
 							{
 								Glob: "github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
-								Param: map[string]any{
+								Config: map[string]any{
 									"excluded": []string{"test"},
 								},
 							},
@@ -117,7 +117,7 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 							{
 								ID:        "zoo/*.jsonnet",
 								SlashPath: "zoo/*.jsonnet",
-								Param: map[string]any{
+								Config: map[string]any{
 									"limit": 10,
 								},
 							},
@@ -140,7 +140,7 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 									Ref:       "0ed62adf055a4fbd7ef7ebe304f01794508ed325",
 									Tag:       "v0.1.3",
 								},
-								Param: map[string]any{
+								Config: map[string]any{
 									"excluded": []string{"test"},
 								},
 							},

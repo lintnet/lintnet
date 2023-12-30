@@ -32,7 +32,7 @@ func (c *Controller) parseLintFile(lintFile *config.LintFile) (*Node, error) {
 	return &Node{
 		Node:   ja,
 		Key:    lintFile.ID,
-		Custom: lintFile.Param,
+		Custom: lintFile.Config,
 	}, nil
 }
 

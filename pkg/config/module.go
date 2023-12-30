@@ -11,14 +11,14 @@ type Module struct {
 	ID        string
 	Archive   *ModuleArchive
 	SlashPath string
-	Param     map[string]interface{}
+	Config    map[string]interface{}
 }
 
 type ModuleGlob struct {
 	ID        string
 	SlashPath string
 	Archive   *ModuleArchive
-	Param     map[string]interface{}
+	Config    map[string]interface{}
 	Excluded  bool
 }
 
