@@ -45,10 +45,10 @@ type Node struct {
 func (c *Controller) evaluateNode(data *Data, ja *Node) *JsonnetEvaluateResult {
 	tla := &TopLevelArgment{
 		Data:   data,
-		Custom: ja.Custom,
+		Config: ja.Custom,
 	}
-	if tla.Custom == nil {
-		tla.Custom = map[string]any{}
+	if tla.Config == nil {
+		tla.Config = map[string]any{}
 	}
 	tlaB, err := json.Marshal(tla)
 	if err != nil {
