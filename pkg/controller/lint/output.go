@@ -40,7 +40,13 @@ type jsonOutputter struct {
 }
 
 func (o *jsonOutputter) Output(result *Output) error {
-	return outputJSON(o.stdout, result)
+	r := *result
+	for i, e := range result.Errors {
+		fe := *e
+		fe.Description = ""
+		r.Errors[i] = &fe
+	}
+	return outputJSON(o.stdout, &r)
 }
 
 type jsonnetOutputter struct {
@@ -159,11 +165,12 @@ func (c *Controller) getOutputter(outputs []*config.Output, outputID string) (Ou
 }
 
 type FlatError struct {
-	Rule     string `json:"rule,omitempty"`
-	Level    string `json:"level,omitempty"`
-	Message  string `json:"message,omitempty"`
-	LintFile string `json:"lint_file,omitempty"`
-	DataFile string `json:"data_file,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	Level       string `json:"level,omitempty"`
+	Message     string `json:"message,omitempty"`
+	LintFile    string `json:"lint_file,omitempty"`
+	DataFile    string `json:"data_file,omitempty"`
 	// DataFilePaths []string `json:"data_files,omitempty"`
 	TargetID string `json:"target_id,omitempty"`
 	Location any    `json:"location,omitempty"`

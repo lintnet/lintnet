@@ -8,6 +8,9 @@ function(param)
     function(elem) std.length(elem.location.files) > 1,
     std.map(function(workflow_name) {
       name: 'GitHub Actions workflow name must be unique',
+      description: |||
+        The duplicate of workflow names may cause issues.
+      |||,
       location: {
         workflow_name: workflow_name,
         files: std.filterMap(
