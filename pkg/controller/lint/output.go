@@ -193,14 +193,15 @@ func (c *Controller) getOutputter(output *config.Output) (Outputter, error) {
 }
 
 type FlatError struct {
-	RuleName      string   `json:"rule,omitempty"`
-	Level         string   `json:"level,omitempty"`
-	Message       string   `json:"message,omitempty"`
-	LintFilePath  string   `json:"lint_file,omitempty"`
-	DataFilePath  string   `json:"data_file,omitempty"`
-	DataFilePaths []string `json:"data_files,omitempty"`
-	Location      any      `json:"location,omitempty"`
-	Custom        any      `json:"custom,omitempty"`
+	RuleName     string `json:"rule,omitempty"`
+	Level        string `json:"level,omitempty"`
+	Message      string `json:"message,omitempty"`
+	LintFilePath string `json:"lint_file,omitempty"`
+	DataFilePath string `json:"data_file,omitempty"`
+	// DataFilePaths []string `json:"data_files,omitempty"`
+	TargetID string `json:"target_id,omitempty"`
+	Location any    `json:"location,omitempty"`
+	Custom   any    `json:"custom,omitempty"`
 }
 
 func (e *FlatError) Failed(errLevel errlevel.Level) (bool, error) {

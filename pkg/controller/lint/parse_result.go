@@ -25,6 +25,7 @@ type (
 	}
 
 	Result struct {
+		TargetID  string           `json:"target_id,omitempty"`
 		LintFile  string           `json:"lint_file,omitempty"`
 		DataFile  string           `json:"data_file,omitempty"`
 		DataFiles []string         `json:"data_files,omitempty"`
@@ -42,14 +43,15 @@ func (result *Result) FlatErrors() []*FlatError {
 			continue
 		}
 		fes = append(fes, &FlatError{
-			RuleName:      r.Name,
-			Level:         r.Level,
-			Message:       r.Message,
-			LintFilePath:  result.LintFile,
-			DataFilePath:  result.DataFile,
-			DataFilePaths: result.DataFiles,
-			Location:      r.Location,
-			Custom:        r.Custom,
+			RuleName:     r.Name,
+			Level:        r.Level,
+			Message:      r.Message,
+			LintFilePath: result.LintFile,
+			DataFilePath: result.DataFile,
+			// DataFilePaths: result.DataFiles,
+			TargetID: result.TargetID,
+			Location: r.Location,
+			Custom:   r.Custom,
 		})
 	}
 	return fes

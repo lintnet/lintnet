@@ -116,6 +116,9 @@ func (c *Controller) getResults(targets []*Target) ([]*Result, error) {
 		if err != nil {
 			return nil, err
 		}
+		for _, r := range rs {
+			r.TargetID = target.ID
+		}
 		results = append(results, rs...)
 	}
 	return results, nil

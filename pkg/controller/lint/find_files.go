@@ -53,6 +53,7 @@ func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootD
 }
 
 type Target struct {
+	ID        string
 	Combine   bool
 	LintFiles []*config.LintFile
 	DataFiles []string
@@ -112,6 +113,7 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir s
 		if err != nil {
 			return nil, err
 		}
+		t.ID = target.ID
 		targets[i] = t
 	}
 	return targets, nil
