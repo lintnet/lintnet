@@ -122,9 +122,7 @@ func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.Templat
 }
 
 func (o *templateOutputter) Output(result *Output) error {
-	if err := o.template.Execute(o.stdout, map[string]any{
-		"result": result,
-	}); err != nil {
+	if err := o.template.Execute(o.stdout, result); err != nil {
 		return fmt.Errorf("render a template: %w", err)
 	}
 	return nil
@@ -161,11 +159,11 @@ func (c *Controller) getOutputter(outputs []*config.Output, outputID string) (Ou
 }
 
 type FlatError struct {
-	RuleName     string `json:"rule,omitempty"`
-	Level        string `json:"level,omitempty"`
-	Message      string `json:"message,omitempty"`
-	LintFilePath string `json:"lint_file,omitempty"`
-	DataFilePath string `json:"data_file,omitempty"`
+	Rule     string `json:"rule,omitempty"`
+	Level    string `json:"level,omitempty"`
+	Message  string `json:"message,omitempty"`
+	LintFile string `json:"lint_file,omitempty"`
+	DataFile string `json:"data_file,omitempty"`
 	// DataFilePaths []string `json:"data_files,omitempty"`
 	TargetID string `json:"target_id,omitempty"`
 	Location any    `json:"location,omitempty"`
