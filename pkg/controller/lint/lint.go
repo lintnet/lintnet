@@ -18,7 +18,7 @@ type ParamLint struct {
 	ConfigFilePath string
 	TargetID       string
 	FilePaths      []string
-	Outputs        []string
+	Output         string
 	OutputSuccess  bool
 }
 
@@ -41,7 +41,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}
 
-	outputters, err := c.getOutputters(cfg, param.Outputs)
+	outputter, err := c.getOutputter(cfg.Outputs, param.Output)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		"targets": log.JSON(targets),
 	}).Debug("linted")
 
-	return c.Output(logE, errLevel, results, outputters, param.OutputSuccess)
+	return c.Output(logE, errLevel, results, []Outputter{outputter}, param.OutputSuccess)
 }
 
 func (c *Controller) getTarget(targets []*config.RawTarget, targetID string) (*config.RawTarget, error) {
@@ -91,22 +91,6 @@ func (c *Controller) getTarget(targets []*config.RawTarget, targetID string) (*c
 		}
 	}
 	return nil, errors.New("target isn't found")
-}
-
-func (c *Controller) getOutputters(cfg *config.Config, outputIDs []string) ([]Outputter, error) {
-	outputs, err := c.getOutputs(cfg, outputIDs)
-	if err != nil {
-		return nil, err
-	}
-	outputters := make([]Outputter, len(outputs))
-	for i, output := range outputs {
-		o, err := c.getOutputter(output)
-		if err != nil {
-			return nil, err
-		}
-		outputters[i] = o
-	}
-	return outputters, nil
 }
 
 func (c *Controller) getResults(targets []*Target) ([]*Result, error) {

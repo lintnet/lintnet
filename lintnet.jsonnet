@@ -23,4 +23,19 @@ function(param) {
       ],
     },
   ],
+  outputs: [
+    {
+      id: 'jsonnet',
+      renderer: 'jsonnet',
+      template: 'examples/output/output.jsonnet',
+      // config: {},
+    },
+    {
+      id: 'template',
+      renderer: 'text/template',
+      template: 'examples/output/output.tpl',
+      transform: 'examples/transform/template.jsonnet',
+      // config: {},
+    },
+  ],
 }

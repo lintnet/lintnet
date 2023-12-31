@@ -13,7 +13,6 @@ import (
 	"github.com/lintnet/lintnet/pkg/render"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results []*Result, outputters []Outputter, outputSuccess bool) error {
@@ -36,89 +35,77 @@ func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results
 	return nil
 }
 
-func (c *Controller) getOutputs(cfg *config.Config, outputIDs []string) ([]*config.Output, error) {
-	outputList := cfg.Outputs
-	if len(outputList) == 0 {
-		outputList = []*config.Output{
-			{
-				ID:       "stdout",
-				Type:     "stdout",
-				Renderer: "jsonnet",
-			},
-		}
+type jsonOutputter struct {
+	stdout io.Writer
+}
+
+func (o *jsonOutputter) Output(result *Output) error {
+	r := *result
+	for i, e := range result.Errors {
+		fe := *e
+		fe.Description = ""
+		r.Errors[i] = &fe
 	}
-	if len(outputIDs) == 0 {
-		outputIDs = []string{
-			"stdout",
-		}
-	}
-	outputs := make([]*config.Output, len(outputIDs))
-	outputMap := make(map[string]*config.Output, len(outputList))
-	for _, output := range outputList {
-		outputMap[output.ID] = output
-	}
-	for i, outputID := range outputIDs {
-		output, ok := outputMap[outputID]
-		if !ok {
-			return nil, logerr.WithFields(errors.New("unknown output id"), logrus.Fields{ //nolint:wrapcheck
-				"output_id": outputID,
-			})
-		}
-		outputs[i] = output
-	}
-	return outputs, nil
+	return outputJSON(o.stdout, &r)
 }
 
 type jsonnetOutputter struct {
-	fs     afero.Fs
-	stdout io.Writer
-	output *config.Output
-	node   jsonnet.Node
+	stdout    io.Writer
+	output    *config.Output
+	transform jsonnet.Node
+	node      jsonnet.Node
+	importer  *jsonnet.Importer
+	config    map[string]any
 }
 
-func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output) (*jsonnetOutputter, error) {
-	var node jsonnet.Node
-	if output.Template != "" {
-		n, err := jsonnet.ReadToNode(fs, output.Template)
-		if err != nil {
-			return nil, fmt.Errorf("read a template as Jsonnet: %w", err)
-		}
-		node = n
+func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, importer *jsonnet.Importer) (*jsonnetOutputter, error) {
+	node, err := jsonnet.ReadToNode(fs, output.Template)
+	if err != nil {
+		return nil, fmt.Errorf("read a template as Jsonnet: %w", err)
 	}
-	return &jsonnetOutputter{
-		fs:     fs,
-		stdout: stdout,
-		output: output,
-		node:   node,
-	}, nil
+	outputter := &jsonnetOutputter{
+		stdout:   stdout,
+		output:   output,
+		node:     node,
+		importer: importer,
+		config:   output.Config,
+	}
+	if output.Transform != "" {
+		node, err := jsonnet.ReadToNode(fs, output.Transform)
+		if err != nil {
+			return nil, fmt.Errorf("read a transform as Jsonnet: %w", err)
+		}
+		outputter.transform = node
+	}
+	return outputter, nil
 }
 
 func (o *jsonnetOutputter) Output(result *Output) error {
-	out := o.stdout
-	if o.output.Type == "file" {
-		f, err := o.fs.Create(o.output.Path)
-		if err != nil {
-			return fmt.Errorf("create a file: %w", err)
-		}
-		defer f.Close()
-		out = f
+	r := *result
+	r.Config = o.config
+	tla, err := json.Marshal(&r)
+	if err != nil {
+		return fmt.Errorf("marshal output as JSON: %w", err)
 	}
-	if o.output.Template != "" {
-		b, err := json.Marshal(result)
+	tlaS := string(tla)
+	if o.transform != nil {
+		vm := jsonnet.NewVM(string(tla), o.importer)
+		s, err := vm.Evaluate(o.transform)
 		if err != nil {
-			return fmt.Errorf("marshal results as JSON: %w", err)
+			return fmt.Errorf("evaluate a jsonnet: %w", err)
 		}
-		vm := jsonnet.MakeVM()
-		vm.TLACode("param", string(b))
-		jsonnet.SetNativeFunctions(vm)
-		result, err := vm.Evaluate(o.node)
-		if err != nil {
-			return fmt.Errorf("evaluate a Jsonnet: %w", err)
-		}
-		fmt.Fprintln(out, result)
-		return nil
+		tlaS = s
 	}
-	return outputJSON(out, result)
+	vm := jsonnet.NewVM(tlaS, o.importer)
+	s, err := vm.Evaluate(o.node)
+	if err != nil {
+		return fmt.Errorf("evaluate a jsonnet: %w", err)
+	}
+	var a any
+	if err := json.Unmarshal([]byte(s), &a); err != nil {
+		return fmt.Errorf("unmarshal the result as JSON: %w", err)
+	}
+	return outputJSON(o.stdout, a)
 }
 
 func outputJSON(w io.Writer, result any) error {
@@ -140,9 +127,11 @@ type templateOutputter struct {
 	fs       afero.Fs
 	output   *config.Output
 	template render.Template
+	node     jsonnet.Node
+	importer *jsonnet.Importer
 }
 
-func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output) (*templateOutputter, error) {
+func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output, importer *jsonnet.Importer) (*templateOutputter, error) {
 	if output.Template == "" {
 		return nil, errors.New("template is required")
 	}
@@ -154,50 +143,89 @@ func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.Templat
 	if err != nil {
 		return nil, fmt.Errorf("parse a template: %w", err)
 	}
+	var node jsonnet.Node
+	if output.Transform != "" {
+		n, err := jsonnet.ReadToNode(fs, output.Transform)
+		if err != nil {
+			return nil, fmt.Errorf("read a transform as Jsonnet: %w", err)
+		}
+		node = n
+	}
 	return &templateOutputter{
 		stdout:   stdout,
 		fs:       fs,
 		output:   output,
 		template: tpl,
+		importer: importer,
+		node:     node,
 	}, nil
 }
 
 func (o *templateOutputter) Output(result *Output) error {
-	out := o.stdout
-	if o.output.Type == "file" {
-		f, err := o.fs.Create(o.output.Path)
-		if err != nil {
-			return fmt.Errorf("create a file: %w", err)
-		}
-		defer f.Close()
-		out = f
+	r := *result
+	r.Config = o.output.Config
+	b, err := json.Marshal(r)
+	if err != nil {
+		return fmt.Errorf("marshal result as JSON: %w", err)
 	}
-	if err := o.template.Execute(out, map[string]any{
-		"result": result,
-	}); err != nil {
+	var param any
+	if o.node != nil {
+		vm := jsonnet.NewVM(string(b), o.importer)
+		s, err := vm.Evaluate(o.node)
+		if err != nil {
+			return fmt.Errorf("evaluate a jsonnet: %w", err)
+		}
+		if err := json.Unmarshal([]byte(s), &param); err != nil {
+			return fmt.Errorf("unmarshal transformed result as JSON: %w", err)
+		}
+	} else {
+		if err := json.Unmarshal(b, &param); err != nil {
+			return fmt.Errorf("unmarshal result as JSON: %w", err)
+		}
+	}
+	if err := o.template.Execute(o.stdout, param); err != nil {
 		return fmt.Errorf("render a template: %w", err)
 	}
 	return nil
 }
 
-func (c *Controller) getOutputter(output *config.Output) (Outputter, error) {
+func (c *Controller) getOutput(outputs []*config.Output, outputID string) (*config.Output, error) {
+	for _, output := range outputs {
+		if output.ID == outputID {
+			return output, nil
+		}
+	}
+	return nil, errors.New("unknown output id")
+}
+
+func (c *Controller) getOutputter(outputs []*config.Output, outputID string) (Outputter, error) {
+	if outputID == "" {
+		return &jsonOutputter{
+			stdout: c.stdout,
+		}, nil
+	}
+	output, err := c.getOutput(outputs, outputID)
+	if err != nil {
+		return nil, err
+	}
 	switch output.Renderer {
 	case "jsonnet":
-		return newJsonnetOutputter(c.fs, c.stdout, output)
+		return newJsonnetOutputter(c.fs, c.stdout, output, c.importer)
 	case "text/template":
-		return newTemplateOutputter(c.stdout, c.fs, &render.TextTemplateRenderer{}, output)
+		return newTemplateOutputter(c.stdout, c.fs, &render.TextTemplateRenderer{}, output, c.importer)
 	case "html/template":
-		return newTemplateOutputter(c.stdout, c.fs, &render.HTMLTemplateRenderer{}, output)
+		return newTemplateOutputter(c.stdout, c.fs, &render.HTMLTemplateRenderer{}, output, c.importer)
 	}
 	return nil, errors.New("unknown renderer")
 }
 
 type FlatError struct {
-	RuleName     string `json:"rule,omitempty"`
-	Level        string `json:"level,omitempty"`
-	Message      string `json:"message,omitempty"`
-	LintFilePath string `json:"lint_file,omitempty"`
-	DataFilePath string `json:"data_file,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	Level       string `json:"level,omitempty"`
+	Message     string `json:"message,omitempty"`
+	LintFile    string `json:"lint_file,omitempty"`
+	DataFile    string `json:"data_file,omitempty"`
 	// DataFilePaths []string `json:"data_files,omitempty"`
 	TargetID string `json:"target_id,omitempty"`
 	Location any    `json:"location,omitempty"`
@@ -217,9 +245,10 @@ func (e *FlatError) Failed(errLevel errlevel.Level) (bool, error) {
 }
 
 type Output struct {
-	LintnetVersion string       `json:"lintnet_version"`
-	Env            string       `json:"env"`
-	Errors         []*FlatError `json:"errors,omitempty"`
+	LintnetVersion string         `json:"lintnet_version"`
+	Env            string         `json:"env"`
+	Errors         []*FlatError   `json:"errors,omitempty"`
+	Config         map[string]any `json:"config,omitempty"`
 }
 
 func (c *Controller) formatResultToOutput(results []*Result) *Output {

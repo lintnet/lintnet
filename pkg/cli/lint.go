@@ -28,6 +28,10 @@ func (lc *lintCommand) command() *cli.Command {
 		Action: lc.action,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
+				Name:    "output",
+				Aliases: []string{"o"},
+			},
+			&cli.StringFlag{
 				Name:    "target-id",
 				Aliases: []string{"t"},
 			},
@@ -73,6 +77,7 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		ConfigFilePath: c.String("config"),
 		TargetID:       c.String("target-id"),
 		OutputSuccess:  c.Bool("output-success"),
+		Output:         c.String("output"),
 		RootDir:        rootDir,
 	})
 }

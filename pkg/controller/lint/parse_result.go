@@ -43,11 +43,12 @@ func (result *Result) FlatErrors() []*FlatError {
 			continue
 		}
 		fes = append(fes, &FlatError{
-			RuleName:     r.Name,
-			Level:        r.Level,
-			Message:      r.Message,
-			LintFilePath: result.LintFile,
-			DataFilePath: result.DataFile,
+			Name:        r.Name,
+			Level:       r.Level,
+			Message:     r.Message,
+			Description: r.Description,
+			LintFile:    result.LintFile,
+			DataFile:    result.DataFile,
 			// DataFilePaths: result.DataFiles,
 			TargetID: result.TargetID,
 			Location: r.Location,
