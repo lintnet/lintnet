@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path/filepath"
 	"runtime"
 
 	"github.com/lintnet/lintnet/pkg/config"
@@ -198,7 +199,7 @@ func (c *Controller) getOutput(outputs []*config.Output, outputID string) (*conf
 	return nil, errors.New("unknown output id")
 }
 
-func (c *Controller) getOutputter(outputs []*config.Output, outputID string) (Outputter, error) {
+func (c *Controller) getOutputter(outputs []*config.Output, outputID, rootDir string) (Outputter, error) {
 	if outputID == "" {
 		return &jsonOutputter{
 			stdout: c.stdout,
@@ -208,6 +209,19 @@ func (c *Controller) getOutputter(outputs []*config.Output, outputID string) (Ou
 	if err != nil {
 		return nil, err
 	}
+
+	if output.TemplateModule != nil {
+		output.Template = filepath.Join(rootDir, output.TemplateModule.FilePath())
+	} else {
+		output.Template = filepath.FromSlash(output.Template)
+	}
+
+	if output.TransformModule != nil {
+		output.Transform = filepath.Join(rootDir, output.TransformModule.FilePath())
+	} else {
+		output.Transform = filepath.FromSlash(output.Transform)
+	}
+
 	switch output.Renderer {
 	case "jsonnet":
 		return newJsonnetOutputter(c.fs, c.stdout, output, c.importer)

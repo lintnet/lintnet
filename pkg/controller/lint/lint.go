@@ -41,7 +41,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}
 
-	outputter, err := c.getOutputter(cfg.Outputs, param.Output)
+	outputter, err := c.getOutputter(cfg.Outputs, param.Output, param.RootDir)
 	if err != nil {
 		return err
 	}
