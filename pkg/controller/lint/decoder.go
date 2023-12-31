@@ -18,8 +18,9 @@ type Data struct {
 }
 
 type TopLevelArgment struct {
-	Data   *Data          `json:"data"`
-	Config map[string]any `json:"config"`
+	Data         *Data          `json:"data,omitempty"`
+	CombinedData []*Data        `json:"combined_data,omitempty"`
+	Config       map[string]any `json:"config"`
 }
 
 func (c *Controller) parseDataFile(filePath string) (*TopLevelArgment, error) {

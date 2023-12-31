@@ -10,7 +10,7 @@ import (
 )
 
 type RawConfig struct {
-	ErrorLevel string       `json:"error_level" yaml:"error_level"`
+	ErrorLevel string       `json:"error_level"`
 	Targets    []*RawTarget `json:"targets"`
 	Outputs    []*RawOutput `json:"outputs,omitempty"`
 }
@@ -66,16 +66,20 @@ type Output struct {
 }
 
 type Target struct {
+	ID             string
 	LintFiles      []*ModuleGlob
 	Modules        []*ModuleGlob
 	ModuleArchives map[string]*ModuleArchive
 	DataFiles      []string
+	Combine        bool
 }
 
 type RawTarget struct {
-	LintGlobs []*LintGlob  `json:"lint_files" yaml:"lint_files"`
+	ID        string       `json:"id,omitempty"`
+	LintGlobs []*LintGlob  `json:"lint_files"`
 	Modules   []*RawModule `json:"modules"`
-	DataFiles []string     `json:"data_files" yaml:"data_files"`
+	DataFiles []string     `json:"data_files"`
+	Combine   bool         `json:"combine,omitempty"`
 }
 
 type LintGlob struct {
@@ -109,6 +113,8 @@ func (rt *RawTarget) Parse() (*Target, error) {
 		lintFiles[i] = lintGlob.ToModule()
 	}
 	target := &Target{
+		ID:        rt.ID,
+		Combine:   rt.Combine,
 		LintFiles: lintFiles,
 		Modules:   make([]*ModuleGlob, len(rt.Modules)),
 		DataFiles: rt.DataFiles,
