@@ -15,7 +15,7 @@ type RawConfig struct {
 	Outputs    []*Output    `json:"outputs,omitempty"`
 }
 
-func (rc *RawConfig) Parse() (*Config, error) {
+func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
 	cfg := &Config{
 		ErrorLevel: errlevel.Error,
 		Targets:    make([]*Target, len(rc.Targets)),
@@ -39,6 +39,24 @@ func (rc *RawConfig) Parse() (*Config, error) {
 			moduleArchives[k] = ma
 		}
 	}
+	for _, output := range rc.Outputs {
+		if strings.HasPrefix(output.Template, "github.com/") {
+			m, err := ParseImport(output.Template)
+			if err != nil {
+				return nil, fmt.Errorf("parse a module path: %w", err)
+			}
+			output.TemplateModule = m
+			moduleArchives[m.Archive.ID] = m.Archive
+		}
+		if strings.HasPrefix(output.Transform, "github.com/") {
+			m, err := ParseImport(output.Transform)
+			if err != nil {
+				return nil, fmt.Errorf("parse a module path: %w", err)
+			}
+			output.TransformModule = m
+			moduleArchives[m.Archive.ID] = m.Archive
+		}
+	}
 	cfg.ModuleArchives = moduleArchives
 	return cfg, nil
 }
@@ -59,7 +77,9 @@ type Output struct {
 	// parameter
 	Config map[string]any `json:"config"`
 	// Transform parameter
-	Transform string `json:"transform"`
+	Transform       string  `json:"transform"`
+	TemplateModule  *Module `json:"-"`
+	TransformModule *Module `json:"-"`
 }
 
 type Target struct {
