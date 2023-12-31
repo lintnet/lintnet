@@ -12,13 +12,14 @@ import (
 type RawConfig struct {
 	ErrorLevel string       `json:"error_level"`
 	Targets    []*RawTarget `json:"targets"`
-	Outputs    []*RawOutput `json:"outputs,omitempty"`
+	Outputs    []*Output    `json:"outputs,omitempty"`
 }
 
 func (rc *RawConfig) Parse() (*Config, error) {
 	cfg := &Config{
 		ErrorLevel: errlevel.Error,
 		Targets:    make([]*Target, len(rc.Targets)),
+		Outputs:    rc.Outputs,
 	}
 	if rc.ErrorLevel != "" {
 		level, err := errlevel.New(rc.ErrorLevel)
@@ -49,20 +50,14 @@ type Config struct {
 	ModuleArchives map[string]*ModuleArchive
 }
 
-type RawOutput struct {
-	ID        string `json:"id"`
-	Type      string `json:"type"`
-	Renderer  string `json:"renderer"`
-	SlashPath string `json:"path"`
-	Template  string `json:"template"`
-}
-
 type Output struct {
-	ID       string `json:"id"`
-	Type     string `json:"type"`
+	ID string `json:"id"`
+	// text/template, html/template, jsonnet
 	Renderer string `json:"renderer"`
-	Path     string `json:"path"`
+	// path to a template file
 	Template string `json:"template"`
+	// parameter
+	Config map[string]any `json:"config"`
 }
 
 type Target struct {

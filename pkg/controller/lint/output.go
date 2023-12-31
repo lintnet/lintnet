@@ -13,7 +13,6 @@ import (
 	"github.com/lintnet/lintnet/pkg/render"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results []*Result, outputters []Outputter, outputSuccess bool) error {
@@ -36,89 +35,49 @@ func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results
 	return nil
 }
 
-func (c *Controller) getOutputs(cfg *config.Config, outputIDs []string) ([]*config.Output, error) {
-	outputList := cfg.Outputs
-	if len(outputList) == 0 {
-		outputList = []*config.Output{
-			{
-				ID:       "stdout",
-				Type:     "stdout",
-				Renderer: "jsonnet",
-			},
-		}
-	}
-	if len(outputIDs) == 0 {
-		outputIDs = []string{
-			"stdout",
-		}
-	}
-	outputs := make([]*config.Output, len(outputIDs))
-	outputMap := make(map[string]*config.Output, len(outputList))
-	for _, output := range outputList {
-		outputMap[output.ID] = output
-	}
-	for i, outputID := range outputIDs {
-		output, ok := outputMap[outputID]
-		if !ok {
-			return nil, logerr.WithFields(errors.New("unknown output id"), logrus.Fields{ //nolint:wrapcheck
-				"output_id": outputID,
-			})
-		}
-		outputs[i] = output
-	}
-	return outputs, nil
+type jsonOutputter struct {
+	stdout io.Writer
+}
+
+func (o *jsonOutputter) Output(result *Output) error {
+	return outputJSON(o.stdout, result)
 }
 
 type jsonnetOutputter struct {
-	fs     afero.Fs
-	stdout io.Writer
-	output *config.Output
-	node   jsonnet.Node
+	stdout   io.Writer
+	output   *config.Output
+	node     jsonnet.Node
+	importer *jsonnet.Importer
 }
 
-func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output) (*jsonnetOutputter, error) {
-	var node jsonnet.Node
-	if output.Template != "" {
-		n, err := jsonnet.ReadToNode(fs, output.Template)
-		if err != nil {
-			return nil, fmt.Errorf("read a template as Jsonnet: %w", err)
-		}
-		node = n
+func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, importer *jsonnet.Importer) (*jsonnetOutputter, error) {
+	node, err := jsonnet.ReadToNode(fs, output.Template)
+	if err != nil {
+		return nil, fmt.Errorf("read a template as Jsonnet: %w", err)
 	}
 	return &jsonnetOutputter{
-		fs:     fs,
-		stdout: stdout,
-		output: output,
-		node:   node,
+		stdout:   stdout,
+		output:   output,
+		node:     node,
+		importer: importer,
 	}, nil
 }
 
 func (o *jsonnetOutputter) Output(result *Output) error {
-	out := o.stdout
-	if o.output.Type == "file" {
-		f, err := o.fs.Create(o.output.Path)
-		if err != nil {
-			return fmt.Errorf("create a file: %w", err)
-		}
-		defer f.Close()
-		out = f
+	tla, err := json.Marshal(result)
+	if err != nil {
+		return fmt.Errorf("marshal output as JSON: %w", err)
 	}
-	if o.output.Template != "" {
-		b, err := json.Marshal(result)
-		if err != nil {
-			return fmt.Errorf("marshal results as JSON: %w", err)
-		}
-		vm := jsonnet.MakeVM()
-		vm.TLACode("param", string(b))
-		jsonnet.SetNativeFunctions(vm)
-		result, err := vm.Evaluate(o.node)
-		if err != nil {
-			return fmt.Errorf("evaluate a Jsonnet: %w", err)
-		}
-		fmt.Fprintln(out, result)
-		return nil
+	vm := jsonnet.NewVM(string(tla), o.importer)
+	s, err := vm.Evaluate(o.node)
+	if err != nil {
+		return fmt.Errorf("evaluate a jsonnet: %w", err)
 	}
-	return outputJSON(out, result)
+	var a any
+	if err := json.Unmarshal([]byte(s), &a); err != nil {
+		return fmt.Errorf("unmarshal the result as JSON: %w", err)
+	}
+	return outputJSON(o.stdout, a)
 }
 
 func outputJSON(w io.Writer, result any) error {
@@ -163,16 +122,7 @@ func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.Templat
 }
 
 func (o *templateOutputter) Output(result *Output) error {
-	out := o.stdout
-	if o.output.Type == "file" {
-		f, err := o.fs.Create(o.output.Path)
-		if err != nil {
-			return fmt.Errorf("create a file: %w", err)
-		}
-		defer f.Close()
-		out = f
-	}
-	if err := o.template.Execute(out, map[string]any{
+	if err := o.template.Execute(o.stdout, map[string]any{
 		"result": result,
 	}); err != nil {
 		return fmt.Errorf("render a template: %w", err)
@@ -180,10 +130,28 @@ func (o *templateOutputter) Output(result *Output) error {
 	return nil
 }
 
-func (c *Controller) getOutputter(output *config.Output) (Outputter, error) {
+func (c *Controller) getOutput(outputs []*config.Output, outputID string) (*config.Output, error) {
+	for _, output := range outputs {
+		if output.ID == outputID {
+			return output, nil
+		}
+	}
+	return nil, errors.New("unknown output id")
+}
+
+func (c *Controller) getOutputter(outputs []*config.Output, outputID string) (Outputter, error) {
+	if outputID == "" {
+		return &jsonOutputter{
+			stdout: c.stdout,
+		}, nil
+	}
+	output, err := c.getOutput(outputs, outputID)
+	if err != nil {
+		return nil, err
+	}
 	switch output.Renderer {
 	case "jsonnet":
-		return newJsonnetOutputter(c.fs, c.stdout, output)
+		return newJsonnetOutputter(c.fs, c.stdout, output, c.importer)
 	case "text/template":
 		return newTemplateOutputter(c.stdout, c.fs, &render.TextTemplateRenderer{}, output)
 	case "html/template":

@@ -1,5 +1,5 @@
 function(param)
-  local workflow_names = std.uniq(std.map(
+  local workflow_names = std.set(std.map(
     function(data) data.value.name,
     param.combined_data
   ));
