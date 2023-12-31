@@ -2,6 +2,7 @@ package lint
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/lintnet/lintnet/pkg/config"
@@ -15,16 +16,26 @@ type ParamLint struct {
 	ErrorLevel     string
 	RootDir        string
 	ConfigFilePath string
+	TargetID       string
 	FilePaths      []string
 	Outputs        []string
 	OutputSuccess  bool
 }
 
-func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error {
+func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop
 	rawCfg := &config.RawConfig{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
 		return err
 	}
+
+	if param.TargetID != "" {
+		target, err := c.getTarget(rawCfg.Targets, param.TargetID)
+		if err != nil {
+			return err
+		}
+		rawCfg.Targets = []*config.RawTarget{target}
+	}
+
 	cfg, err := rawCfg.Parse()
 	if err != nil {
 		return fmt.Errorf("parse a configuration file: %w", err)
@@ -53,7 +64,11 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 
 	if len(param.FilePaths) > 0 {
 		logE.Debug("filtering targets by given files")
-		targets = filterTargets(targets, param.FilePaths)
+		if param.TargetID != "" {
+			targets[0].DataFiles = param.FilePaths
+		} else {
+			targets = filterTargets(targets, param.FilePaths)
+		}
 	}
 
 	results, err := c.getResults(targets)
@@ -67,6 +82,15 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	}).Debug("linted")
 
 	return c.Output(logE, errLevel, results, outputters, param.OutputSuccess)
+}
+
+func (c *Controller) getTarget(targets []*config.RawTarget, targetID string) (*config.RawTarget, error) {
+	for _, target := range targets {
+		if target.ID == targetID {
+			return target, nil
+		}
+	}
+	return nil, errors.New("target isn't found")
 }
 
 func (c *Controller) getOutputters(cfg *config.Config, outputIDs []string) ([]Outputter, error) {
@@ -85,34 +109,58 @@ func (c *Controller) getOutputters(cfg *config.Config, outputIDs []string) ([]Ou
 	return outputters, nil
 }
 
-func (c *Controller) getResults(targets []*Target) (map[string]*FileResult, error) {
-	results := make(map[string]*FileResult, len(targets))
+func (c *Controller) getResults(targets []*Target) ([]*Result, error) {
+	results := make([]*Result, 0, len(targets))
 	for _, target := range targets {
-		if err := c.lintTarget(target, results); err != nil {
+		rs, err := c.lintTarget(target)
+		if err != nil {
 			return nil, err
 		}
+		results = append(results, rs...)
 	}
 	return results, nil
 }
 
-func (c *Controller) lintTarget(target *Target, results map[string]*FileResult) error {
+type DataSet struct {
+	File  string
+	Files []string
+}
+
+func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
 	lintFiles, err := c.parseLintFiles(target.LintFiles)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	for _, dataFile := range target.DataFiles {
-		rs, err := c.lint(dataFile, lintFiles)
+	if target.Combine {
+		rs, err := c.lint(&DataSet{
+			Files: target.DataFiles,
+		}, lintFiles)
 		if err != nil {
-			results[dataFile] = &FileResult{
-				Error: err.Error(),
-			}
+			return nil, err
+		}
+		for _, r := range rs {
+			r.DataFiles = target.DataFiles
+		}
+		return rs, nil
+	}
+	results := make([]*Result, 0, len(target.DataFiles))
+	for _, dataFile := range target.DataFiles {
+		rs, err := c.lint(&DataSet{
+			File: dataFile,
+		}, lintFiles)
+		if err != nil {
+			results = append(results, &Result{
+				DataFile: dataFile,
+				Error:    err.Error(),
+			})
 			continue
 		}
-		results[dataFile] = &FileResult{
-			Results: rs,
+		for _, r := range rs {
+			r.DataFile = dataFile
 		}
+		results = append(results, rs...)
 	}
-	return nil
+	return results, nil
 }
 
 func (c *Controller) getErrorLevel(cfg *config.Config, param *ParamLint) (errlevel.Level, error) {
@@ -126,17 +174,30 @@ func (c *Controller) getErrorLevel(cfg *config.Config, param *ParamLint) (errlev
 	return ll, nil
 }
 
-func (c *Controller) lint(dataFile string, jsonnetAsts []*Node) ([]*Result, error) {
-	tla, err := c.parseDataFile(dataFile)
+func (c *Controller) getTLA(dataSet *DataSet) (*TopLevelArgment, error) {
+	if dataSet.File != "" {
+		return c.parseDataFile(dataSet.File)
+	}
+	if len(dataSet.Files) > 0 {
+		combinedData := make([]*Data, len(dataSet.Files))
+		for i, dataFile := range dataSet.Files {
+			data, err := c.parseDataFile(dataFile)
+			if err != nil {
+				return nil, err
+			}
+			combinedData[i] = data.Data
+		}
+		return &TopLevelArgment{
+			CombinedData: combinedData,
+		}, nil
+	}
+	return &TopLevelArgment{}, nil
+}
+
+func (c *Controller) lint(dataSet *DataSet, lintFiles []*Node) ([]*Result, error) {
+	tla, err := c.getTLA(dataSet)
 	if err != nil {
 		return nil, err
 	}
-
-	results := c.evaluate(tla.Data, jsonnetAsts)
-	rs := make([]*Result, len(results))
-
-	for i, result := range results {
-		rs[i] = c.parseResult(result)
-	}
-	return rs, nil
+	return c.evaluate(tla, lintFiles), nil
 }

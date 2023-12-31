@@ -16,7 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results map[string]*FileResult, outputters []Outputter, outputSuccess bool) error {
+func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results []*Result, outputters []Outputter, outputSuccess bool) error {
 	fes := c.formatResultToOutput(results)
 	failed, err := isFailed(fes.Errors, errLevel)
 	if err != nil {
@@ -193,13 +193,14 @@ func (c *Controller) getOutputter(output *config.Output) (Outputter, error) {
 }
 
 type FlatError struct {
-	RuleName     string `json:"rule,omitempty"`
-	Level        string `json:"level,omitempty"`
-	Message      string `json:"message,omitempty"`
-	LintFilePath string `json:"lint_file,omitempty"`
-	DataFilePath string `json:"data_file,omitempty"`
-	Location     any    `json:"location,omitempty"`
-	Custom       any    `json:"custom,omitempty"`
+	RuleName      string   `json:"rule,omitempty"`
+	Level         string   `json:"level,omitempty"`
+	Message       string   `json:"message,omitempty"`
+	LintFilePath  string   `json:"lint_file,omitempty"`
+	DataFilePath  string   `json:"data_file,omitempty"`
+	DataFilePaths []string `json:"data_files,omitempty"`
+	Location      any      `json:"location,omitempty"`
+	Custom        any      `json:"custom,omitempty"`
 }
 
 func (e *FlatError) Failed(errLevel errlevel.Level) (bool, error) {
@@ -220,10 +221,10 @@ type Output struct {
 	Errors         []*FlatError `json:"errors,omitempty"`
 }
 
-func (c *Controller) formatResultToOutput(results map[string]*FileResult) *Output {
+func (c *Controller) formatResultToOutput(results []*Result) *Output {
 	list := make([]*FlatError, 0, len(results))
-	for dataFilePath, fileResult := range results {
-		list = append(list, fileResult.FlattenError(dataFilePath)...)
+	for _, result := range results {
+		list = append(list, result.FlatErrors()...)
 	}
 	return &Output{
 		LintnetVersion: c.param.Version,

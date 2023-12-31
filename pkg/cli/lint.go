@@ -28,8 +28,8 @@ func (lc *lintCommand) command() *cli.Command {
 		Action: lc.action,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "rule-base-dir",
-				Aliases: []string{"d"},
+				Name:    "target-id",
+				Aliases: []string{"t"},
 			},
 			&cli.StringFlag{
 				Name:    "error-level",
@@ -44,7 +44,7 @@ func (lc *lintCommand) command() *cli.Command {
 	}
 }
 
-func (lc *lintCommand) action(c *cli.Context) error { //nolint:dupl
+func (lc *lintCommand) action(c *cli.Context) error {
 	fs := afero.NewOsFs()
 	logE := lc.logE
 	log.SetLevel(c.String("log-level"), logE)
@@ -71,6 +71,7 @@ func (lc *lintCommand) action(c *cli.Context) error { //nolint:dupl
 		FilePaths:      c.Args().Slice(),
 		ErrorLevel:     c.String("error-level"),
 		ConfigFilePath: c.String("config"),
+		TargetID:       c.String("target-id"),
 		OutputSuccess:  c.Bool("output-success"),
 		RootDir:        rootDir,
 	})

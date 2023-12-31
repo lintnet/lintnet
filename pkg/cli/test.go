@@ -35,7 +35,7 @@ func (tc *testCommand) command() *cli.Command {
 	}
 }
 
-func (tc *testCommand) action(c *cli.Context) error { //nolint:dupl
+func (tc *testCommand) action(c *cli.Context) error {
 	fs := afero.NewOsFs()
 	logE := tc.logE
 	log.SetLevel(c.String("log-level"), logE)

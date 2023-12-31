@@ -46,12 +46,14 @@ func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootD
 	}).Debug("found modules")
 	lintFiles = append(lintFiles, modules...)
 	return &Target{
+		Combine:   target.Combine,
 		LintFiles: lintFiles,
 		DataFiles: dataFiles,
 	}, nil
 }
 
 type Target struct {
+	Combine   bool
 	LintFiles []*config.LintFile
 	DataFiles []string
 }

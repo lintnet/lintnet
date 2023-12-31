@@ -6,14 +6,13 @@ import (
 )
 
 type (
-	// Process Jsonnet
-
 	// return of vm.Evaluate()
 	JsonnetEvaluateResult struct {
-		Key    string
+		// Key    string
 		Result string
 		Error  string
 	}
+
 	// unmarshal Jsonnet as JSON
 	JsonnetResult struct {
 		Name        string `json:"name,omitempty"`
@@ -25,16 +24,10 @@ type (
 		Excluded    bool   `json:"excluded,omitempty"`
 	}
 
-	// Aggregate results
-
-	FileResult struct {
-		// lint file -> result
-		Results []*Result `json:"results,omitempty"`
-		Error   string    `json:"error,omitempty"`
-	}
-
 	Result struct {
-		Key       string           `json:"-"`
+		LintFile  string           `json:"lint_file,omitempty"`
+		DataFile  string           `json:"data_file,omitempty"`
+		DataFiles []string         `json:"data_files,omitempty"`
 		RawResult []*JsonnetResult `json:"-"`
 		RawOutput string           `json:"-"`
 		Interface any              `json:"result,omitempty"`
@@ -42,96 +35,35 @@ type (
 	}
 )
 
-func (r *FileResult) FlattenError(dataFilePath string) []*FlatError {
-	if r.Error != "" {
-		return []*FlatError{
-			{
-				DataFilePath: dataFilePath,
-				Message:      r.Error,
-			},
+func (result *Result) FlatErrors() []*FlatError {
+	fes := make([]*FlatError, 0, len(result.RawResult))
+	for _, r := range result.RawResult {
+		if r.Excluded {
+			continue
 		}
+		fes = append(fes, &FlatError{
+			RuleName:      r.Name,
+			Level:         r.Level,
+			Message:       r.Message,
+			LintFilePath:  result.LintFile,
+			DataFilePath:  result.DataFile,
+			DataFilePaths: result.DataFiles,
+			Location:      r.Location,
+			Custom:        r.Custom,
+		})
 	}
-	list := make([]*FlatError, 0, len(r.Results))
-	for _, result := range r.Results {
-		list = append(list, result.flattenError(dataFilePath, result.Key)...)
-	}
-	if len(list) == 0 {
-		return nil
-	}
-	return list
+	return fes
 }
 
-func (r *Result) flattenError(dataFilePath, lintFilePath string) []*FlatError {
-	if r.Error != "" {
-		return []*FlatError{
-			{
-				DataFilePath: dataFilePath,
-				LintFilePath: lintFilePath,
-				Message:      r.Error,
-				Custom: map[string]any{
-					"result": r.Interface,
-				},
-			},
-		}
-	}
-	arr := make([]*FlatError, 0, len(r.RawResult))
-	for _, result := range r.RawResult {
-		arr = append(arr, result.flattenError(dataFilePath, lintFilePath)...)
-	}
-	return arr
-}
-
-func (r *JsonnetResult) flattenError(dataFilePath, lintFilePath string) []*FlatError {
-	if r.Excluded {
-		return nil
-	}
-	return []*FlatError{
-		{
-			DataFilePath: dataFilePath,
-			LintFilePath: lintFilePath,
-			RuleName:     r.Name,
-			Message:      r.Message,
-			Location:     r.Location,
-			Level:        r.Level,
-			Custom:       r.Custom,
-		},
-	}
-}
-
-func (c *Controller) parseResult(result *JsonnetEvaluateResult) *Result {
-	// jsonnet VM returns the result as JSON string,
-	// so parse the JSON string to structured data
-	if result.Error != "" {
-		return &Result{
-			Key:       result.Key,
-			RawOutput: result.Result,
-			Error:     result.Error,
-		}
-	}
-	rb := []byte(result.Result)
-
+func (c *Controller) parseResult(result []byte) ([]*JsonnetResult, any, error) {
 	var rs any
-	if err := json.Unmarshal(rb, &rs); err != nil {
-		return &Result{
-			Key:       result.Key,
-			RawOutput: result.Result,
-			Error:     result.Error,
-		}
+	if err := json.Unmarshal(result, &rs); err != nil {
+		return nil, nil, fmt.Errorf("unmarshal the result as JSON: %w", err)
 	}
 
 	out := []*JsonnetResult{}
-	if err := json.Unmarshal(rb, &out); err != nil {
-		return &Result{
-			Key:       result.Key,
-			RawOutput: result.Result,
-			Interface: rs,
-			Error:     fmt.Errorf("unmarshal the result as JSON: %w", err).Error(),
-		}
+	if err := json.Unmarshal(result, &out); err != nil {
+		return nil, rs, fmt.Errorf("unmarshal the result as JSON: %w", err)
 	}
-	return &Result{
-		Key:       result.Key,
-		RawOutput: result.Result,
-		RawResult: out,
-		Interface: rs,
-	}
+	return out, rs, nil
 }
