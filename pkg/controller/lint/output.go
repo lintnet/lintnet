@@ -50,11 +50,12 @@ func (o *jsonOutputter) Output(result *Output) error {
 }
 
 type jsonnetOutputter struct {
-	stdout   io.Writer
-	output   *config.Output
-	node     jsonnet.Node
-	importer *jsonnet.Importer
-	config   map[string]any
+	stdout    io.Writer
+	output    *config.Output
+	transform jsonnet.Node
+	node      jsonnet.Node
+	importer  *jsonnet.Importer
+	config    map[string]any
 }
 
 func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, importer *jsonnet.Importer) (*jsonnetOutputter, error) {
@@ -62,13 +63,21 @@ func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, i
 	if err != nil {
 		return nil, fmt.Errorf("read a template as Jsonnet: %w", err)
 	}
-	return &jsonnetOutputter{
+	outputter := &jsonnetOutputter{
 		stdout:   stdout,
 		output:   output,
 		node:     node,
 		importer: importer,
 		config:   output.Config,
-	}, nil
+	}
+	if output.Transform != "" {
+		node, err := jsonnet.ReadToNode(fs, output.Transform)
+		if err != nil {
+			return nil, fmt.Errorf("read a transform as Jsonnet: %w", err)
+		}
+		outputter.transform = node
+	}
+	return outputter, nil
 }
 
 func (o *jsonnetOutputter) Output(result *Output) error {
@@ -78,7 +87,16 @@ func (o *jsonnetOutputter) Output(result *Output) error {
 	if err != nil {
 		return fmt.Errorf("marshal output as JSON: %w", err)
 	}
-	vm := jsonnet.NewVM(string(tla), o.importer)
+	tlaS := string(tla)
+	if o.transform != nil {
+		vm := jsonnet.NewVM(string(tla), o.importer)
+		s, err := vm.Evaluate(o.transform)
+		if err != nil {
+			return fmt.Errorf("evaluate a jsonnet: %w", err)
+		}
+		tlaS = s
+	}
+	vm := jsonnet.NewVM(tlaS, o.importer)
 	s, err := vm.Evaluate(o.node)
 	if err != nil {
 		return fmt.Errorf("evaluate a jsonnet: %w", err)
