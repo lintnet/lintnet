@@ -54,6 +54,7 @@ type jsonnetOutputter struct {
 	output   *config.Output
 	node     jsonnet.Node
 	importer *jsonnet.Importer
+	config   map[string]any
 }
 
 func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, importer *jsonnet.Importer) (*jsonnetOutputter, error) {
@@ -66,11 +67,14 @@ func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, i
 		output:   output,
 		node:     node,
 		importer: importer,
+		config:   output.Config,
 	}, nil
 }
 
 func (o *jsonnetOutputter) Output(result *Output) error {
-	tla, err := json.Marshal(result)
+	r := *result
+	r.Config = o.config
+	tla, err := json.Marshal(&r)
 	if err != nil {
 		return fmt.Errorf("marshal output as JSON: %w", err)
 	}
@@ -105,9 +109,11 @@ type templateOutputter struct {
 	fs       afero.Fs
 	output   *config.Output
 	template render.Template
+	node     jsonnet.Node
+	importer *jsonnet.Importer
 }
 
-func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output) (*templateOutputter, error) {
+func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output, importer *jsonnet.Importer) (*templateOutputter, error) {
 	if output.Template == "" {
 		return nil, errors.New("template is required")
 	}
@@ -119,16 +125,47 @@ func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.Templat
 	if err != nil {
 		return nil, fmt.Errorf("parse a template: %w", err)
 	}
+	var node jsonnet.Node
+	if output.Transform != "" {
+		n, err := jsonnet.ReadToNode(fs, output.Transform)
+		if err != nil {
+			return nil, fmt.Errorf("read a transform as Jsonnet: %w", err)
+		}
+		node = n
+	}
 	return &templateOutputter{
 		stdout:   stdout,
 		fs:       fs,
 		output:   output,
 		template: tpl,
+		importer: importer,
+		node:     node,
 	}, nil
 }
 
 func (o *templateOutputter) Output(result *Output) error {
-	if err := o.template.Execute(o.stdout, result); err != nil {
+	r := *result
+	r.Config = o.output.Config
+	b, err := json.Marshal(r)
+	if err != nil {
+		return fmt.Errorf("marshal result as JSON: %w", err)
+	}
+	var param any
+	if o.node != nil {
+		vm := jsonnet.NewVM(string(b), o.importer)
+		s, err := vm.Evaluate(o.node)
+		if err != nil {
+			return fmt.Errorf("evaluate a jsonnet: %w", err)
+		}
+		if err := json.Unmarshal([]byte(s), &param); err != nil {
+			return fmt.Errorf("unmarshal transformed result as JSON: %w", err)
+		}
+	} else {
+		if err := json.Unmarshal(b, &param); err != nil {
+			return fmt.Errorf("unmarshal result as JSON: %w", err)
+		}
+	}
+	if err := o.template.Execute(o.stdout, param); err != nil {
 		return fmt.Errorf("render a template: %w", err)
 	}
 	return nil
@@ -157,9 +194,9 @@ func (c *Controller) getOutputter(outputs []*config.Output, outputID string) (Ou
 	case "jsonnet":
 		return newJsonnetOutputter(c.fs, c.stdout, output, c.importer)
 	case "text/template":
-		return newTemplateOutputter(c.stdout, c.fs, &render.TextTemplateRenderer{}, output)
+		return newTemplateOutputter(c.stdout, c.fs, &render.TextTemplateRenderer{}, output, c.importer)
 	case "html/template":
-		return newTemplateOutputter(c.stdout, c.fs, &render.HTMLTemplateRenderer{}, output)
+		return newTemplateOutputter(c.stdout, c.fs, &render.HTMLTemplateRenderer{}, output, c.importer)
 	}
 	return nil, errors.New("unknown renderer")
 }
@@ -190,9 +227,10 @@ func (e *FlatError) Failed(errLevel errlevel.Level) (bool, error) {
 }
 
 type Output struct {
-	LintnetVersion string       `json:"lintnet_version"`
-	Env            string       `json:"env"`
-	Errors         []*FlatError `json:"errors,omitempty"`
+	LintnetVersion string         `json:"lintnet_version"`
+	Env            string         `json:"env"`
+	Errors         []*FlatError   `json:"errors,omitempty"`
+	Config         map[string]any `json:"config,omitempty"`
 }
 
 func (c *Controller) formatResultToOutput(results []*Result) *Output {

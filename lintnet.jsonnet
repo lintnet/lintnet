@@ -27,13 +27,14 @@ function(param) {
     {
       id: 'jsonnet',
       renderer: 'jsonnet',
-      template: 'output.jsonnet',
+      template: 'examples/output/output.jsonnet',
       // config: {},
     },
     {
       id: 'template',
       renderer: 'text/template',
-      template: 'output.tpl',
+      template: 'examples/output/output.tpl',
+      transform: 'examples/transform/template.jsonnet',
       // config: {},
     },
   ],

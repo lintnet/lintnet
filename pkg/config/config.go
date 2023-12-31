@@ -58,6 +58,8 @@ type Output struct {
 	Template string `json:"template"`
 	// parameter
 	Config map[string]any `json:"config"`
+	// Transform parameter
+	Transform string `json:"transform"`
 }
 
 type Target struct {
