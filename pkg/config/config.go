@@ -15,7 +15,7 @@ type RawConfig struct {
 	Outputs    []*Output    `json:"outputs,omitempty"`
 }
 
-func (rc *RawConfig) Parse() (*Config, error) {
+func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
 	cfg := &Config{
 		ErrorLevel: errlevel.Error,
 		Targets:    make([]*Target, len(rc.Targets)),
