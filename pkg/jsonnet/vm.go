@@ -10,7 +10,7 @@ import (
 func SetNativeFunctions(vm *jsonnet.VM) {
 	vm.NativeFunction(strings.Contains("strings.Contains"))
 	vm.NativeFunction(strings.TrimPrefix("strings.TrimPrefix"))
-	vm.NativeFunction(strings.TrimPrefix("strings.TrimSpace"))
+	vm.NativeFunction(strings.TrimSpace("strings.TrimSpace"))
 	vm.NativeFunction(regexp.MatchString("regexp.MatchString"))
 	vm.NativeFunction(filepath.Base("filepath.Base"))
 }
