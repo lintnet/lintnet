@@ -1,0 +1,124 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "additionalProperties": false,
+   "properties": {
+      "outputs": {
+         "description": "outputs",
+         "items": {
+            "additionalProperties": false,
+            "properties": {
+               "config": {
+                  "description": "configuration of transform and output",
+                  "type": "object"
+               },
+               "id": {
+                  "description": "output id",
+                  "type": "string"
+               },
+               "renderer": {
+                  "description": "renderer",
+                  "enum": [
+                     "jsonnet",
+                     "text/template",
+                     "html/template"
+                  ],
+                  "type": "string"
+               },
+               "template": {
+                  "description": "file path to template",
+                  "type": "string"
+               },
+               "transform": {
+                  "description": "file path to Jsonnet to transform results",
+                  "type": "string"
+               }
+            },
+            "required": [
+               "id",
+               "renderer",
+               "template"
+            ],
+            "type": "object"
+         },
+         "type": "array"
+      },
+      "targets": {
+         "description": "targets",
+         "items": {
+            "additionalProperties": false,
+            "description": "target",
+            "properties": {
+               "data_files": {
+                  "description": "data files",
+                  "items": {
+                     "description": "file path to data files. Glob is available",
+                     "type": "string"
+                  },
+                  "type": "array"
+               },
+               "lint_files": {
+                  "description": "lint files",
+                  "items": {
+                     "anyOf": [
+                        {
+                           "description": "file path to lint files. Glob is available",
+                           "type": "string"
+                        },
+                        {
+                           "properties": {
+                              "config": {
+                                 "description": "configuration of the lint files",
+                                 "type": "object"
+                              },
+                              "path": {
+                                 "description": "file path to lint files. Glob is available",
+                                 "type": "string"
+                              }
+                           },
+                           "required": [
+                              "path"
+                           ],
+                           "type": "object"
+                        }
+                     ],
+                     "description": "lint files"
+                  },
+                  "type": "array"
+               },
+               "modules": {
+                  "description": "modules",
+                  "items": {
+                     "anyOf": [
+                        {
+                           "description": "file path to lint files. Glob is available",
+                           "type": "string"
+                        },
+                        {
+                           "properties": {
+                              "config": {
+                                 "description": "configuration of the lint files",
+                                 "type": "object"
+                              },
+                              "path": {
+                                 "description": "file path to lint files. Glob is available",
+                                 "type": "string"
+                              }
+                           },
+                           "required": [
+                              "path"
+                           ],
+                           "type": "object"
+                        }
+                     ],
+                     "description": "modules"
+                  },
+                  "type": "array"
+               }
+            },
+            "type": "object"
+         },
+         "type": "array"
+      }
+   },
+   "type": "object"
+}

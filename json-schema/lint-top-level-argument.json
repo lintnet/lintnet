@@ -1,0 +1,53 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "additionalProperties": false,
+   "description": "Top level arguments",
+   "properties": {
+      "config": {
+         "description": "configuration",
+         "type": "object"
+      },
+      "data": {
+         "additionalProperties": false,
+         "description": "data file",
+         "properties": {
+            "file_path": {
+               "description": "data file path",
+               "type": "string"
+            },
+            "file_type": {
+               "description": "data file type",
+               "enum": [
+                  "csv",
+                  "hcl2",
+                  "json",
+                  "plain_text",
+                  "toml",
+                  "tsv",
+                  "yaml"
+               ],
+               "type": "string"
+            },
+            "text": {
+               "description": "data file content",
+               "type": "string"
+            },
+            "value": {
+               "description": "data file content"
+            }
+         },
+         "required": [
+            "file_path",
+            "text",
+            "value",
+            "file_type"
+         ],
+         "type": "object"
+      }
+   },
+   "required": [
+      "data",
+      "config"
+   ],
+   "type": "object"
+}
