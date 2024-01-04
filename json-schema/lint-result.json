@@ -1,0 +1,49 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "description": "results",
+   "items": {
+      "additionalProperties": false,
+      "description": "result",
+      "properties": {
+         "custom": {
+            "description": "Custom fields that users can set freely",
+            "type": "object"
+         },
+         "description": {
+            "description": "rule description",
+            "type": "string"
+         },
+         "excluded": {
+            "description": "Whether the result is excluded",
+            "type": "boolean"
+         },
+         "level": {
+            "description": "error level",
+            "enum": [
+               "debug",
+               "info",
+               "warn",
+               "error"
+            ],
+            "type": "string"
+         },
+         "location": {
+            "description": "Location where errors occur",
+            "type": "object"
+         },
+         "message": {
+            "description": "error message",
+            "type": "string"
+         },
+         "name": {
+            "description": "rule name",
+            "type": "string"
+         }
+      },
+      "required": [
+         "name"
+      ],
+      "type": "object"
+   },
+   "type": "array"
+}

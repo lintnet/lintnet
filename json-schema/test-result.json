@@ -1,0 +1,125 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "additionalProperties": false,
+   "description": "Test results",
+   "items": {
+      "description": "data file",
+      "properties": {
+         "data_file": {
+            "description": "data file path. This overrides param.data's text, value and param.data.text",
+            "type": "string"
+         },
+         "name": {
+            "description": "test name",
+            "type": "string"
+         },
+         "param": {
+            "additionalProperties": false,
+            "description": "Top level arguments",
+            "properties": {
+               "config": {
+                  "description": "configuration",
+                  "type": "object"
+               },
+               "data": {
+                  "additionalProperties": false,
+                  "description": "data file",
+                  "properties": {
+                     "file_path": {
+                        "description": "data file path",
+                        "type": "string"
+                     },
+                     "file_type": {
+                        "description": "data file type",
+                        "enum": [
+                           "csv",
+                           "hcl2",
+                           "json",
+                           "plain_text",
+                           "toml",
+                           "tsv",
+                           "yaml"
+                        ],
+                        "type": "string"
+                     },
+                     "text": {
+                        "description": "data file content",
+                        "type": "string"
+                     },
+                     "value": {
+                        "description": "data file content"
+                     }
+                  },
+                  "required": [
+                     "file_path",
+                     "text",
+                     "value",
+                     "file_type"
+                  ],
+                  "type": "object"
+               }
+            },
+            "required": [
+               "data",
+               "config"
+            ],
+            "type": "object"
+         },
+         "result": {
+            "description": "results",
+            "items": {
+               "additionalProperties": false,
+               "description": "result",
+               "properties": {
+                  "custom": {
+                     "description": "Custom fields that users can set freely",
+                     "type": "object"
+                  },
+                  "description": {
+                     "description": "rule description",
+                     "type": "string"
+                  },
+                  "excluded": {
+                     "description": "Whether the result is excluded",
+                     "type": "boolean"
+                  },
+                  "level": {
+                     "description": "error level",
+                     "enum": [
+                        "debug",
+                        "info",
+                        "warn",
+                        "error"
+                     ],
+                     "type": "string"
+                  },
+                  "location": {
+                     "description": "Location where errors occur",
+                     "type": "object"
+                  },
+                  "message": {
+                     "description": "error message",
+                     "type": "string"
+                  },
+                  "name": {
+                     "description": "rule name",
+                     "type": "string"
+                  }
+               },
+               "required": [
+                  "name"
+               ],
+               "type": "object"
+            },
+            "type": "array"
+         }
+      },
+      "required": [
+         "name",
+         "param",
+         "result"
+      ],
+      "type": "object"
+   },
+   "type": "array"
+}
