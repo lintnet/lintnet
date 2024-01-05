@@ -48,6 +48,9 @@
             "additionalProperties": false,
             "description": "target",
             "properties": {
+               "combine": {
+                  "type": "boolean"
+               },
                "data_files": {
                   "description": "data files",
                   "items": {
