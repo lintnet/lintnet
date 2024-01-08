@@ -15,6 +15,7 @@ import (
 type ParamLint struct {
 	ErrorLevel     string
 	RootDir        string
+	DataRootDir    string
 	ConfigFilePath string
 	TargetID       string
 	FilePaths      []string

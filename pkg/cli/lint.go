@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -71,6 +72,14 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		Version: lc.version,
 	}
 	ctrl := lint.NewController(param, fs, os.Stdout, modInstaller, importer)
+	dataRootDir := c.String("data-root-dir")
+	if dataRootDir == "" {
+		pwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("get the current directory: %w", err)
+		}
+		dataRootDir = pwd
+	}
 	return ctrl.Lint(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
 		FilePaths:      c.Args().Slice(),
 		ErrorLevel:     c.String("error-level"),
@@ -79,5 +88,6 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		OutputSuccess:  c.Bool("output-success"),
 		Output:         c.String("output"),
 		RootDir:        rootDir,
+		DataRootDir:    dataRootDir,
 	})
 }
