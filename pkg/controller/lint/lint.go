@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/errlevel"
@@ -43,7 +44,11 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}
 
-	outputter, err := c.getOutputter(cfg.Outputs, param.Output, param.RootDir)
+	cfgDir := filepath.Dir(rawCfg.FilePath)
+	if !filepath.IsAbs(cfgDir) {
+		cfgDir = filepath.Join(param.PWD, cfgDir)
+	}
+	outputter, err := c.getOutputter(cfg.Outputs, param, cfgDir)
 	if err != nil {
 		return err
 	}
@@ -59,7 +64,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	targets, err := c.findFiles(logE, cfg, param.RootDir)
+	targets, err := c.findFiles(logE, cfg, param.RootDir, cfgDir)
 	if err != nil {
 		return err
 	}

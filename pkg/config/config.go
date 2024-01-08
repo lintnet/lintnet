@@ -10,6 +10,7 @@ import (
 )
 
 type RawConfig struct {
+	FilePath   string       `json:"-"`
 	ErrorLevel string       `json:"error_level"`
 	Targets    []*RawTarget `json:"targets"`
 	Outputs    []*Output    `json:"outputs,omitempty"`

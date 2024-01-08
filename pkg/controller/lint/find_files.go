@@ -25,7 +25,7 @@ type LintFile struct { //nolint:revive
 	Config     map[string]any
 }
 
-func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootDir string) (*Target, error) {
+func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootDir, cfgDir string) (*Target, error) {
 	lintFiles, err := c.findFilesFromModules(target.LintFiles, "")
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootD
 		"lint_globs": log.JSON(target.LintFiles),
 		"lint_files": log.JSON(lintFiles),
 	}).Debug("found lint files")
-	dataFiles, err := c.findFilesFromPaths(target.DataFiles)
+	dataFiles, err := c.findFilesFromPaths(target.DataFiles, cfgDir)
 	if err != nil {
 		return nil, err
 	}
@@ -154,14 +154,14 @@ func (c *Controller) filterFileByDataRootDir(logE *logrus.Entry, param *ParamLin
 	return false
 }
 
-func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir string) ([]*Target, error) {
+func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*Target, error) {
 	if len(cfg.Targets) == 0 {
 		return nil, nil
 	}
 
 	targets := make([]*Target, len(cfg.Targets))
 	for i, target := range cfg.Targets {
-		t, err := c.findTarget(logE, target, rootDir)
+		t, err := c.findTarget(logE, target, rootDir, cfgDir)
 		if err != nil {
 			return nil, err
 		}
@@ -232,11 +232,14 @@ func (c *Controller) findFilesFromModules(modules []*config.ModuleGlob, rootDir 
 	return arr, nil
 }
 
-func (c *Controller) findFilesFromPaths(files []string) ([]string, error) {
+func (c *Controller) findFilesFromPaths(files []string, cfgDir string) ([]string, error) {
 	matchFiles := map[string]struct{}{}
 	for _, line := range files {
 		if pattern := strings.TrimPrefix(line, "!"); pattern != line {
 			for file := range matchFiles {
+				if !filepath.IsAbs(pattern) {
+					pattern = filepath.Join(cfgDir, pattern)
+				}
 				matched, err := doublestar.Match(pattern, file)
 				if err != nil {
 					return nil, fmt.Errorf("check file match: %w", err)
@@ -246,6 +249,9 @@ func (c *Controller) findFilesFromPaths(files []string) ([]string, error) {
 				}
 			}
 			continue
+		}
+		if !filepath.IsAbs(line) {
+			line = filepath.Join(cfgDir, line)
 		}
 		if err := doublestar.GlobWalk(afero.NewIOFS(c.fs), line, func(path string, d fs.DirEntry) error {
 			if _, ok := ignoreDirs[d.Name()]; ok {

@@ -18,6 +18,7 @@ func (c *Controller) findAndReadConfig(p string, cfg *config.RawConfig) error {
 		if err := c.readConfig(p, cfg); err != nil {
 			return fmt.Errorf("read a config file: %w", err)
 		}
+		cfg.FilePath = p
 		return nil
 	}
 	paths := []string{
@@ -31,6 +32,7 @@ func (c *Controller) findAndReadConfig(p string, cfg *config.RawConfig) error {
 			}
 			return fmt.Errorf("read a config file: %w", err)
 		}
+		cfg.FilePath = p
 		return nil
 	}
 	return fmt.Errorf("config file isn't found: %w", os.ErrNotExist)
