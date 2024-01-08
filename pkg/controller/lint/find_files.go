@@ -2,6 +2,7 @@ package lint
 
 import (
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
@@ -12,6 +13,11 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/exp/maps"
 )
+
+var ignoreDirs = map[string]struct{}{ //nolint:gochecknoglobals
+	"node_modules": {},
+	".git":         {},
+}
 
 type LintFile struct { //nolint:revive
 	Path       string
@@ -119,7 +125,7 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir s
 	return targets, nil
 }
 
-func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile) error {
+func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile) error { //nolint:cyclop
 	if m.Excluded {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 		for file := range matchFiles {
@@ -133,11 +139,20 @@ func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, m
 		}
 		return nil
 	}
-	matches, err := doublestar.Glob(afero.NewIOFS(c.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), doublestar.WithFilesOnly())
-	if err != nil {
+	matches := map[string]struct{}{}
+	if err := doublestar.GlobWalk(afero.NewIOFS(c.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), func(path string, d fs.DirEntry) error {
+		if _, ok := ignoreDirs[d.Name()]; ok {
+			return fs.SkipDir
+		}
+		if strings.HasSuffix(d.Name(), "_test.jsonnet") {
+			return nil
+		}
+		matches[path] = struct{}{}
+		return nil
+	}, doublestar.WithNoFollow(), doublestar.WithFilesOnly()); err != nil {
 		return fmt.Errorf("search files: %w", err)
 	}
-	for _, file := range matches {
+	for file := range matches {
 		relPath, err := filepath.Rel(rootDir, file)
 		if err != nil {
 			return fmt.Errorf("get a relative path from the root directory to a module: %w", err)
@@ -186,12 +201,14 @@ func (c *Controller) findFilesFromPaths(files []string) ([]string, error) {
 			}
 			continue
 		}
-		matches, err := doublestar.Glob(afero.NewIOFS(c.fs), line, doublestar.WithFilesOnly())
-		if err != nil {
+		if err := doublestar.GlobWalk(afero.NewIOFS(c.fs), line, func(path string, d fs.DirEntry) error {
+			if _, ok := ignoreDirs[d.Name()]; ok {
+				return fs.SkipDir
+			}
+			matchFiles[path] = struct{}{}
+			return nil
+		}, doublestar.WithNoFollow(), doublestar.WithFilesOnly()); err != nil {
 			return nil, fmt.Errorf("search files: %w", err)
-		}
-		for _, file := range matches {
-			matchFiles[file] = struct{}{}
 		}
 	}
 	return maps.Keys(matchFiles), nil
