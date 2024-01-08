@@ -21,9 +21,10 @@ type ParamLint struct {
 	FilePaths      []string
 	Output         string
 	OutputSuccess  bool
+	PWD            string
 }
 
-func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop
+func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
 	rawCfg := &config.RawConfig{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
 		return err
@@ -70,6 +71,10 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		} else {
 			targets = filterTargets(targets, param.FilePaths)
 		}
+	}
+
+	if err := c.filterTargetsByDataRootDir(logE, param, targets); err != nil {
+		return err
 	}
 
 	results, err := c.getResults(targets)

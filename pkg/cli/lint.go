@@ -72,12 +72,12 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		Version: lc.version,
 	}
 	ctrl := lint.NewController(param, fs, os.Stdout, modInstaller, importer)
+	pwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get the current directory: %w", err)
+	}
 	dataRootDir := c.String("data-root-dir")
 	if dataRootDir == "" {
-		pwd, err := os.Getwd()
-		if err != nil {
-			return fmt.Errorf("get the current directory: %w", err)
-		}
 		dataRootDir = pwd
 	}
 	return ctrl.Lint(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
@@ -89,5 +89,6 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		Output:         c.String("output"),
 		RootDir:        rootDir,
 		DataRootDir:    dataRootDir,
+		PWD:            pwd,
 	})
 }

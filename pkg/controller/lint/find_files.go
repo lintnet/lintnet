@@ -108,6 +108,52 @@ func filterTarget(target *Target, filePaths []string) *Target {
 	return newTarget
 }
 
+func (c *Controller) filterTargetsByDataRootDir(logE *logrus.Entry, param *ParamLint, targets []*Target) error {
+	for _, target := range targets {
+		if err := c.filterTargetByDataRootDir(logE, param, target); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Controller) filterTargetByDataRootDir(logE *logrus.Entry, param *ParamLint, target *Target) error {
+	arr := make([]string, 0, len(target.DataFiles))
+	for _, dataFile := range target.DataFiles {
+		if c.filterFileByDataRootDir(logE, param, dataFile) {
+			arr = append(arr, dataFile)
+		} else {
+			logE.WithField("data_file", dataFile).Warn("this data file is ignored because this is out of the data root directory")
+		}
+	}
+	target.DataFiles = arr
+	return nil
+}
+
+func (c *Controller) filterFileByDataRootDir(logE *logrus.Entry, param *ParamLint, dataFile string) bool {
+	p := dataFile
+	if !filepath.IsAbs(dataFile) {
+		p = filepath.Join(param.PWD, dataFile)
+	}
+
+	if a, err := filepath.Rel(param.DataRootDir, p); err != nil {
+		logE.WithError(err).Warn("get a relative path")
+	} else if !strings.HasPrefix(a, "..") {
+		return true
+	}
+	for _, c := range param.FilePaths {
+		b, err := filepath.Rel(c, dataFile)
+		if err != nil {
+			logE.WithError(err).Warn("get a relative path")
+			continue
+		}
+		if b == "." {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir string) ([]*Target, error) {
 	if len(cfg.Targets) == 0 {
 		return nil, nil
