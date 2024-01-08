@@ -14,7 +14,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-var ignoreDirs = map[string]struct{}{
+var ignoreDirs = map[string]struct{}{ //nolint:gochecknoglobals
 	"node_modules": {},
 	".git":         {},
 }
@@ -125,7 +125,7 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir s
 	return targets, nil
 }
 
-func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile) error {
+func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile) error { //nolint:cyclop
 	if m.Excluded {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 		for file := range matchFiles {
