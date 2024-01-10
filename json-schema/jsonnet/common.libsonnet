@@ -1,49 +1,55 @@
+local lint_data = {
+  type: 'object',
+  description: 'data file',
+  additionalProperties: false,
+  required: [
+    'file_path',
+    'text',
+    'value',
+    'file_type',
+  ],
+  properties: {
+    file_path: {
+      type: 'string',
+      description: 'data file path',
+    },
+    text: {
+      type: 'string',
+      description: 'data file content',
+    },
+    value: {
+      description: 'data file content',
+    },
+    file_type: {
+      type: 'string',
+      description: 'data file type',
+      enum: [
+        'csv',
+        'hcl2',
+        'json',
+        'plain_text',
+        'toml',
+        'tsv',
+        'yaml',
+      ],
+    },
+  },
+};
+
 {
   lint_tla: {
     type: 'object',
     additionalProperties: false,
     description: 'Top level arguments',
     required: [
-      'data',
       'config',
     ],
     properties: {
-      data: {
-        type: 'object',
-        description: 'data file',
-        additionalProperties: false,
-        required: [
-          'file_path',
-          'text',
-          'value',
-          'file_type',
-        ],
-        properties: {
-          file_path: {
-            type: 'string',
-            description: 'data file path',
-          },
-          text: {
-            type: 'string',
-            description: 'data file content',
-          },
-          value: {
-            description: 'data file content',
-          },
-          file_type: {
-            type: 'string',
-            description: 'data file type',
-            enum: [
-              'csv',
-              'hcl2',
-              'json',
-              'plain_text',
-              'toml',
-              'tsv',
-              'yaml',
-            ],
-          },
-        },
+      data: lint_data,
+      combined_data: {
+        type: 'array',
+        description: 'A list of data. This is set if combine is true',
+        items: lint_data,
       },
       config: {
         type: 'object',
