@@ -3,6 +3,47 @@
    "additionalProperties": false,
    "description": "Top level arguments",
    "properties": {
+      "combined_data": {
+         "description": "A list of data. This is set if combine is true",
+         "items": {
+            "additionalProperties": false,
+            "description": "data file",
+            "properties": {
+               "file_path": {
+                  "description": "data file path",
+                  "type": "string"
+               },
+               "file_type": {
+                  "description": "data file type",
+                  "enum": [
+                     "csv",
+                     "hcl2",
+                     "json",
+                     "plain_text",
+                     "toml",
+                     "tsv",
+                     "yaml"
+                  ],
+                  "type": "string"
+               },
+               "text": {
+                  "description": "data file content",
+                  "type": "string"
+               },
+               "value": {
+                  "description": "data file content"
+               }
+            },
+            "required": [
+               "file_path",
+               "text",
+               "value",
+               "file_type"
+            ],
+            "type": "object"
+         },
+         "type": "array"
+      },
       "config": {
          "description": "configuration",
          "type": "object"
@@ -46,7 +87,6 @@
       }
    },
    "required": [
-      "data",
       "config"
    ],
    "type": "object"
