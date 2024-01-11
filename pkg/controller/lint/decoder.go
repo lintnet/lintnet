@@ -23,14 +23,14 @@ type TopLevelArgment struct {
 	Config       map[string]any `json:"config"`
 }
 
-func (c *Controller) parseDataFile(filePath string) (*TopLevelArgment, error) {
-	unmarshaler, fileType, err := encoding.NewUnmarshaler(filePath)
+func (c *Controller) parseDataFile(filePath *Path) (*TopLevelArgment, error) {
+	unmarshaler, fileType, err := encoding.NewUnmarshaler(filePath.Abs)
 	if err != nil {
 		return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-			"file_path": filePath,
+			"file_path": filePath.Raw,
 		})
 	}
-	b, err := afero.ReadFile(c.fs, filePath)
+	b, err := afero.ReadFile(c.fs, filePath.Abs)
 	if err != nil {
 		return nil, fmt.Errorf("read a file: %w", err)
 	}
@@ -41,7 +41,7 @@ func (c *Controller) parseDataFile(filePath string) (*TopLevelArgment, error) {
 	return &TopLevelArgment{
 		Data: &Data{
 			Text:     string(b),
-			FilePath: filePath,
+			FilePath: filePath.Raw,
 			FileType: fileType,
 			Value:    input,
 		},

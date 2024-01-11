@@ -72,7 +72,18 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	if len(param.FilePaths) > 0 {
 		logE.Debug("filtering targets by given files")
 		if param.TargetID != "" {
-			targets[0].DataFiles = param.FilePaths
+			arr := make([]*Path, len(param.FilePaths))
+			for i, filePath := range param.FilePaths {
+				p := &Path{
+					Abs: filePath,
+					Raw: filePath,
+				}
+				if !filepath.IsAbs(filePath) {
+					p.Abs = filepath.Join(param.PWD, filePath)
+				}
+				arr[i] = p
+			}
+			targets[0].DataFiles = arr
 		} else {
 			targets = filterTargets(targets, param.FilePaths)
 		}
@@ -120,8 +131,18 @@ func (c *Controller) getResults(targets []*Target) ([]*Result, error) {
 }
 
 type DataSet struct {
-	File  string
-	Files []string
+	File  *Path
+	Files []*Path
+}
+
+type Paths []*Path
+
+func (ps Paths) Raw() []string {
+	arr := make([]string, len(ps))
+	for i, p := range ps {
+		arr[i] = p.Raw
+	}
+	return arr
 }
 
 func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
@@ -137,7 +158,11 @@ func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
 			return nil, err
 		}
 		for _, r := range rs {
-			r.DataFiles = target.DataFiles
+			arr := make([]string, len(target.DataFiles))
+			for i, dataFile := range target.DataFiles {
+				arr[i] = dataFile.Raw
+			}
+			r.DataFiles = arr
 		}
 		return rs, nil
 	}
@@ -148,13 +173,13 @@ func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
 		}, lintFiles)
 		if err != nil {
 			results = append(results, &Result{
-				DataFile: dataFile,
+				DataFile: dataFile.Raw,
 				Error:    err.Error(),
 			})
 			continue
 		}
 		for _, r := range rs {
-			r.DataFile = dataFile
+			r.DataFile = dataFile.Raw
 		}
 		results = append(results, rs...)
 	}
@@ -173,7 +198,7 @@ func (c *Controller) getErrorLevel(cfg *config.Config, param *ParamLint) (errlev
 }
 
 func (c *Controller) getTLA(dataSet *DataSet) (*TopLevelArgment, error) {
-	if dataSet.File != "" {
+	if dataSet.File != nil {
 		return c.parseDataFile(dataSet.File)
 	}
 	if len(dataSet.Files) > 0 {

@@ -59,8 +59,11 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 
 func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
 	if td.DataFile != "" {
-		dataFilePath := filepath.Join(filepath.Dir(pair.TestFilePath), td.DataFile)
-		data, err := c.parseDataFile(dataFilePath)
+		p := &Path{
+			Raw: td.DataFile,
+			Abs: filepath.Join(filepath.Dir(pair.TestFilePath), td.DataFile),
+		}
+		data, err := c.parseDataFile(p)
 		if err != nil {
 			return &FailedResult{
 				Error: fmt.Errorf("read a data file: %w", err).Error(),
