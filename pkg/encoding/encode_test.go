@@ -72,8 +72,10 @@ func TestNewUnmarshaler(t *testing.T) { //nolint:funlen
 			fileName: "hello.yaml",
 			data: `name: hello
 `,
-			exp: map[string]any{
-				"name": "hello",
+			exp: []any{
+				map[string]any{
+					"name": "hello",
+				},
 			},
 			fileType: "yaml",
 		},
