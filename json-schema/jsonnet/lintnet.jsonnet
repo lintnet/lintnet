@@ -11,9 +11,6 @@
         additionalProperties: false,
         description: 'target',
         properties: {
-          combine: {
-            type: 'boolean',
-          },
           data_files: {
             type: 'array',
             description: 'data files',

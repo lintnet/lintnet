@@ -3,6 +3,7 @@ package lint
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
@@ -30,16 +31,18 @@ func (c *Controller) parseLintFile(lintFile *config.LintFile) (*Node, error) {
 		return nil, err //nolint:wrapcheck
 	}
 	return &Node{
-		Node:   node,
-		Key:    lintFile.ID,
-		Config: lintFile.Config,
+		Node:    node,
+		Key:     lintFile.ID,
+		Config:  lintFile.Config,
+		Combine: strings.HasSuffix(lintFile.Path, "_combine.jsonnet"),
 	}, nil
 }
 
 type Node struct {
-	Node   jsonnet.Node
-	Config map[string]any
-	Key    string
+	Node    jsonnet.Node
+	Config  map[string]any
+	Key     string
+	Combine bool
 }
 
 func (c *Controller) evaluateLintFile(tla *TopLevelArgment, lintFile jsonnet.Node) (string, error) {

@@ -145,32 +145,29 @@ func (ps Paths) Raw() []string {
 	return arr
 }
 
-func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
-	lintFiles, err := c.parseLintFiles(target.LintFiles)
+func (c *Controller) lintCombineFiles(target *Target, combineFiles []*Node) ([]*Result, error) {
+	rs, err := c.lint(&DataSet{
+		Files: target.DataFiles,
+	}, combineFiles)
 	if err != nil {
 		return nil, err
 	}
-	if target.Combine {
-		rs, err := c.lint(&DataSet{
-			Files: target.DataFiles,
-		}, lintFiles)
-		if err != nil {
-			return nil, err
+	for _, r := range rs {
+		arr := make([]string, len(target.DataFiles))
+		for i, dataFile := range target.DataFiles {
+			arr[i] = dataFile.Raw
 		}
-		for _, r := range rs {
-			arr := make([]string, len(target.DataFiles))
-			for i, dataFile := range target.DataFiles {
-				arr[i] = dataFile.Raw
-			}
-			r.DataFiles = arr
-		}
-		return rs, nil
+		r.DataFiles = arr
 	}
+	return rs, nil
+}
+
+func (c *Controller) lintNonCombineFiles(target *Target, nonCombineFiles []*Node) []*Result {
 	results := make([]*Result, 0, len(target.DataFiles))
 	for _, dataFile := range target.DataFiles {
 		rs, err := c.lint(&DataSet{
 			File: dataFile,
-		}, lintFiles)
+		}, nonCombineFiles)
 		if err != nil {
 			results = append(results, &Result{
 				DataFile: dataFile.Raw,
@@ -182,6 +179,34 @@ func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
 			r.DataFile = dataFile.Raw
 		}
 		results = append(results, rs...)
+	}
+	return results
+}
+
+func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
+	lintFiles, err := c.parseLintFiles(target.LintFiles)
+	if err != nil {
+		return nil, err
+	}
+
+	combineFiles := []*Node{}
+	nonCombineFiles := []*Node{}
+	for _, lintFile := range lintFiles {
+		if lintFile.Combine {
+			combineFiles = append(combineFiles, lintFile)
+			continue
+		}
+		nonCombineFiles = append(nonCombineFiles, lintFile)
+	}
+
+	results := c.lintNonCombineFiles(target, nonCombineFiles)
+
+	if len(combineFiles) > 0 {
+		rs, err := c.lintCombineFiles(target, combineFiles)
+		if err != nil {
+			return nil, err
+		}
+		return append(results, rs...), nil
 	}
 	return results, nil
 }
