@@ -10,11 +10,12 @@ import (
 )
 
 type RawConfig struct {
-	FilePath    string       `json:"-"`
-	ErrorLevel  string       `json:"error_level,omitempty"`
-	IgnoredDirs []string     `json:"ignored_dirs,omitempty"`
-	Targets     []*RawTarget `json:"targets"`
-	Outputs     []*Output    `json:"outputs,omitempty"`
+	FilePath        string       `json:"-"`
+	ErrorLevel      string       `json:"error_level,omitempty"`
+	ShownErrorLevel string       `json:"shown_error_level,omitempty"`
+	IgnoredDirs     []string     `json:"ignored_dirs,omitempty"`
+	Targets         []*RawTarget `json:"targets"`
+	Outputs         []*Output    `json:"outputs,omitempty"`
 }
 
 func getIgnoredPatterns(ignoredDirs []string) []string {
@@ -31,19 +32,22 @@ func getIgnoredPatterns(ignoredDirs []string) []string {
 	return ignoredPatterns
 }
 
-func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
+func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
 	cfg := &Config{
 		ErrorLevel:      errlevel.Error,
+		ShownErrorLevel: errlevel.Info,
 		Targets:         make([]*Target, len(rc.Targets)),
 		Outputs:         rc.Outputs,
 		IgnoredPatterns: getIgnoredPatterns(rc.IgnoredDirs),
 	}
+
 	if cfg.IgnoredPatterns == nil {
 		cfg.IgnoredPatterns = []string{
 			"node_modules",
 			".git",
 		}
 	}
+
 	if rc.ErrorLevel != "" {
 		level, err := errlevel.New(rc.ErrorLevel)
 		if err != nil {
@@ -51,6 +55,19 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
 		}
 		cfg.ErrorLevel = level
 	}
+
+	if rc.ShownErrorLevel != "" {
+		level, err := errlevel.New(rc.ShownErrorLevel)
+		if err != nil {
+			return nil, fmt.Errorf("parse the error level: %w", err)
+		}
+		cfg.ShownErrorLevel = level
+	}
+
+	if cfg.ShownErrorLevel > cfg.ErrorLevel {
+		cfg.ShownErrorLevel = cfg.ErrorLevel
+	}
+
 	moduleArchives := map[string]*ModuleArchive{}
 	for i, rt := range rc.Targets {
 		target, err := rt.Parse()
@@ -86,6 +103,7 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
 
 type Config struct {
 	ErrorLevel      errlevel.Level
+	ShownErrorLevel errlevel.Level
 	Targets         []*Target
 	Outputs         []*Output
 	ModuleArchives  map[string]*ModuleArchive

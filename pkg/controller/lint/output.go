@@ -17,8 +17,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results []*Result, outputters []Outputter, outputSuccess bool) error {
-	fes := c.formatResultToOutput(results)
+func (c *Controller) Output(logE *logrus.Entry, errLevel, shownErrLevel errlevel.Level, results []*Result, outputters []Outputter, outputSuccess bool) error {
+	fes := c.formatResultToOutput(results, shownErrLevel)
 	failed, err := isFailed(fes.Errors, errLevel)
 	if err != nil {
 		return err
@@ -357,10 +357,15 @@ type Output struct {
 	Config         map[string]any `json:"config,omitempty"`
 }
 
-func (c *Controller) formatResultToOutput(results []*Result) *Output {
+func (c *Controller) formatResultToOutput(results []*Result, errLevel errlevel.Level) *Output {
 	list := make([]*FlatError, 0, len(results))
 	for _, result := range results {
-		list = append(list, result.FlatErrors()...)
+		for _, fe := range result.FlatErrors() {
+			el, err := errlevel.New(fe.Level) // TODO output warning
+			if err != nil || el >= errLevel {
+				list = append(list, fe)
+			}
+		}
 	}
 	return &Output{
 		LintnetVersion: c.param.Version,

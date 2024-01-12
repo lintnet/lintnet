@@ -106,7 +106,8 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 				},
 			},
 			cfg: &config.Config{
-				ErrorLevel: errlevel.Info,
+				ErrorLevel:      errlevel.Info,
+				ShownErrorLevel: errlevel.Info,
 				IgnoredPatterns: []string{
 					"**/.git/**",
 					"**/node_modules/**",
