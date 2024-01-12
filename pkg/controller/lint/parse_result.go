@@ -17,7 +17,7 @@ type (
 	JsonnetResult struct {
 		Name        string `json:"name,omitempty"`
 		Description string `json:"description,omitempty"`
-		Links       *Links `json:"links,omitempty"`
+		Links       Links  `json:"links,omitempty"`
 		Message     string `json:"message,omitempty"`
 		Level       string `json:"level,omitempty"`
 		Location    any    `json:"location,omitempty"`
@@ -61,7 +61,7 @@ func (result *Result) FlatErrors() []*FlatError {
 			Description: r.Description,
 			LintFile:    result.LintFile,
 			DataFile:    result.DataFile,
-			Links:       *r.Links,
+			Links:       r.Links,
 			// DataFilePaths: result.DataFiles,
 			TargetID: result.TargetID,
 			Location: r.Location,
