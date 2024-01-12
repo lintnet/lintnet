@@ -6,6 +6,7 @@
       "description": "result",
       "properties": {
          "custom": {
+            "additionalProperties": true,
             "description": "Custom fields that users can set freely",
             "type": "object"
          },
@@ -27,9 +28,59 @@
             ],
             "type": "string"
          },
+         "links": {
+            "oneOf": [
+               {
+                  "additionalProperties": {
+                     "description": "link",
+                     "type": "string"
+                  },
+                  "description": "each key is a link title",
+                  "type": "object"
+               },
+               {
+                  "items": {
+                     "oneOf": [
+                        {
+                           "description": "link",
+                           "type": "string"
+                        },
+                        {
+                           "additionalProperties": false,
+                           "description": "result",
+                           "properties": {
+                              "link": {
+                                 "description": "link",
+                                 "type": "string"
+                              },
+                              "title": {
+                                 "description": "link title",
+                                 "type": "string"
+                              }
+                           },
+                           "required": [
+                              "link"
+                           ],
+                           "type": "object"
+                        }
+                     ]
+                  },
+                  "type": "array"
+               }
+            ]
+         },
          "location": {
-            "description": "Location where errors occur",
-            "type": "object"
+            "oneOf": [
+               {
+                  "additionalProperties": true,
+                  "description": "Location where errors occur",
+                  "type": "object"
+               },
+               {
+                  "description": "Location where errors occur",
+                  "type": "string"
+               }
+            ]
          },
          "message": {
             "description": "error message",
