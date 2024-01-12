@@ -14,9 +14,22 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-var ignoreDirs = map[string]struct{}{ //nolint:gochecknoglobals
-	"node_modules": {},
-	".git":         {},
+var ignoredDirs = map[string]struct{}{ //nolint:gochecknoglobals
+	"**/node_modules/**": {},
+	"**/.git/**":         {},
+}
+
+func ignorePath(path string) error {
+	for ignoredDir := range ignoredDirs {
+		f, err := doublestar.PathMatch(ignoredDir, path)
+		if err != nil {
+			return fmt.Errorf("check if a path is included in a ignored directory: %w", err)
+		}
+		if f {
+			return fs.SkipDir
+		}
+	}
+	return nil
 }
 
 type LintFile struct { //nolint:revive
@@ -183,8 +196,8 @@ func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, m
 	}
 	matches := map[string]struct{}{}
 	if err := doublestar.GlobWalk(afero.NewIOFS(c.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), func(path string, d fs.DirEntry) error {
-		if _, ok := ignoreDirs[d.Name()]; ok {
-			return fs.SkipDir
+		if err := ignorePath(path); err != nil {
+			return err
 		}
 		if strings.HasSuffix(d.Name(), "_test.jsonnet") {
 			return nil
@@ -256,9 +269,6 @@ func (c *Controller) findFilesFromPath(line, cfgDir string, matchFiles map[strin
 		line = filepath.Join(cfgDir, line)
 	}
 	if err := doublestar.GlobWalk(afero.NewIOFS(c.fs), line, func(path string, d fs.DirEntry) error {
-		if _, ok := ignoreDirs[d.Name()]; ok {
-			return fs.SkipDir
-		}
 		p := &Path{
 			Raw: path,
 			Abs: path,
@@ -268,6 +278,9 @@ func (c *Controller) findFilesFromPath(line, cfgDir string, matchFiles map[strin
 			if err == nil {
 				p.Raw = a
 			}
+		}
+		if err := ignorePath(p.Raw); err != nil {
+			return err
 		}
 		matchFiles[path] = p
 		return nil
