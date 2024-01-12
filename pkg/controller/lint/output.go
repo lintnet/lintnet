@@ -42,13 +42,7 @@ type jsonOutputter struct {
 }
 
 func (o *jsonOutputter) Output(result *Output) error {
-	r := *result
-	for i, e := range result.Errors {
-		fe := *e
-		fe.Description = ""
-		r.Errors[i] = &fe
-	}
-	return outputJSON(o.stdout, &r)
+	return outputJSON(o.stdout, result)
 }
 
 type jsonnetOutputter struct {
