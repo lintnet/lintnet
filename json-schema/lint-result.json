@@ -6,6 +6,7 @@
       "description": "result",
       "properties": {
          "custom": {
+            "additionalProperties": true,
             "description": "Custom fields that users can set freely",
             "type": "object"
          },
@@ -69,8 +70,17 @@
             ]
          },
          "location": {
-            "description": "Location where errors occur",
-            "type": "object"
+            "oneOf": [
+               {
+                  "additionalProperties": true,
+                  "description": "Location where errors occur",
+                  "type": "object"
+               },
+               {
+                  "description": "Location where errors occur",
+                  "type": "string"
+               }
+            ]
          },
          "message": {
             "description": "error message",

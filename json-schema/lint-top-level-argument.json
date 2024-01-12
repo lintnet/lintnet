@@ -45,6 +45,7 @@
          "type": "array"
       },
       "config": {
+         "additionalProperties": true,
          "description": "configuration",
          "type": "object"
       },

@@ -54,6 +54,7 @@ local lint_data = {
       config: {
         type: 'object',
         description: 'configuration',
+        additionalProperties: true,
       },
     },
   },
@@ -132,8 +133,17 @@ local lint_data = {
           ],
         },
         location: {
-          type: 'object',
-          description: 'Location where errors occur',
+          oneOf: [
+            {
+              type: 'object',
+              description: 'Location where errors occur',
+              additionalProperties: true,
+            },
+            {
+              type: 'string',
+              description: 'Location where errors occur',
+            },
+          ],
         },
         excluded: {
           type: 'boolean',
@@ -142,6 +152,7 @@ local lint_data = {
         custom: {
           type: 'object',
           description: 'Custom fields that users can set freely',
+          additionalProperties: true,
         },
       },
     },
