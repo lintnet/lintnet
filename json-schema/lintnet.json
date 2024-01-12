@@ -2,6 +2,18 @@
    "$schema": "https://json-schema.org/draft/2020-12/schema",
    "additionalProperties": false,
    "properties": {
+      "ignored_dirs": {
+         "default": [
+            ".git",
+            "node_modules"
+         ],
+         "description": "ignored directory names",
+         "items": {
+            "description": "An ignored directory name. When lintnet searches data files, files under this directory are ignored",
+            "type": "string"
+         },
+         "type": "array"
+      },
       "outputs": {
          "description": "outputs",
          "items": {

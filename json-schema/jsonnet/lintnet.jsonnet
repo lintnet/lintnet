@@ -123,5 +123,17 @@
         },
       },
     },
+    ignored_dirs: {
+      type: 'array',
+      description: 'ignored directory names',
+      default: [
+        '.git',
+        'node_modules',
+      ],
+      items: {
+        type: 'string',
+        description: 'An ignored directory name. When lintnet searches data files, files under this directory are ignored',
+      },
+    },
   },
 }
