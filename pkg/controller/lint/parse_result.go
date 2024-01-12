@@ -17,6 +17,7 @@ type (
 	JsonnetResult struct {
 		Name        string `json:"name,omitempty"`
 		Description string `json:"description,omitempty"`
+		Links       *Links `json:"links,omitempty"`
 		Message     string `json:"message,omitempty"`
 		Level       string `json:"level,omitempty"`
 		Location    any    `json:"location,omitempty"`
@@ -37,6 +38,17 @@ type (
 )
 
 func (result *Result) FlatErrors() []*FlatError {
+	if result.Error != "" {
+		return []*FlatError{
+			{
+				LintFile: result.LintFile,
+				DataFile: result.DataFile,
+				// DataFilePaths: result.DataFiles,
+				TargetID: result.TargetID,
+				Message:  result.Error,
+			},
+		}
+	}
 	fes := make([]*FlatError, 0, len(result.RawResult))
 	for _, r := range result.RawResult {
 		if r.Excluded {
@@ -49,6 +61,7 @@ func (result *Result) FlatErrors() []*FlatError {
 			Description: r.Description,
 			LintFile:    result.LintFile,
 			DataFile:    result.DataFile,
+			Links:       *r.Links,
 			// DataFilePaths: result.DataFiles,
 			TargetID: result.TargetID,
 			Location: r.Location,
