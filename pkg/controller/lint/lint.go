@@ -59,7 +59,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	shownErrLevel, err := c.getErrorLevel(param.ShownErrorLevel, cfg.ErrorLevel)
+	shownErrLevel, err := c.getErrorLevel(param.ShownErrorLevel, cfg.ShownErrorLevel)
 	if err != nil {
 		return err
 	}
