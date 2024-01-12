@@ -1,4 +1,10 @@
+{{range .}}
+##  {{.name}}
+{{if .description}}{{.description}}{{end}}
 {{range .errors}}
-  Name: {{.name}}
-  {{if .data_file}}Data: {{.data_file}}{{end}}
+{{if .message}}{{.message}}{{end}}
+{{if .location}}{{.location}}{{end}}
+{{if .level}}{{.level}}{{end}}
+{{if .custom}}{{.custom}}{{end}}
+{{end}}
 {{end}}
