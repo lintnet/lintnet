@@ -41,6 +41,10 @@ func (lc *lintCommand) command() *cli.Command {
 				Aliases: []string{"e"},
 				EnvVars: []string{"LINTNET_ERROR_LEVEL"},
 			},
+			&cli.StringFlag{
+				Name:    "shown-error-level",
+				EnvVars: []string{"LINTNET_SHOWN_ERROR_LEVEL"},
+			},
 			&cli.BoolFlag{
 				Name:    "output-success",
 				EnvVars: []string{"LINTNET_OUTPUT_SUCCESS"},
@@ -81,14 +85,15 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		dataRootDir = pwd
 	}
 	return ctrl.Lint(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
-		FilePaths:      c.Args().Slice(),
-		ErrorLevel:     c.String("error-level"),
-		ConfigFilePath: c.String("config"),
-		TargetID:       c.String("target-id"),
-		OutputSuccess:  c.Bool("output-success"),
-		Output:         c.String("output"),
-		RootDir:        rootDir,
-		DataRootDir:    dataRootDir,
-		PWD:            pwd,
+		FilePaths:       c.Args().Slice(),
+		ErrorLevel:      c.String("error-level"),
+		ShownErrorLevel: c.String("shown-error-level"),
+		ConfigFilePath:  c.String("config"),
+		TargetID:        c.String("target-id"),
+		OutputSuccess:   c.Bool("output-success"),
+		Output:          c.String("output"),
+		RootDir:         rootDir,
+		DataRootDir:     dataRootDir,
+		PWD:             pwd,
 	})
 }

@@ -14,15 +14,16 @@ import (
 )
 
 type ParamLint struct {
-	ErrorLevel     string
-	RootDir        string
-	DataRootDir    string
-	ConfigFilePath string
-	TargetID       string
-	FilePaths      []string
-	Output         string
-	OutputSuccess  bool
-	PWD            string
+	ErrorLevel      string
+	ShownErrorLevel string
+	RootDir         string
+	DataRootDir     string
+	ConfigFilePath  string
+	TargetID        string
+	FilePaths       []string
+	Output          string
+	OutputSuccess   bool
+	PWD             string
 }
 
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
@@ -53,7 +54,12 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	errLevel, err := c.getErrorLevel(cfg, param)
+	errLevel, err := c.getErrorLevel(param.ErrorLevel, cfg.ErrorLevel)
+	if err != nil {
+		return err
+	}
+
+	shownErrLevel, err := c.getErrorLevel(param.ShownErrorLevel, cfg.ErrorLevel)
 	if err != nil {
 		return err
 	}
@@ -103,7 +109,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		"targets": log.JSON(targets),
 	}).Debug("linted")
 
-	return c.Output(logE, errLevel, results, []Outputter{outputter}, param.OutputSuccess)
+	return c.Output(logE, errLevel, shownErrLevel, results, []Outputter{outputter}, param.OutputSuccess)
 }
 
 func (c *Controller) getTarget(targets []*config.RawTarget, targetID string) (*config.RawTarget, error) {
@@ -211,11 +217,11 @@ func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
 	return results, nil
 }
 
-func (c *Controller) getErrorLevel(cfg *config.Config, param *ParamLint) (errlevel.Level, error) {
-	if param.ErrorLevel == "" {
-		return cfg.ErrorLevel, nil
+func (c *Controller) getErrorLevel(errLevel string, defaultErrorLevel errlevel.Level) (errlevel.Level, error) {
+	if errLevel == "" {
+		return defaultErrorLevel, nil
 	}
-	ll, err := errlevel.New(param.ErrorLevel)
+	ll, err := errlevel.New(errLevel)
 	if err != nil {
 		return ll, err //nolint:wrapcheck
 	}
