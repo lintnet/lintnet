@@ -90,6 +90,47 @@ local lint_data = {
             'error',
           ],
         },
+        links: {
+          oneOf: [
+            {
+              type: 'object',
+              description: 'each key is a link title',
+              additionalProperties: {
+                type: 'string',
+                description: 'link',
+              },
+            },
+            {
+              type: 'array',
+              items: {
+                oneOf: [
+                  {
+                    type: 'string',
+                    description: 'link',
+                  },
+                  {
+                    type: 'object',
+                    additionalProperties: false,
+                    description: 'result',
+                    required: [
+                      'link',
+                    ],
+                    properties: {
+                      title: {
+                        type: 'string',
+                        description: 'link title',
+                      },
+                      link: {
+                        type: 'string',
+                        description: 'link',
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
         location: {
           type: 'object',
           description: 'Location where errors occur',
