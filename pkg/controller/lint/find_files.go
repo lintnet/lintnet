@@ -199,12 +199,15 @@ func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, m
 		if err := ignorePath(path); err != nil {
 			return err
 		}
+		if d.IsDir() {
+			return nil
+		}
 		if strings.HasSuffix(d.Name(), "_test.jsonnet") {
 			return nil
 		}
 		matches[path] = struct{}{}
 		return nil
-	}, doublestar.WithNoFollow(), doublestar.WithFilesOnly()); err != nil {
+	}, doublestar.WithNoFollow()); err != nil {
 		return fmt.Errorf("search files: %w", err)
 	}
 	for file := range matches {
@@ -282,9 +285,12 @@ func (c *Controller) findFilesFromPath(line, cfgDir string, matchFiles map[strin
 		if err := ignorePath(p.Raw); err != nil {
 			return err
 		}
+		if d.IsDir() {
+			return nil
+		}
 		matchFiles[path] = p
 		return nil
-	}, doublestar.WithNoFollow(), doublestar.WithFilesOnly()); err != nil {
+	}, doublestar.WithNoFollow()); err != nil {
 		return fmt.Errorf("search files: %w", err)
 	}
 	return nil
