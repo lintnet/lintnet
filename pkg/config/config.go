@@ -32,7 +32,7 @@ func getIgnoredPatterns(ignoredDirs []string) []string {
 	return ignoredPatterns
 }
 
-func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
+func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
 	cfg := &Config{
 		ErrorLevel:      errlevel.Error,
 		ShownErrorLevel: errlevel.Info,
@@ -40,6 +40,7 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
 		Outputs:         rc.Outputs,
 		IgnoredPatterns: getIgnoredPatterns(rc.IgnoredDirs),
 	}
+
 	if cfg.IgnoredPatterns == nil {
 		cfg.IgnoredPatterns = []string{
 			"node_modules",
