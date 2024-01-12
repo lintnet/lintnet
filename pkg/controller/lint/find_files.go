@@ -15,8 +15,8 @@ import (
 )
 
 var ignoreDirs = map[string]struct{}{ //nolint:gochecknoglobals
-	"node_modules": {},
-	".git":         {},
+	"**/node_modules/**": {},
+	"**/.git/**":         {},
 }
 
 type LintFile struct { //nolint:revive
@@ -183,8 +183,14 @@ func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, m
 	}
 	matches := map[string]struct{}{}
 	if err := doublestar.GlobWalk(afero.NewIOFS(c.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), func(path string, d fs.DirEntry) error {
-		if _, ok := ignoreDirs[d.Name()]; ok {
-			return fs.SkipDir
+		for ignoreDir := range ignoreDirs {
+			f, err := doublestar.PathMatch(ignoreDir, path)
+			if err != nil {
+				return err
+			}
+			if f {
+				return fs.SkipDir
+			}
 		}
 		if strings.HasSuffix(d.Name(), "_test.jsonnet") {
 			return nil
@@ -256,9 +262,6 @@ func (c *Controller) findFilesFromPath(line, cfgDir string, matchFiles map[strin
 		line = filepath.Join(cfgDir, line)
 	}
 	if err := doublestar.GlobWalk(afero.NewIOFS(c.fs), line, func(path string, d fs.DirEntry) error {
-		if _, ok := ignoreDirs[d.Name()]; ok {
-			return fs.SkipDir
-		}
 		p := &Path{
 			Raw: path,
 			Abs: path,
@@ -267,6 +270,15 @@ func (c *Controller) findFilesFromPath(line, cfgDir string, matchFiles map[strin
 			a, err := filepath.Rel(cfgDir, path)
 			if err == nil {
 				p.Raw = a
+			}
+		}
+		for ignoreDir := range ignoreDirs {
+			f, err := doublestar.PathMatch(ignoreDir, p.Raw)
+			if err != nil {
+				return err
+			}
+			if f {
+				return fs.SkipDir
 			}
 		}
 		matchFiles[path] = p
