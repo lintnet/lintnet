@@ -14,13 +14,8 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-var ignoredDirs = map[string]struct{}{ //nolint:gochecknoglobals
-	"**/node_modules/**": {},
-	"**/.git/**":         {},
-}
-
-func ignorePath(path string) error {
-	for ignoredDir := range ignoredDirs {
+func ignorePath(path string, ignorePatterns []string) error {
+	for _, ignoredDir := range ignorePatterns {
 		f, err := doublestar.PathMatch(ignoredDir, path)
 		if err != nil {
 			return fmt.Errorf("check if a path is included in a ignored directory: %w", err)
@@ -38,8 +33,8 @@ type LintFile struct { //nolint:revive
 	Config     map[string]any
 }
 
-func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootDir, cfgDir string) (*Target, error) {
-	lintFiles, err := c.findFilesFromModules(target.LintFiles, "")
+func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootDir, cfgDir string, ignorePatterns []string) (*Target, error) {
+	lintFiles, err := c.findFilesFromModules(target.LintFiles, "", ignorePatterns)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +42,7 @@ func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootD
 		"lint_globs": log.JSON(target.LintFiles),
 		"lint_files": log.JSON(lintFiles),
 	}).Debug("found lint files")
-	dataFiles, err := c.findFilesFromPaths(target.DataFiles, cfgDir)
+	dataFiles, err := c.findFilesFromPaths(target.DataFiles, cfgDir, ignorePatterns)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +50,7 @@ func (c *Controller) findTarget(logE *logrus.Entry, target *config.Target, rootD
 		"data_globs": log.JSON(target.DataFiles),
 		"data_files": log.JSON(dataFiles),
 	}).Debug("found data files")
-	modules, err := c.findFilesFromModules(target.Modules, rootDir)
+	modules, err := c.findFilesFromModules(target.Modules, rootDir, ignorePatterns)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +165,7 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir, 
 
 	targets := make([]*Target, len(cfg.Targets))
 	for i, target := range cfg.Targets {
-		t, err := c.findTarget(logE, target, rootDir, cfgDir)
+		t, err := c.findTarget(logE, target, rootDir, cfgDir, cfg.IgnoredPatterns)
 		if err != nil {
 			return nil, err
 		}
@@ -180,7 +175,7 @@ func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir, 
 	return targets, nil
 }
 
-func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile) error { //nolint:cyclop
+func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop
 	if m.Excluded {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 		for file := range matchFiles {
@@ -196,7 +191,7 @@ func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, m
 	}
 	matches := map[string]struct{}{}
 	if err := doublestar.GlobWalk(afero.NewIOFS(c.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), func(path string, d fs.DirEntry) error {
-		if err := ignorePath(path); err != nil {
+		if err := ignorePath(path, ignorePatterns); err != nil {
 			return err
 		}
 		if d.IsDir() {
@@ -230,10 +225,10 @@ func (c *Controller) findFilesFromModule(m *config.ModuleGlob, rootDir string, m
 	return nil
 }
 
-func (c *Controller) findFilesFromModules(modules []*config.ModuleGlob, rootDir string) ([]*config.LintFile, error) {
+func (c *Controller) findFilesFromModules(modules []*config.ModuleGlob, rootDir string, ignorePatterns []string) ([]*config.LintFile, error) {
 	matchFiles := map[string][]*config.LintFile{}
 	for _, m := range modules {
-		if err := c.findFilesFromModule(m, rootDir, matchFiles); err != nil {
+		if err := c.findFilesFromModule(m, rootDir, matchFiles, ignorePatterns); err != nil {
 			return nil, err
 		}
 	}
@@ -260,7 +255,7 @@ func (c *Controller) excludeFiles(pattern, cfgDir string, matchFiles map[string]
 	return nil
 }
 
-func (c *Controller) findFilesFromPath(line, cfgDir string, matchFiles map[string]*Path) error {
+func (c *Controller) findFilesFromPath(line, cfgDir string, matchFiles map[string]*Path, ignoredPatterns []string) error {
 	if pattern := strings.TrimPrefix(line, "!"); pattern != line {
 		if err := c.excludeFiles(pattern, cfgDir, matchFiles); err != nil {
 			return err
@@ -282,7 +277,7 @@ func (c *Controller) findFilesFromPath(line, cfgDir string, matchFiles map[strin
 				p.Raw = a
 			}
 		}
-		if err := ignorePath(p.Raw); err != nil {
+		if err := ignorePath(p.Raw, ignoredPatterns); err != nil {
 			return err
 		}
 		if d.IsDir() {
@@ -296,10 +291,10 @@ func (c *Controller) findFilesFromPath(line, cfgDir string, matchFiles map[strin
 	return nil
 }
 
-func (c *Controller) findFilesFromPaths(files []string, cfgDir string) ([]*Path, error) {
+func (c *Controller) findFilesFromPaths(files []string, cfgDir string, ignoredPatterns []string) ([]*Path, error) {
 	matchFiles := map[string]*Path{}
 	for _, line := range files {
-		if err := c.findFilesFromPath(line, cfgDir, matchFiles); err != nil {
+		if err := c.findFilesFromPath(line, cfgDir, matchFiles, ignoredPatterns); err != nil {
 			return nil, err
 		}
 	}

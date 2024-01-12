@@ -10,17 +10,39 @@ import (
 )
 
 type RawConfig struct {
-	FilePath   string       `json:"-"`
-	ErrorLevel string       `json:"error_level"`
-	Targets    []*RawTarget `json:"targets"`
-	Outputs    []*Output    `json:"outputs,omitempty"`
+	FilePath    string       `json:"-"`
+	ErrorLevel  string       `json:"error_level,omitempty"`
+	IgnoredDirs []string     `json:"ignored_dirs,omitempty"`
+	Targets     []*RawTarget `json:"targets"`
+	Outputs     []*Output    `json:"outputs,omitempty"`
+}
+
+func getIgnoredPatterns(ignoredDirs []string) []string {
+	if ignoredDirs == nil {
+		ignoredDirs = []string{
+			"node_modules",
+			".git",
+		}
+	}
+	ignoredPatterns := make([]string, len(ignoredDirs))
+	for i, d := range ignoredDirs {
+		ignoredPatterns[i] = fmt.Sprintf("**/%s/**", d)
+	}
+	return ignoredPatterns
 }
 
 func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
 	cfg := &Config{
-		ErrorLevel: errlevel.Error,
-		Targets:    make([]*Target, len(rc.Targets)),
-		Outputs:    rc.Outputs,
+		ErrorLevel:      errlevel.Error,
+		Targets:         make([]*Target, len(rc.Targets)),
+		Outputs:         rc.Outputs,
+		IgnoredPatterns: getIgnoredPatterns(rc.IgnoredDirs),
+	}
+	if cfg.IgnoredPatterns == nil {
+		cfg.IgnoredPatterns = []string{
+			"node_modules",
+			".git",
+		}
 	}
 	if rc.ErrorLevel != "" {
 		level, err := errlevel.New(rc.ErrorLevel)
@@ -63,10 +85,11 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
 }
 
 type Config struct {
-	ErrorLevel     errlevel.Level
-	Targets        []*Target
-	Outputs        []*Output
-	ModuleArchives map[string]*ModuleArchive
+	ErrorLevel      errlevel.Level
+	Targets         []*Target
+	Outputs         []*Output
+	ModuleArchives  map[string]*ModuleArchive
+	IgnoredPatterns []string
 }
 
 type Output struct {
