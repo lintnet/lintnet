@@ -107,6 +107,10 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 			},
 			cfg: &config.Config{
 				ErrorLevel: errlevel.Info,
+				IgnoredPatterns: []string{
+					"**/.git/**",
+					"**/node_modules/**",
+				},
 				Targets: []*config.Target{
 					{
 						LintFiles: []*config.ModuleGlob{

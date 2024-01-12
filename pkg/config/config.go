@@ -20,8 +20,8 @@ type RawConfig struct {
 func getIgnoredPatterns(ignoredDirs []string) []string {
 	if ignoredDirs == nil {
 		ignoredDirs = []string{
-			"node_modules",
 			".git",
+			"node_modules",
 		}
 	}
 	ignoredPatterns := make([]string, len(ignoredDirs))
