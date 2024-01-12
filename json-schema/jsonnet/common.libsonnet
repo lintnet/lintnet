@@ -48,7 +48,7 @@ local lint_data = {
       data: lint_data,
       combined_data: {
         type: 'array',
-        description: 'A list of data. This is set if combine is true',
+        description: 'A list of data. This is set if the lint file is a combined lint file',
         items: lint_data,
       },
       config: {

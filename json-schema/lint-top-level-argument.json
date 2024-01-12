@@ -4,7 +4,7 @@
    "description": "Top level arguments",
    "properties": {
       "combined_data": {
-         "description": "A list of data. This is set if combine is true",
+         "description": "A list of data. This is set if the lint file is a combined lint file",
          "items": {
             "additionalProperties": false,
             "description": "data file",
