@@ -162,7 +162,7 @@ func (c *Controller) lintCombineFiles(target *Target, combineFiles []*Node) ([]*
 	return rs, nil
 }
 
-func (c *Controller) lintNonCombineFiles(target *Target, nonCombineFiles []*Node) ([]*Result, error) {
+func (c *Controller) lintNonCombineFiles(target *Target, nonCombineFiles []*Node) []*Result {
 	results := make([]*Result, 0, len(target.DataFiles))
 	for _, dataFile := range target.DataFiles {
 		rs, err := c.lint(&DataSet{
@@ -180,7 +180,7 @@ func (c *Controller) lintNonCombineFiles(target *Target, nonCombineFiles []*Node
 		}
 		results = append(results, rs...)
 	}
-	return results, nil
+	return results
 }
 
 func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
@@ -199,10 +199,7 @@ func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
 		nonCombineFiles = append(nonCombineFiles, lintFile)
 	}
 
-	results, err := c.lintNonCombineFiles(target, nonCombineFiles)
-	if err != nil {
-		return nil, err
-	}
+	results := c.lintNonCombineFiles(target, nonCombineFiles)
 
 	if len(combineFiles) > 0 {
 		rs, err := c.lintCombineFiles(target, combineFiles)
