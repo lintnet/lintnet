@@ -23,7 +23,7 @@ func (c *Controller) Output(logE *logrus.Entry, errLevel errlevel.Level, results
 	if err != nil {
 		return err
 	}
-	if !outputSuccess && !failed {
+	if !outputSuccess && len(fes.Errors) == 0 {
 		return nil
 	}
 	for _, outputter := range outputters {
