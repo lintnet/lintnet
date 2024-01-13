@@ -1,7 +1,0 @@
-jobs:
-  foo:
-    steps:
-      - run: echo hello
-      - uses: foo@main
-  bar:
-    uses: bar@main
