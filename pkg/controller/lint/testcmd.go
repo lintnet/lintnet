@@ -57,6 +57,39 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 	return nil
 }
 
+type TestResult struct {
+	Name     string `json:"name,omitempty"`
+	Links    any    `json:"links,omitempty"`
+	Message  string `json:"message,omitempty"`
+	Level    string `json:"level,omitempty"`
+	Location any    `json:"location,omitempty"`
+	Custom   any    `json:"custom,omitempty"`
+	Excluded bool   `json:"excluded,omitempty"`
+}
+
+func (tr *TestResult) Any() any {
+	m := map[string]any{}
+	if tr.Name != "" {
+		m["name"] = tr.Name
+	}
+	if tr.Links != nil {
+		m["links"] = tr.Links
+	}
+	if tr.Message != "" {
+		m["message"] = tr.Message
+	}
+	if tr.Level != "" {
+		m["level"] = tr.Level
+	}
+	if tr.Location != nil {
+		m["location"] = tr.Location
+	}
+	if tr.Custom != nil {
+		m["custom"] = tr.Custom
+	}
+	return m
+}
+
 func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
 	if td.DataFile != "" {
 		p := &Path{
@@ -86,16 +119,26 @@ func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint
 			Error: fmt.Errorf("marshal param as JSON: %w", err).Error(),
 		}
 	}
-	var result any
-	if err := jsonnet.Read(c.fs, pair.LintFilePath, string(tlaB), c.importer, &result); err != nil {
+	var results []*TestResult
+	if err := jsonnet.Read(c.fs, pair.LintFilePath, string(tlaB), c.importer, &results); err != nil {
 		return &FailedResult{
 			Error: fmt.Errorf("read a lint file: %w", err).Error(),
 		}
 	}
-	if diff := cmp.Diff(td.Result, result); diff != "" {
+	rs := make([]any, 0, len(results))
+	for _, result := range results {
+		if result.Excluded {
+			continue
+		}
+		rs = append(rs, result.Any())
+	}
+	if len(rs) == 0 && len(td.Result) == 0 {
+		return nil
+	}
+	if diff := cmp.Diff(td.Result, rs); diff != "" {
 		return &FailedResult{
 			Wanted: td.Result,
-			Got:    result,
+			Got:    rs,
 			Diff:   diff,
 		}
 	}
@@ -130,7 +173,7 @@ type TestData struct {
 	Name     string           `json:"name,omitempty"`
 	DataFile string           `json:"data_file,omitempty"`
 	Param    *TopLevelArgment `json:"param,omitempty"`
-	Result   any              `json:"result,omitempty"`
+	Result   []any            `json:"result,omitempty"`
 }
 
 type TestPair struct {
