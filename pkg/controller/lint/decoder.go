@@ -9,6 +9,13 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+func (c *Controller) parseDataFile(filePath *Path) (*TopLevelArgment, error) {
+	parser := &DataFileParser{
+		fs: c.fs,
+	}
+	return parser.Parse(filePath)
+}
+
 type Data struct {
 	Text     string `json:"text"`
 	Value    any    `json:"value"`
@@ -23,14 +30,18 @@ type TopLevelArgment struct {
 	Config       map[string]any `json:"config"`
 }
 
-func (c *Controller) parseDataFile(filePath *Path) (*TopLevelArgment, error) {
+type DataFileParser struct {
+	fs afero.Fs
+}
+
+func (dp *DataFileParser) Parse(filePath *Path) (*TopLevelArgment, error) {
 	unmarshaler, fileType, err := encoding.NewUnmarshaler(filePath.Abs)
 	if err != nil {
 		return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 			"file_path": filePath.Raw,
 		})
 	}
-	b, err := afero.ReadFile(c.fs, filePath.Abs)
+	b, err := afero.ReadFile(dp.fs, filePath.Abs)
 	if err != nil {
 		return nil, fmt.Errorf("read a file: %w", err)
 	}

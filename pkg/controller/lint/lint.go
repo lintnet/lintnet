@@ -26,6 +26,21 @@ type ParamLint struct {
 	PWD             string
 }
 
+type DataSet struct {
+	File  *Path
+	Files []*Path
+}
+
+type Paths []*Path
+
+func (ps Paths) Raw() []string {
+	arr := make([]string, len(ps))
+	for i, p := range ps {
+		arr[i] = p.Raw
+	}
+	return arr
+}
+
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
 	rawCfg := &config.RawConfig{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
@@ -33,7 +48,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	}
 
 	if param.TargetID != "" {
-		target, err := c.getTarget(rawCfg.Targets, param.TargetID)
+		target, err := getTarget(rawCfg.Targets, param.TargetID)
 		if err != nil {
 			return err
 		}
@@ -54,12 +69,12 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	errLevel, err := c.getErrorLevel(param.ErrorLevel, cfg.ErrorLevel)
+	errLevel, err := getErrorLevel(param.ErrorLevel, cfg.ErrorLevel)
 	if err != nil {
 		return err
 	}
 
-	shownErrLevel, err := c.getErrorLevel(param.ShownErrorLevel, cfg.ShownErrorLevel)
+	shownErrLevel, err := getErrorLevel(param.ShownErrorLevel, cfg.ShownErrorLevel)
 	if err != nil {
 		return err
 	}
@@ -112,15 +127,6 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	return c.Output(logE, errLevel, shownErrLevel, results, []Outputter{outputter}, param.OutputSuccess)
 }
 
-func (c *Controller) getTarget(targets []*config.RawTarget, targetID string) (*config.RawTarget, error) {
-	for _, target := range targets {
-		if target.ID == targetID {
-			return target, nil
-		}
-	}
-	return nil, errors.New("target isn't found")
-}
-
 func (c *Controller) getResults(targets []*Target) ([]*Result, error) {
 	results := make([]*Result, 0, len(targets))
 	for _, target := range targets {
@@ -134,21 +140,6 @@ func (c *Controller) getResults(targets []*Target) ([]*Result, error) {
 		results = append(results, rs...)
 	}
 	return results, nil
-}
-
-type DataSet struct {
-	File  *Path
-	Files []*Path
-}
-
-type Paths []*Path
-
-func (ps Paths) Raw() []string {
-	arr := make([]string, len(ps))
-	for i, p := range ps {
-		arr[i] = p.Raw
-	}
-	return arr
 }
 
 func (c *Controller) lintCombineFiles(target *Target, combineFiles []*Node) ([]*Result, error) {
@@ -217,17 +208,6 @@ func (c *Controller) lintTarget(target *Target) ([]*Result, error) {
 	return results, nil
 }
 
-func (c *Controller) getErrorLevel(errLevel string, defaultErrorLevel errlevel.Level) (errlevel.Level, error) {
-	if errLevel == "" {
-		return defaultErrorLevel, nil
-	}
-	ll, err := errlevel.New(errLevel)
-	if err != nil {
-		return ll, err //nolint:wrapcheck
-	}
-	return ll, nil
-}
-
 func (c *Controller) getTLA(dataSet *DataSet) (*TopLevelArgment, error) {
 	if dataSet.File != nil {
 		return c.parseDataFile(dataSet.File)
@@ -254,4 +234,24 @@ func (c *Controller) lint(dataSet *DataSet, lintFiles []*Node) ([]*Result, error
 		return nil, err
 	}
 	return c.evaluate(tla, lintFiles), nil
+}
+
+func getErrorLevel(errLevel string, defaultErrorLevel errlevel.Level) (errlevel.Level, error) {
+	if errLevel == "" {
+		return defaultErrorLevel, nil
+	}
+	ll, err := errlevel.New(errLevel)
+	if err != nil {
+		return ll, err //nolint:wrapcheck
+	}
+	return ll, nil
+}
+
+func getTarget(targets []*config.RawTarget, targetID string) (*config.RawTarget, error) {
+	for _, target := range targets {
+		if target.ID == targetID {
+			return target, nil
+		}
+	}
+	return nil, errors.New("target isn't found")
 }

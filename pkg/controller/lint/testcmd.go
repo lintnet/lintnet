@@ -19,6 +19,62 @@ import (
 //go:embed test_diff.txt
 var testResultTemplateByte []byte
 
+type TestData struct {
+	Name     string           `json:"name,omitempty"`
+	DataFile string           `json:"data_file,omitempty"`
+	Param    *TopLevelArgment `json:"param,omitempty"`
+	Result   []any            `json:"result,omitempty"`
+}
+
+type TestPair struct {
+	LintFilePath string
+	TestFilePath string
+}
+
+type FailedResult struct {
+	Name         string `json:"name,omitempty"`
+	LintFilePath string `json:"lint_file_path,omitempty"`
+	TestFilePath string `json:"test_file_path,omitempty"`
+	Param        any    `json:"param,omitempty"`
+	Wanted       any    `json:"wanted,omitempty"`
+	Got          any    `json:"got,omitempty"`
+	Diff         string `json:"diff,omitempty"`
+	Error        string `json:"error,omitempty"`
+}
+
+type TestResult struct {
+	Name     string `json:"name,omitempty"`
+	Links    any    `json:"links,omitempty"`
+	Message  string `json:"message,omitempty"`
+	Level    string `json:"level,omitempty"`
+	Location any    `json:"location,omitempty"`
+	Custom   any    `json:"custom,omitempty"`
+	Excluded bool   `json:"excluded,omitempty"`
+}
+
+func (tr *TestResult) Any() any {
+	m := map[string]any{}
+	if tr.Name != "" {
+		m["name"] = tr.Name
+	}
+	if tr.Links != nil {
+		m["links"] = tr.Links
+	}
+	if tr.Message != "" {
+		m["message"] = tr.Message
+	}
+	if tr.Level != "" {
+		m["level"] = tr.Level
+	}
+	if tr.Location != nil {
+		m["location"] = tr.Location
+	}
+	if tr.Custom != nil {
+		m["custom"] = tr.Custom
+	}
+	return m
+}
+
 func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
 	rawCfg := &config.RawConfig{}
 	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
@@ -55,39 +111,6 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 		return fmt.Errorf("render the result: %w", err)
 	}
 	return nil
-}
-
-type TestResult struct {
-	Name     string `json:"name,omitempty"`
-	Links    any    `json:"links,omitempty"`
-	Message  string `json:"message,omitempty"`
-	Level    string `json:"level,omitempty"`
-	Location any    `json:"location,omitempty"`
-	Custom   any    `json:"custom,omitempty"`
-	Excluded bool   `json:"excluded,omitempty"`
-}
-
-func (tr *TestResult) Any() any {
-	m := map[string]any{}
-	if tr.Name != "" {
-		m["name"] = tr.Name
-	}
-	if tr.Links != nil {
-		m["links"] = tr.Links
-	}
-	if tr.Message != "" {
-		m["message"] = tr.Message
-	}
-	if tr.Level != "" {
-		m["level"] = tr.Level
-	}
-	if tr.Location != nil {
-		m["location"] = tr.Location
-	}
-	if tr.Custom != nil {
-		m["custom"] = tr.Custom
-	}
-	return m
 }
 
 func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
@@ -167,29 +190,6 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 		}
 	}
 	return results
-}
-
-type TestData struct {
-	Name     string           `json:"name,omitempty"`
-	DataFile string           `json:"data_file,omitempty"`
-	Param    *TopLevelArgment `json:"param,omitempty"`
-	Result   []any            `json:"result,omitempty"`
-}
-
-type TestPair struct {
-	LintFilePath string
-	TestFilePath string
-}
-
-type FailedResult struct {
-	Name         string `json:"name,omitempty"`
-	LintFilePath string `json:"lint_file_path,omitempty"`
-	TestFilePath string `json:"test_file_path,omitempty"`
-	Param        any    `json:"param,omitempty"`
-	Wanted       any    `json:"wanted,omitempty"`
-	Got          any    `json:"got,omitempty"`
-	Diff         string `json:"diff,omitempty"`
-	Error        string `json:"error,omitempty"`
 }
 
 func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*Target) []*TestPair {
