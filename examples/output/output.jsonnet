@@ -1,1 +1,0 @@
-function(param) param.errors
