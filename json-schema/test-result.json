@@ -117,14 +117,6 @@
                      "description": "Custom fields that users can set freely",
                      "type": "object"
                   },
-                  "description": {
-                     "description": "rule description",
-                     "type": "string"
-                  },
-                  "excluded": {
-                     "description": "Whether the result is excluded",
-                     "type": "boolean"
-                  },
                   "level": {
                      "description": "error level",
                      "enum": [
