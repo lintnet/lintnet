@@ -1,10 +1,5 @@
 package lint
 
-import (
-	"encoding/json"
-	"fmt"
-)
-
 type (
 	// return of vm.Evaluate()
 	JsonnetEvaluateResult struct {
@@ -69,17 +64,4 @@ func (result *Result) FlatErrors() []*FlatError {
 		})
 	}
 	return fes
-}
-
-func (c *Controller) parseResult(result []byte) ([]*JsonnetResult, any, error) {
-	var rs any
-	if err := json.Unmarshal(result, &rs); err != nil {
-		return nil, nil, fmt.Errorf("unmarshal the result as JSON: %w", err)
-	}
-
-	out := []*JsonnetResult{}
-	if err := json.Unmarshal(result, &out); err != nil {
-		return nil, rs, fmt.Errorf("unmarshal the result as JSON: %w", err)
-	}
-	return out, rs, nil
 }

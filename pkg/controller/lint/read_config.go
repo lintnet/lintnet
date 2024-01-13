@@ -7,15 +7,21 @@ import (
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
+	"github.com/spf13/afero"
 )
 
-func (c *Controller) readConfig(p string, cfg *config.RawConfig) error {
-	return jsonnet.Read(c.fs, p, "{}", c.importer, cfg) //nolint:wrapcheck
+type ConfigReader struct {
+	fs       afero.Fs
+	importer *jsonnet.Importer
 }
 
-func (c *Controller) findAndReadConfig(p string, cfg *config.RawConfig) error {
+func (r *ConfigReader) read(p string, cfg *config.RawConfig) error {
+	return jsonnet.Read(r.fs, p, "{}", r.importer, cfg) //nolint:wrapcheck
+}
+
+func (r *ConfigReader) Read(p string, cfg *config.RawConfig) error {
 	if p != "" {
-		if err := c.readConfig(p, cfg); err != nil {
+		if err := r.read(p, cfg); err != nil {
 			return fmt.Errorf("read a config file: %w", err)
 		}
 		cfg.FilePath = p
@@ -26,7 +32,7 @@ func (c *Controller) findAndReadConfig(p string, cfg *config.RawConfig) error {
 		".lintnet.jsonnet",
 	}
 	for _, p := range paths {
-		if err := c.readConfig(p, cfg); err != nil {
+		if err := r.read(p, cfg); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				continue
 			}
@@ -36,4 +42,12 @@ func (c *Controller) findAndReadConfig(p string, cfg *config.RawConfig) error {
 		return nil
 	}
 	return fmt.Errorf("config file isn't found: %w", os.ErrNotExist)
+}
+
+func (c *Controller) findAndReadConfig(p string, cfg *config.RawConfig) error {
+	reader := &ConfigReader{
+		fs:       c.fs,
+		importer: c.importer,
+	}
+	return reader.Read(p, cfg)
 }

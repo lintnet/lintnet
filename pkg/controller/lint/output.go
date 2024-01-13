@@ -11,11 +11,13 @@ import (
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/errlevel"
-	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/render"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
+
+type Outputter interface {
+	Output(result *Output) error
+}
 
 func (c *Controller) Output(logE *logrus.Entry, errLevel, shownErrLevel errlevel.Level, results []*Result, outputters []Outputter, outputSuccess bool) error {
 	fes := c.formatResultToOutput(results, shownErrLevel)
@@ -37,73 +39,6 @@ func (c *Controller) Output(logE *logrus.Entry, errLevel, shownErrLevel errlevel
 	return nil
 }
 
-type jsonOutputter struct {
-	stdout io.Writer
-}
-
-func (o *jsonOutputter) Output(result *Output) error {
-	return outputJSON(o.stdout, result)
-}
-
-type jsonnetOutputter struct {
-	stdout    io.Writer
-	output    *config.Output
-	transform jsonnet.Node
-	node      jsonnet.Node
-	importer  *jsonnet.Importer
-	config    map[string]any
-}
-
-func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, importer *jsonnet.Importer) (*jsonnetOutputter, error) {
-	node, err := jsonnet.ReadToNode(fs, output.Template)
-	if err != nil {
-		return nil, fmt.Errorf("read a template as Jsonnet: %w", err)
-	}
-	outputter := &jsonnetOutputter{
-		stdout:   stdout,
-		output:   output,
-		node:     node,
-		importer: importer,
-		config:   output.Config,
-	}
-	if output.Transform != "" {
-		node, err := jsonnet.ReadToNode(fs, output.Transform)
-		if err != nil {
-			return nil, fmt.Errorf("read a transform as Jsonnet: %w", err)
-		}
-		outputter.transform = node
-	}
-	return outputter, nil
-}
-
-func (o *jsonnetOutputter) Output(result *Output) error {
-	r := *result
-	r.Config = o.config
-	tla, err := json.Marshal(&r)
-	if err != nil {
-		return fmt.Errorf("marshal output as JSON: %w", err)
-	}
-	tlaS := string(tla)
-	if o.transform != nil {
-		vm := jsonnet.NewVM(string(tla), o.importer)
-		s, err := vm.Evaluate(o.transform)
-		if err != nil {
-			return fmt.Errorf("evaluate a jsonnet: %w", err)
-		}
-		tlaS = s
-	}
-	vm := jsonnet.NewVM(tlaS, o.importer)
-	s, err := vm.Evaluate(o.node)
-	if err != nil {
-		return fmt.Errorf("evaluate a jsonnet: %w", err)
-	}
-	var a any
-	if err := json.Unmarshal([]byte(s), &a); err != nil {
-		return fmt.Errorf("unmarshal the result as JSON: %w", err)
-	}
-	return outputJSON(o.stdout, a)
-}
-
 func outputJSON(w io.Writer, result any) error {
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
@@ -114,78 +49,7 @@ func outputJSON(w io.Writer, result any) error {
 	return nil
 }
 
-type Outputter interface {
-	Output(result *Output) error
-}
-
-type templateOutputter struct {
-	stdout   io.Writer
-	fs       afero.Fs
-	output   *config.Output
-	template render.Template
-	node     jsonnet.Node
-	importer *jsonnet.Importer
-}
-
-func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output, importer *jsonnet.Importer) (*templateOutputter, error) {
-	if output.Template == "" {
-		return nil, errors.New("template is required")
-	}
-	b, err := afero.ReadFile(fs, output.Template)
-	if err != nil {
-		return nil, fmt.Errorf("read a template: %w", err)
-	}
-	tpl, err := renderer.Compile(string(b))
-	if err != nil {
-		return nil, fmt.Errorf("parse a template: %w", err)
-	}
-	var node jsonnet.Node
-	if output.Transform != "" {
-		n, err := jsonnet.ReadToNode(fs, output.Transform)
-		if err != nil {
-			return nil, fmt.Errorf("read a transform as Jsonnet: %w", err)
-		}
-		node = n
-	}
-	return &templateOutputter{
-		stdout:   stdout,
-		fs:       fs,
-		output:   output,
-		template: tpl,
-		importer: importer,
-		node:     node,
-	}, nil
-}
-
-func (o *templateOutputter) Output(result *Output) error {
-	r := *result
-	r.Config = o.output.Config
-	b, err := json.Marshal(r)
-	if err != nil {
-		return fmt.Errorf("marshal result as JSON: %w", err)
-	}
-	var param any
-	if o.node != nil {
-		vm := jsonnet.NewVM(string(b), o.importer)
-		s, err := vm.Evaluate(o.node)
-		if err != nil {
-			return fmt.Errorf("evaluate a jsonnet: %w", err)
-		}
-		if err := json.Unmarshal([]byte(s), &param); err != nil {
-			return fmt.Errorf("unmarshal transformed result as JSON: %w", err)
-		}
-	} else {
-		if err := json.Unmarshal(b, &param); err != nil {
-			return fmt.Errorf("unmarshal result as JSON: %w", err)
-		}
-	}
-	if err := o.template.Execute(o.stdout, param); err != nil {
-		return fmt.Errorf("render a template: %w", err)
-	}
-	return nil
-}
-
-func (c *Controller) getOutput(outputs []*config.Output, outputID string) (*config.Output, error) {
+func getOutput(outputs []*config.Output, outputID string) (*config.Output, error) {
 	for _, output := range outputs {
 		if output.ID == outputID {
 			return output, nil
@@ -200,7 +64,7 @@ func (c *Controller) getOutputter(outputs []*config.Output, param *ParamLint, cf
 			stdout: c.stdout,
 		}, nil
 	}
-	output, err := c.getOutput(outputs, param.Output)
+	output, err := getOutput(outputs, param.Output)
 	if err != nil {
 		return nil, err
 	}
@@ -246,82 +110,6 @@ func (c *Controller) getOutputter(outputs []*config.Output, param *ParamLint, cf
 		return newTemplateOutputter(c.stdout, c.fs, &render.HTMLTemplateRenderer{}, output, c.importer)
 	}
 	return nil, errors.New("unknown renderer")
-}
-
-type Links []*Link
-
-func convMapToLink(m map[string]any) (*Link, error) {
-	lk := &Link{}
-	if e, ok := m["title"]; ok {
-		f, ok := e.(string)
-		if !ok {
-			return nil, errors.New("title must be a string")
-		}
-		lk.Title = f
-	}
-	if e, ok := m["link"]; ok {
-		f, ok := e.(string)
-		if !ok {
-			return nil, errors.New("link must be a string")
-		}
-		lk.Link = f
-	}
-	return lk, nil
-}
-
-func convAnyToLink(a any) (*Link, error) {
-	switch d := a.(type) {
-	case string:
-		return &Link{
-			Link: d,
-		}, nil
-	case map[string]any:
-		return convMapToLink(d)
-	}
-	return nil, errors.New("link must be either a string or map[string]any")
-}
-
-func (ls *Links) UnmarshalJSON(b []byte) error {
-	var a any
-	if err := json.Unmarshal(b, &a); err != nil {
-		return fmt.Errorf("unmarshal bytes as JSON: %w", err)
-	}
-	if a == nil {
-		return nil
-	}
-	switch b := a.(type) {
-	case []any:
-		links := make([]*Link, len(b))
-		for i, c := range b {
-			lk, err := convAnyToLink(c)
-			if err != nil {
-				return err
-			}
-			links[i] = lk
-		}
-		*ls = links
-		return nil
-	case map[string]any:
-		links := make([]*Link, 0, len(b))
-		for k, v := range b {
-			s, ok := v.(string)
-			if !ok {
-				return errors.New("link must be a string")
-			}
-			links = append(links, &Link{
-				Title: k,
-				Link:  s,
-			})
-		}
-		*ls = links
-		return nil
-	}
-	return nil
-}
-
-type Link struct {
-	Title string `json:"title,omitempty"`
-	Link  string `json:"link"`
 }
 
 type FlatError struct {

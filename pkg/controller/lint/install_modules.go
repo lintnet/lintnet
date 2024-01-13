@@ -3,10 +3,7 @@ package lint
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 
-	"github.com/google/go-github/v58/github"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
@@ -15,14 +12,6 @@ import (
 
 type ParamDownloadModule struct {
 	BaseDir string
-}
-
-type GitHub interface {
-	GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, maxRedirects int) (*url.URL, *github.Response, error)
-}
-
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
 }
 
 func (c *Controller) installModules(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, modules map[string]*config.ModuleArchive) error {
