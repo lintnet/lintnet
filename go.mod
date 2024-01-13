@@ -9,12 +9,12 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v58 v58.0.0
 	github.com/google/go-jsonnet v0.20.0
+	github.com/lintnet/go-jsonnet-native-functions v0.2.1
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/otiai10/copy v1.14.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.11.0
-	github.com/suzuki-shunsuke/go-jsonnet-native-functions v0.2.0
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/tmccombs/hcl2json v0.6.0
 	github.com/urfave/cli/v2 v2.27.1
