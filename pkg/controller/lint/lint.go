@@ -99,7 +99,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	results, err := c.getResults(targets)
+	results, err := c.linter.Lint(targets)
 	if err != nil {
 		return err
 	}
