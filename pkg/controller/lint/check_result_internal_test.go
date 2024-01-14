@@ -11,14 +11,14 @@ func Test_isFailed(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name     string
-		results  []*domain.FlatError
+		results  []*domain.Error
 		errLevel errlevel.Level
 		exp      bool
 		isErr    bool
 	}{
 		{
 			name: "false",
-			results: []*domain.FlatError{
+			results: []*domain.Error{
 				{
 					Level: "warn",
 				},
@@ -28,7 +28,7 @@ func Test_isFailed(t *testing.T) {
 		},
 		{
 			name: "true",
-			results: []*domain.FlatError{
+			results: []*domain.Error{
 				{
 					Level: "warn",
 				},

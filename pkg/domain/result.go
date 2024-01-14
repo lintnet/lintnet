@@ -32,9 +32,9 @@ type (
 	}
 )
 
-func (result *Result) FlatErrors() []*FlatError {
+func (result *Result) FlatErrors() []*Error {
 	if result.Error != "" {
-		return []*FlatError{
+		return []*Error{
 			{
 				LintFile: result.LintFile,
 				DataFile: result.DataFile,
@@ -44,12 +44,12 @@ func (result *Result) FlatErrors() []*FlatError {
 			},
 		}
 	}
-	fes := make([]*FlatError, 0, len(result.RawResult))
+	fes := make([]*Error, 0, len(result.RawResult))
 	for _, r := range result.RawResult {
 		if r.Excluded {
 			continue
 		}
-		fes = append(fes, &FlatError{
+		fes = append(fes, &Error{
 			Name:        r.Name,
 			Level:       r.Level,
 			Message:     r.Message,
@@ -66,7 +66,7 @@ func (result *Result) FlatErrors() []*FlatError {
 	return fes
 }
 
-type FlatError struct {
+type Error struct {
 	Name        string  `json:"name,omitempty"`
 	Description string  `json:"description,omitempty"`
 	Links       []*Link `json:"links,omitempty"`
@@ -80,7 +80,7 @@ type FlatError struct {
 	Custom   any    `json:"custom,omitempty"`
 }
 
-func (e *FlatError) Failed(errLevel errlevel.Level) (bool, error) {
+func (e *Error) Failed(errLevel errlevel.Level) (bool, error) {
 	level := errlevel.Error
 	if e.Level != "" {
 		feErrLevel, err := errlevel.New(e.Level)

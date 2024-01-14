@@ -2,6 +2,8 @@ package lint
 
 import (
 	"errors"
+	"fmt"
+	"runtime"
 
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
@@ -14,8 +16,11 @@ type Outputter interface {
 }
 
 func (c *Controller) Output(logE *logrus.Entry, errLevel, shownErrLevel errlevel.Level, results []*domain.Result, outputters []Outputter, outputSuccess bool) error {
-	fes := output.FormatResults(results, shownErrLevel)
-	fes.LintnetVersion = c.param.Version
+	fes := &output.Output{
+		Errors:         output.FormatResults(logE, results, shownErrLevel),
+		LintnetVersion: c.param.Version,
+		Env:            fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+	}
 	failed, err := isFailed(fes.Errors, errLevel)
 	if err != nil {
 		return err
