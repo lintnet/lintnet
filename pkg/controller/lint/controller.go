@@ -9,11 +9,13 @@ import (
 )
 
 type Controller struct {
-	fs              afero.Fs
-	stdout          io.Writer
-	moduleInstaller *module.Installer
-	importer        *jsonnet.Importer
-	param           *ParamController
+	fs                afero.Fs
+	stdout            io.Writer
+	moduleInstaller   *module.Installer
+	importer          *jsonnet.Importer
+	param             *ParamController
+	lintFileParser    *LintFileParser
+	lintFileEvaluator *LintFileEvaluator
 }
 
 type ParamController struct {
@@ -27,5 +29,11 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 		stdout:          stdout,
 		moduleInstaller: moduleInstaller,
 		importer:        importer,
+		lintFileParser: &LintFileParser{
+			fs: fs,
+		},
+		lintFileEvaluator: &LintFileEvaluator{
+			importer: importer,
+		},
 	}
 }
