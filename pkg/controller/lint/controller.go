@@ -5,6 +5,7 @@ import (
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/domain"
+	"github.com/lintnet/lintnet/pkg/encoding"
 	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/lint"
@@ -19,7 +20,7 @@ type Controller struct {
 	moduleInstaller *module.Installer
 	importer        *jsonnet.Importer
 	param           *ParamController
-	dataFileParser  *DataFileParser
+	dataFileParser  lint.DataFileParser
 	linter          Linter
 	fileFinder      FileFinder
 }
@@ -37,6 +38,7 @@ type ParamController struct {
 }
 
 func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, moduleInstaller *module.Installer, importer *jsonnet.Importer) *Controller {
+	dp := encoding.NewDataFileParser(fs)
 	return &Controller{
 		param:           param,
 		fs:              fs,
@@ -44,9 +46,7 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 		moduleInstaller: moduleInstaller,
 		importer:        importer,
 		linter: lint.NewLinter(
-			&DataFileParser{
-				fs: fs,
-			},
+			dp,
 			&LintFileParser{
 				fs: fs,
 			},
@@ -54,9 +54,7 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 				importer: importer,
 			},
 		),
-		dataFileParser: &DataFileParser{
-			fs: fs,
-		},
-		fileFinder: filefind.NewFileFinder(fs),
+		dataFileParser: dp,
+		fileFinder:     filefind.NewFileFinder(fs),
 	}
 }
