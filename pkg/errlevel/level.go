@@ -21,5 +21,5 @@ func New(s string) (Level, error) {
 	if l, ok := m[s]; ok {
 		return l, nil
 	}
-	return Error, errors.New("log level is invalid")
+	return Error, errors.New("error level is invalid")
 }
