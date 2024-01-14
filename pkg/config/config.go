@@ -111,12 +111,12 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
 }
 
 type Config struct {
-	ErrorLevel      errlevel.Level
-	ShownErrorLevel errlevel.Level
-	Targets         []*Target
-	Outputs         []*Output
-	ModuleArchives  map[string]*ModuleArchive
-	IgnoredPatterns []string
+	ErrorLevel      errlevel.Level            `json:"error_level,omitempty"`
+	ShownErrorLevel errlevel.Level            `json:"shown_error_level,omitempty"`
+	Targets         []*Target                 `json:"targets,omitempty"`
+	Outputs         []*Output                 `json:"outputs,omitempty"`
+	ModuleArchives  map[string]*ModuleArchive `json:"module_archives,omitempty"`
+	IgnoredPatterns []string                  `json:"ignore_patterns,omitempty"`
 }
 
 type Output struct {
@@ -134,11 +134,11 @@ type Output struct {
 }
 
 type Target struct {
-	ID             string
-	LintFiles      []*ModuleGlob
-	Modules        []*ModuleGlob
-	ModuleArchives map[string]*ModuleArchive
-	DataFiles      []string
+	ID             string                    `json:"id,omitempty"`
+	LintFiles      []*ModuleGlob             `json:"lint_files,omitempty"`
+	Modules        []*ModuleGlob             `json:"modules,omitempty"`
+	ModuleArchives map[string]*ModuleArchive `json:"module_archives,omitempty"`
+	DataFiles      []string                  `json:"data_files,omitempty"`
 }
 
 type RawTarget struct {

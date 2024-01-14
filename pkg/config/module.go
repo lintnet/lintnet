@@ -15,11 +15,11 @@ type Module struct {
 }
 
 type ModuleGlob struct {
-	ID        string
-	SlashPath string
-	Archive   *ModuleArchive
-	Config    map[string]interface{}
-	Excluded  bool
+	ID        string                 `json:"id,omitempty"`
+	SlashPath string                 `json:"slash_path,omitempty"`
+	Archive   *ModuleArchive         `json:"archive,omitempty"`
+	Config    map[string]interface{} `json:"config,omitempty"`
+	Excluded  bool                   `json:"excluded,omitempty"`
 }
 
 func (m *Module) FilePath() string {
@@ -30,13 +30,13 @@ func (m *Module) FilePath() string {
 }
 
 type ModuleArchive struct {
-	ID        string
-	Type      string
-	Host      string
-	RepoOwner string
-	RepoName  string
-	Ref       string
-	Tag       string
+	ID        string `json:"id,omitempty"`
+	Type      string `json:"type,omitempty"`
+	Host      string `json:"host,omitempty"`
+	RepoOwner string `json:"repo_owner,omitempty"`
+	RepoName  string `json:"repo_name,omitempty"`
+	Ref       string `json:"ref,omitempty"`
+	Tag       string `json:"tag,omitempty"`
 }
 
 var fullCommitHashPattern = regexp.MustCompile("[a-fA-F0-9]{40}")
