@@ -5,14 +5,19 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 	"text/template"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/config/reader"
 	"github.com/lintnet/lintnet/pkg/domain"
+	"github.com/lintnet/lintnet/pkg/encoding"
+	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
+	"github.com/lintnet/lintnet/pkg/lint"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -76,7 +81,30 @@ func (tr *TestResult) Any() any {
 	return m
 }
 
-func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
+type TestController struct {
+	fs             afero.Fs
+	stdout         io.Writer
+	importer       *jsonnet.ModuleImporter
+	param          *ParamController
+	dataFileParser lint.DataFileParser
+	fileFinder     FileFinder
+	configReader   *reader.Reader
+}
+
+func NewTestController(param *ParamController, fs afero.Fs, stdout io.Writer, importer *jsonnet.ModuleImporter) *TestController {
+	dp := encoding.NewDataFileParser(fs)
+	return &TestController{
+		param:          param,
+		fs:             fs,
+		stdout:         stdout,
+		importer:       importer,
+		dataFileParser: dp,
+		fileFinder:     filefind.NewFileFinder(fs),
+		configReader:   reader.New(fs, importer),
+	}
+}
+
+func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
@@ -114,7 +142,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 	return nil
 }
 
-func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
+func (c *TestController) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
 	if td.DataFile != "" {
 		p := &domain.Path{
 			Raw: td.DataFile,
@@ -169,7 +197,7 @@ func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint
 	return nil
 }
 
-func (c *Controller) tests(pair *TestPair) []*FailedResult {
+func (c *TestController) tests(pair *TestPair) []*FailedResult {
 	testData := []*TestData{}
 	if err := jsonnet.Read(c.fs, pair.TestFilePath, "{}", c.importer, &testData); err != nil {
 		return []*FailedResult{
@@ -193,7 +221,7 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	return results
 }
 
-func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*domain.Target) []*TestPair {
+func (c *TestController) filterTargetsWithTest(logE *logrus.Entry, targets []*domain.Target) []*TestPair {
 	pairs := []*TestPair{}
 	for _, target := range targets {
 		for _, lintFile := range target.LintFiles {

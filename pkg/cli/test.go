@@ -57,7 +57,7 @@ func (tc *testCommand) action(c *cli.Context) error {
 	param := &lint.ParamController{
 		Version: tc.version,
 	}
-	ctrl := lint.NewController(param, fs, os.Stdout, modInstaller, importer)
+	ctrl := lint.NewTestController(param, fs, os.Stdout, importer)
 	return ctrl.Test(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
 		FilePaths:      c.Args().Slice(),
 		ErrorLevel:     c.String("error-level"),
