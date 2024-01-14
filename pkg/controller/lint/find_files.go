@@ -26,6 +26,13 @@ type Target struct {
 	DataFiles Paths
 }
 
+func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*Target, error) {
+	finder := &FileFinder{
+		fs: c.fs,
+	}
+	return finder.Find(logE, cfg, rootDir, cfgDir)
+}
+
 func ignorePath(path string, ignorePatterns []string) error {
 	for _, ignoredDir := range ignorePatterns {
 		f, err := doublestar.PathMatch(ignoredDir, path)
@@ -82,19 +89,19 @@ func filterTarget(target *Target, filePaths []string) *Target {
 	return newTarget
 }
 
-func (c *Controller) filterTargetsByDataRootDir(logE *logrus.Entry, param *ParamLint, targets []*Target) error {
+func filterTargetsByDataRootDir(logE *logrus.Entry, param *ParamLint, targets []*Target) error {
 	for _, target := range targets {
-		if err := c.filterTargetByDataRootDir(logE, param, target); err != nil {
+		if err := filterTargetByDataRootDir(logE, param, target); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Controller) filterTargetByDataRootDir(logE *logrus.Entry, param *ParamLint, target *Target) error {
+func filterTargetByDataRootDir(logE *logrus.Entry, param *ParamLint, target *Target) error {
 	arr := make([]*Path, 0, len(target.DataFiles))
 	for _, dataFile := range target.DataFiles {
-		if c.filterFileByDataRootDir(logE, param, dataFile.Abs) {
+		if filterFileByDataRootDir(logE, param, dataFile.Abs) {
 			arr = append(arr, dataFile)
 		} else {
 			logE.WithField("data_file", dataFile).Warn("this data file is ignored because this is out of the data root directory")
@@ -104,7 +111,7 @@ func (c *Controller) filterTargetByDataRootDir(logE *logrus.Entry, param *ParamL
 	return nil
 }
 
-func (c *Controller) filterFileByDataRootDir(logE *logrus.Entry, param *ParamLint, dataFile string) bool {
+func filterFileByDataRootDir(logE *logrus.Entry, param *ParamLint, dataFile string) bool {
 	p := dataFile
 	if a, err := filepath.Rel(param.DataRootDir, p); err != nil {
 		logE.WithError(err).Warn("get a relative path")
@@ -122,13 +129,6 @@ func (c *Controller) filterFileByDataRootDir(logE *logrus.Entry, param *ParamLin
 		}
 	}
 	return false
-}
-
-func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*Target, error) {
-	finder := &FileFinder{
-		fs: c.fs,
-	}
-	return finder.Find(logE, cfg, rootDir, cfgDir)
 }
 
 type FileFinder struct {

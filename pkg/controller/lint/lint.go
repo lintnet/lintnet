@@ -110,7 +110,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		}
 	}
 
-	if err := c.filterTargetsByDataRootDir(logE, param, targets); err != nil {
+	if err := filterTargetsByDataRootDir(logE, param, targets); err != nil {
 		return err
 	}
 
