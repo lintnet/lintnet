@@ -79,7 +79,7 @@ func (tr *TestResult) Any() any {
 func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
-		return err
+		return fmt.Errorf("read a configuration file: %w", err)
 	}
 	cfg, err := rawCfg.Parse()
 	if err != nil {

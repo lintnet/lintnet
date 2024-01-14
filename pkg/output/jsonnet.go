@@ -15,11 +15,11 @@ type jsonnetOutputter struct {
 	output    *config.Output
 	transform jsonnet.Node
 	node      jsonnet.Node
-	importer  *jsonnet.Importer
+	importer  *jsonnet.ModuleImporter
 	config    map[string]any
 }
 
-func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, importer *jsonnet.Importer) (*jsonnetOutputter, error) {
+func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, importer *jsonnet.ModuleImporter) (*jsonnetOutputter, error) {
 	node, err := jsonnet.ReadToNode(fs, output.Template)
 	if err != nil {
 		return nil, fmt.Errorf("read a template as Jsonnet: %w", err)

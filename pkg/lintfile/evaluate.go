@@ -9,10 +9,10 @@ import (
 )
 
 type Evaluator struct {
-	importer *jsonnet.Importer
+	importer *jsonnet.ModuleImporter
 }
 
-func NewEvaluator(importer *jsonnet.Importer) *Evaluator {
+func NewEvaluator(importer *jsonnet.ModuleImporter) *Evaluator {
 	return &Evaluator{
 		importer: importer,
 	}
