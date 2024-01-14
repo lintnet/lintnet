@@ -212,9 +212,9 @@ func (rm *RawModule) Parse() (*ModuleGlob, error) {
 }
 
 type LintFile struct {
-	ID     string
-	Path   string         `json:"path"`
-	Config map[string]any `json:"config"`
+	ID     string         `json:"id,omitempty"`
+	Path   string         `json:"path,omitempty"`
+	Config map[string]any `json:"config,omitempty"`
 }
 
 func (rm *RawModule) UnmarshalJSON(b []byte) error {
