@@ -36,3 +36,8 @@ type TopLevelArgment struct {
 	CombinedData []*Data        `json:"combined_data,omitempty"`
 	Config       map[string]any `json:"config"`
 }
+
+type DataSet struct {
+	File  *Path
+	Files []*Path
+}

@@ -1,11 +1,41 @@
 package lint
 
-import "github.com/lintnet/lintnet/pkg/domain"
+import (
+	"fmt"
+
+	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/domain"
+	"github.com/lintnet/lintnet/pkg/jsonnet"
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
+)
 
 type Linter struct {
-	dataFileParser    *DataFileParser
-	lintFileParser    *LintFileParser
-	lintFileEvaluator *LintFileEvaluator
+	dataFileParser    DataFileParser
+	lintFileParser    LintFileParser
+	lintFileEvaluator LintFileEvaluator
+}
+
+func NewLinter(dataFileParser DataFileParser, lintFileParser LintFileParser, lintFileEvaluator LintFileEvaluator) *Linter {
+	return &Linter{
+		dataFileParser:    dataFileParser,
+		lintFileParser:    lintFileParser,
+		lintFileEvaluator: lintFileEvaluator,
+	}
+}
+
+type DataFileParser interface {
+	Parse(filePath *domain.Path) (*domain.TopLevelArgment, error)
+}
+
+type LintFileParser interface { //nolint:revive
+	Parse(lintFile *config.LintFile) (*domain.Node, error)
+	Parses(lintFiles []*config.LintFile) ([]*domain.Node, error)
+}
+
+type LintFileEvaluator interface { //nolint:revive
+	Evaluate(tla *domain.TopLevelArgment, lintFile jsonnet.Node) (string, error)
+	Evaluates(tla *domain.TopLevelArgment, lintFiles []*domain.Node) []*domain.Result
 }
 
 func (l *Linter) Lint(targets []*domain.Target) ([]*domain.Result, error) {
@@ -26,7 +56,7 @@ func (l *Linter) Lint(targets []*domain.Target) ([]*domain.Result, error) {
 func (l *Linter) lintTarget(target *domain.Target) ([]*domain.Result, error) {
 	lintFiles, err := l.lintFileParser.Parses(target.LintFiles)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse lint files: %w", err)
 	}
 
 	combineFiles := []*domain.Node{}
@@ -52,7 +82,7 @@ func (l *Linter) lintTarget(target *domain.Target) ([]*domain.Result, error) {
 }
 
 func (l *Linter) lintCombineFiles(target *domain.Target, combineFiles []*domain.Node) ([]*domain.Result, error) {
-	rs, err := l.lint(&DataSet{
+	rs, err := l.lint(&domain.DataSet{
 		Files: target.DataFiles,
 	}, combineFiles)
 	if err != nil {
@@ -77,7 +107,7 @@ func (l *Linter) lintNonCombineFiles(target *domain.Target, nonCombineFiles []*d
 }
 
 func (l *Linter) lintNonCombineFile(nonCombineFiles []*domain.Node, dataFile *domain.Path) []*domain.Result {
-	rs, err := l.lint(&DataSet{
+	rs, err := l.lint(&domain.DataSet{
 		File: dataFile,
 	}, nonCombineFiles)
 	if err != nil {
@@ -94,16 +124,22 @@ func (l *Linter) lintNonCombineFile(nonCombineFiles []*domain.Node, dataFile *do
 	return rs
 }
 
-func (l *Linter) getTLA(dataSet *DataSet) (*domain.TopLevelArgment, error) {
+func (l *Linter) getTLA(dataSet *domain.DataSet) (*domain.TopLevelArgment, error) {
 	if dataSet.File != nil {
-		return l.dataFileParser.Parse(dataSet.File)
+		tla, err := l.dataFileParser.Parse(dataSet.File)
+		if err != nil {
+			return nil, fmt.Errorf("parse a data file: %w", err)
+		}
+		return tla, nil
 	}
 	if len(dataSet.Files) > 0 {
 		combinedData := make([]*domain.Data, len(dataSet.Files))
 		for i, dataFile := range dataSet.Files {
 			data, err := l.dataFileParser.Parse(dataFile)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("parse a data file: %w", logerr.WithFields(err, logrus.Fields{
+					"data_file": dataFile.Raw,
+				}))
 			}
 			combinedData[i] = data.Data
 		}
@@ -114,7 +150,7 @@ func (l *Linter) getTLA(dataSet *DataSet) (*domain.TopLevelArgment, error) {
 	return &domain.TopLevelArgment{}, nil
 }
 
-func (l *Linter) lint(dataSet *DataSet, lintFiles []*domain.Node) ([]*domain.Result, error) {
+func (l *Linter) lint(dataSet *domain.DataSet, lintFiles []*domain.Node) ([]*domain.Result, error) {
 	tla, err := l.getTLA(dataSet)
 	if err != nil {
 		return nil, err

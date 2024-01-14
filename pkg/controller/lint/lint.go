@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/lintnet/lintnet/pkg/config"
-	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
@@ -25,11 +24,6 @@ type ParamLint struct {
 	Output          string
 	OutputSuccess   bool
 	PWD             string
-}
-
-type DataSet struct {
-	File  *domain.Path
-	Files []*domain.Path
 }
 
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
@@ -92,7 +86,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 
 	results, err := c.linter.Lint(targets)
 	if err != nil {
-		return err
+		return fmt.Errorf("lint targets: %w", err)
 	}
 	logE.WithFields(logrus.Fields{
 		"config":  log.JSON(cfg),

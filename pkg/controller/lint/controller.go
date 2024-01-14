@@ -7,6 +7,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
+	"github.com/lintnet/lintnet/pkg/lint"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -19,8 +20,12 @@ type Controller struct {
 	importer        *jsonnet.Importer
 	param           *ParamController
 	dataFileParser  *DataFileParser
-	linter          *Linter
+	linter          Linter
 	fileFinder      FileFinder
+}
+
+type Linter interface {
+	Lint(targets []*domain.Target) ([]*domain.Result, error)
 }
 
 type FileFinder interface {
@@ -38,17 +43,17 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 		stdout:          stdout,
 		moduleInstaller: moduleInstaller,
 		importer:        importer,
-		linter: &Linter{
-			lintFileParser: &LintFileParser{
+		linter: lint.NewLinter(
+			&DataFileParser{
 				fs: fs,
 			},
-			lintFileEvaluator: &LintFileEvaluator{
+			&LintFileParser{
+				fs: fs,
+			},
+			&LintFileEvaluator{
 				importer: importer,
 			},
-			dataFileParser: &DataFileParser{
-				fs: fs,
-			},
-		},
+		),
 		dataFileParser: &DataFileParser{
 			fs: fs,
 		},
