@@ -15,11 +15,7 @@ type Output struct {
 	Config         map[string]any      `json:"config,omitempty"`
 }
 
-type Formatter struct {
-	version string
-}
-
-func (f *Formatter) Format(results []*domain.Result, errLevel errlevel.Level) *Output {
+func FormatResults(results []*domain.Result, errLevel errlevel.Level) *Output {
 	list := make([]*domain.FlatError, 0, len(results))
 	for _, result := range results {
 		for _, fe := range result.FlatErrors() {
@@ -30,8 +26,7 @@ func (f *Formatter) Format(results []*domain.Result, errLevel errlevel.Level) *O
 		}
 	}
 	return &Output{
-		LintnetVersion: f.version,
-		Env:            fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
-		Errors:         list,
+		Env:    fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+		Errors: list,
 	}
 }

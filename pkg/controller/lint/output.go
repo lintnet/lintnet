@@ -14,8 +14,8 @@ type Outputter interface {
 }
 
 func (c *Controller) Output(logE *logrus.Entry, errLevel, shownErrLevel errlevel.Level, results []*domain.Result, outputters []Outputter, outputSuccess bool) error {
-	formatter := &output.Formatter{}
-	fes := formatter.Format(results, shownErrLevel)
+	fes := output.FormatResults(results, shownErrLevel)
+	fes.LintnetVersion = c.param.Version
 	failed, err := isFailed(fes.Errors, errLevel)
 	if err != nil {
 		return err
