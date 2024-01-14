@@ -26,13 +26,6 @@ type Target struct {
 	DataFiles Paths
 }
 
-func (c *Controller) findFiles(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*Target, error) {
-	finder := &FileFinder{
-		fs: c.fs,
-	}
-	return finder.Find(logE, cfg, rootDir, cfgDir)
-}
-
 func ignorePath(path string, ignorePatterns []string) error {
 	for _, ignoredDir := range ignorePatterns {
 		f, err := doublestar.PathMatch(ignoredDir, path)

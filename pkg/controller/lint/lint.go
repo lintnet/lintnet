@@ -85,7 +85,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	targets, err := c.findFiles(logE, cfg, param.RootDir, cfgDir)
+	targets, err := c.fileFinder.Find(logE, cfg, param.RootDir, cfgDir)
 	if err != nil {
 		return err
 	}
