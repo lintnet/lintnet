@@ -12,20 +12,6 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) parseLintFiles(lintFiles []*config.LintFile) ([]*Node, error) {
-	parser := &LintFileParser{
-		fs: c.fs,
-	}
-	return parser.Parses(lintFiles)
-}
-
-func (c *Controller) evaluate(tla *TopLevelArgment, lintFiles []*Node) []*Result {
-	evaluator := &LintFileEvaluator{
-		importer: c.importer,
-	}
-	return evaluator.Evaluates(tla, lintFiles)
-}
-
 type Node struct {
 	Node    jsonnet.Node
 	Config  map[string]any

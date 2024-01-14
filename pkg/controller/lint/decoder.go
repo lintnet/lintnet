@@ -9,13 +9,6 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) parseDataFile(filePath *Path) (*TopLevelArgment, error) {
-	parser := &DataFileParser{
-		fs: c.fs,
-	}
-	return parser.Parse(filePath)
-}
-
 type Data struct {
 	Text     string `json:"text"`
 	Value    any    `json:"value"`
