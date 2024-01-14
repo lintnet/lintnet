@@ -1,12 +1,14 @@
 package lint
 
+import "github.com/lintnet/lintnet/pkg/domain"
+
 type Linter struct {
 	dataFileParser    *DataFileParser
 	lintFileParser    *LintFileParser
 	lintFileEvaluator *LintFileEvaluator
 }
 
-func (l *Linter) Lint(targets []*Target) ([]*Result, error) {
+func (l *Linter) Lint(targets []*domain.Target) ([]*Result, error) {
 	results := make([]*Result, 0, len(targets))
 	for _, target := range targets {
 		rs, err := l.lintTarget(target)
@@ -21,7 +23,7 @@ func (l *Linter) Lint(targets []*Target) ([]*Result, error) {
 	return results, nil
 }
 
-func (l *Linter) lintTarget(target *Target) ([]*Result, error) {
+func (l *Linter) lintTarget(target *domain.Target) ([]*Result, error) {
 	lintFiles, err := l.lintFileParser.Parses(target.LintFiles)
 	if err != nil {
 		return nil, err
@@ -49,7 +51,7 @@ func (l *Linter) lintTarget(target *Target) ([]*Result, error) {
 	return results, nil
 }
 
-func (l *Linter) lintCombineFiles(target *Target, combineFiles []*Node) ([]*Result, error) {
+func (l *Linter) lintCombineFiles(target *domain.Target, combineFiles []*Node) ([]*Result, error) {
 	rs, err := l.lint(&DataSet{
 		Files: target.DataFiles,
 	}, combineFiles)
@@ -66,7 +68,7 @@ func (l *Linter) lintCombineFiles(target *Target, combineFiles []*Node) ([]*Resu
 	return rs, nil
 }
 
-func (l *Linter) lintNonCombineFiles(target *Target, nonCombineFiles []*Node) []*Result {
+func (l *Linter) lintNonCombineFiles(target *domain.Target, nonCombineFiles []*Node) []*Result {
 	results := make([]*Result, 0, len(target.DataFiles))
 	for _, dataFile := range target.DataFiles {
 		results = append(results, l.lintNonCombineFile(nonCombineFiles, dataFile)...)
@@ -74,7 +76,7 @@ func (l *Linter) lintNonCombineFiles(target *Target, nonCombineFiles []*Node) []
 	return results
 }
 
-func (l *Linter) lintNonCombineFile(nonCombineFiles []*Node, dataFile *Path) []*Result {
+func (l *Linter) lintNonCombineFile(nonCombineFiles []*Node, dataFile *domain.Path) []*Result {
 	rs, err := l.lint(&DataSet{
 		File: dataFile,
 	}, nonCombineFiles)

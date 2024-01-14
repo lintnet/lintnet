@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
@@ -27,18 +28,8 @@ type ParamLint struct {
 }
 
 type DataSet struct {
-	File  *Path
-	Files []*Path
-}
-
-type Paths []*Path
-
-func (ps Paths) Raw() []string {
-	arr := make([]string, len(ps))
-	for i, p := range ps {
-		arr[i] = p.Raw
-	}
-	return arr
+	File  *domain.Path
+	Files []*domain.Path
 }
 
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen

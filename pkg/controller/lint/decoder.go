@@ -3,6 +3,7 @@ package lint
 import (
 	"fmt"
 
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/encoding"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -27,7 +28,7 @@ type DataFileParser struct {
 	fs afero.Fs
 }
 
-func (dp *DataFileParser) Parse(filePath *Path) (*TopLevelArgment, error) {
+func (dp *DataFileParser) Parse(filePath *domain.Path) (*TopLevelArgment, error) {
 	unmarshaler, fileType, err := encoding.NewUnmarshaler(filePath.Abs)
 	if err != nil {
 		return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck

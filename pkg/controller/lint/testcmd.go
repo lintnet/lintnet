@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -115,7 +116,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 
 func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
 	if td.DataFile != "" {
-		p := &Path{
+		p := &domain.Path{
 			Raw: td.DataFile,
 			Abs: filepath.Join(filepath.Dir(pair.TestFilePath), td.DataFile),
 		}
@@ -192,7 +193,7 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	return results
 }
 
-func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*Target) []*TestPair {
+func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*domain.Target) []*TestPair {
 	pairs := []*TestPair{}
 	for _, target := range targets {
 		for _, lintFile := range target.LintFiles {

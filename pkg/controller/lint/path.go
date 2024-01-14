@@ -8,11 +8,6 @@ import (
 // rel, abs
 // glob, path
 
-type Path struct {
-	Raw string
-	Abs string
-}
-
 func Abs(base, p string) string {
 	if filepath.IsAbs(p) {
 		return p
