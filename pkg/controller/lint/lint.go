@@ -53,7 +53,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	if param.TargetID != "" {
 		target, err := rawCfg.GetTarget(param.TargetID)
 		if err != nil {
-			return err
+			return fmt.Errorf("get a target from configuration file by target id: %w", err)
 		}
 		rawCfg.Targets = []*config.RawTarget{target}
 	}

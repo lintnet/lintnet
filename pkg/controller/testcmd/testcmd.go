@@ -35,7 +35,7 @@ func (p *ParamTest) FilterParam() *filefilter.Param {
 	}
 }
 
-func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *ParamTest) error {
+func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *ParamTest) error { //nolint:cyclop
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
@@ -44,7 +44,7 @@ func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *Para
 	if param.TargetID != "" {
 		target, err := rawCfg.GetTarget(param.TargetID)
 		if err != nil {
-			return err
+			return fmt.Errorf("get a target from configuration file by target id: %w", err)
 		}
 		rawCfg.Targets = []*config.RawTarget{target}
 	}
