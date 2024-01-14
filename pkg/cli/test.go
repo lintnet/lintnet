@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/lintnet/lintnet/pkg/config"
-	"github.com/lintnet/lintnet/pkg/controller/lint"
+	"github.com/lintnet/lintnet/pkg/controller/testcmd"
 	"github.com/lintnet/lintnet/pkg/github"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/log"
@@ -54,15 +54,13 @@ func (tc *testCommand) action(c *cli.Context) error {
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
 	}, modInstaller)
-	param := &lint.ParamController{
+	param := &testcmd.ParamController{
 		Version: tc.version,
 	}
-	ctrl := lint.NewTestController(param, fs, os.Stdout, importer)
-	return ctrl.Test(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
+	ctrl := testcmd.NewTestController(param, fs, os.Stdout, importer)
+	return ctrl.Test(c.Context, logE, &testcmd.ParamTest{ //nolint:wrapcheck
 		FilePaths:      c.Args().Slice(),
-		ErrorLevel:     c.String("error-level"),
 		ConfigFilePath: c.String("config"),
-		OutputSuccess:  c.Bool("output-success"),
 		RootDir:        rootDir,
 	})
 }
