@@ -14,7 +14,7 @@ import (
 
 type FileImporter = jsonnet.FileImporter
 
-type Importer struct {
+type ModuleImporter struct {
 	ctx             context.Context //nolint:containedctx
 	logE            *logrus.Entry
 	param           *module.ParamInstall
@@ -22,8 +22,8 @@ type Importer struct {
 	moduleInstaller *module.Installer
 }
 
-func NewImporter(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, importer jsonnet.Importer, installer *module.Installer) *Importer {
-	return &Importer{
+func NewImporter(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, importer jsonnet.Importer, installer *module.Installer) *ModuleImporter {
+	return &ModuleImporter{
 		ctx:             ctx,
 		logE:            logE,
 		param:           param,
@@ -32,7 +32,7 @@ func NewImporter(ctx context.Context, logE *logrus.Entry, param *module.ParamIns
 	}
 }
 
-func (ip *Importer) Import(importedFrom, importedPath string) (jsonnet.Contents, string, error) {
+func (ip *ModuleImporter) Import(importedFrom, importedPath string) (jsonnet.Contents, string, error) {
 	contents, foundAt, err := ip.importer.Import(importedFrom, importedPath)
 	if err == nil {
 		return contents, foundAt, nil

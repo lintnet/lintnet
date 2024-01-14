@@ -16,10 +16,10 @@ import (
 type Getter struct {
 	stdout   io.Writer
 	fs       afero.Fs
-	importer *jsonnet.Importer
+	importer *jsonnet.ModuleImporter
 }
 
-func NewGetter(stdout io.Writer, fs afero.Fs, importer *jsonnet.Importer) *Getter {
+func NewGetter(stdout io.Writer, fs afero.Fs, importer *jsonnet.ModuleImporter) *Getter {
 	return &Getter{
 		stdout:   stdout,
 		fs:       fs,

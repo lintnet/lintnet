@@ -48,7 +48,7 @@ func (p *ParamLint) OutputterParam() *output.ParamGet {
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
-		return err
+		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
 	if param.TargetID != "" {

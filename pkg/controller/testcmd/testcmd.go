@@ -1,8 +1,7 @@
-package lint
+package testcmd
 
 import (
 	"context"
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -17,69 +16,19 @@ import (
 	"github.com/spf13/afero"
 )
 
-//go:embed test_diff.txt
-var testResultTemplateByte []byte
-
-type TestData struct {
-	Name     string                  `json:"name,omitempty"`
-	DataFile string                  `json:"data_file,omitempty"`
-	Param    *domain.TopLevelArgment `json:"param,omitempty"`
-	Result   []any                   `json:"result,omitempty"`
+type ParamTest struct {
+	RootDir        string
+	DataRootDir    string
+	ConfigFilePath string
+	TargetID       string
+	FilePaths      []string
+	PWD            string
 }
 
-type TestPair struct {
-	LintFilePath string
-	TestFilePath string
-}
-
-type FailedResult struct {
-	Name         string `json:"name,omitempty"`
-	LintFilePath string `json:"lint_file_path,omitempty"`
-	TestFilePath string `json:"test_file_path,omitempty"`
-	Param        any    `json:"param,omitempty"`
-	Wanted       any    `json:"wanted,omitempty"`
-	Got          any    `json:"got,omitempty"`
-	Diff         string `json:"diff,omitempty"`
-	Error        string `json:"error,omitempty"`
-}
-
-type TestResult struct {
-	Name     string `json:"name,omitempty"`
-	Links    any    `json:"links,omitempty"`
-	Message  string `json:"message,omitempty"`
-	Level    string `json:"level,omitempty"`
-	Location any    `json:"location,omitempty"`
-	Custom   any    `json:"custom,omitempty"`
-	Excluded bool   `json:"excluded,omitempty"`
-}
-
-func (tr *TestResult) Any() any {
-	m := map[string]any{}
-	if tr.Name != "" {
-		m["name"] = tr.Name
-	}
-	if tr.Links != nil {
-		m["links"] = tr.Links
-	}
-	if tr.Message != "" {
-		m["message"] = tr.Message
-	}
-	if tr.Level != "" {
-		m["level"] = tr.Level
-	}
-	if tr.Location != nil {
-		m["location"] = tr.Location
-	}
-	if tr.Custom != nil {
-		m["custom"] = tr.Custom
-	}
-	return m
-}
-
-func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
+func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *ParamTest) error {
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
-		return err
+		return fmt.Errorf("read a configuration file: %w", err)
 	}
 	cfg, err := rawCfg.Parse()
 	if err != nil {
@@ -114,7 +63,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 	return nil
 }
 
-func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
+func (c *TestController) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
 	if td.DataFile != "" {
 		p := &domain.Path{
 			Raw: td.DataFile,
@@ -169,7 +118,7 @@ func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint
 	return nil
 }
 
-func (c *Controller) tests(pair *TestPair) []*FailedResult {
+func (c *TestController) tests(pair *TestPair) []*FailedResult {
 	testData := []*TestData{}
 	if err := jsonnet.Read(c.fs, pair.TestFilePath, "{}", c.importer, &testData); err != nil {
 		return []*FailedResult{
@@ -193,7 +142,7 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	return results
 }
 
-func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*domain.Target) []*TestPair {
+func (c *TestController) filterTargetsWithTest(logE *logrus.Entry, targets []*domain.Target) []*TestPair {
 	pairs := []*TestPair{}
 	for _, target := range targets {
 		for _, lintFile := range target.LintFiles {

@@ -1,4 +1,4 @@
-package lint
+package reader
 
 import (
 	"errors"
@@ -10,16 +10,23 @@ import (
 	"github.com/spf13/afero"
 )
 
-type ConfigReader struct {
+type Reader struct {
 	fs       afero.Fs
-	importer *jsonnet.Importer
+	importer *jsonnet.ModuleImporter
 }
 
-func (r *ConfigReader) read(p string, cfg *config.RawConfig) error {
+func New(fs afero.Fs, importer *jsonnet.ModuleImporter) *Reader {
+	return &Reader{
+		fs:       fs,
+		importer: importer,
+	}
+}
+
+func (r *Reader) read(p string, cfg *config.RawConfig) error {
 	return jsonnet.Read(r.fs, p, "{}", r.importer, cfg) //nolint:wrapcheck
 }
 
-func (r *ConfigReader) Read(p string, cfg *config.RawConfig) error {
+func (r *Reader) Read(p string, cfg *config.RawConfig) error {
 	if p != "" {
 		if err := r.read(p, cfg); err != nil {
 			return fmt.Errorf("read a config file: %w", err)

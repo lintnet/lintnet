@@ -18,10 +18,10 @@ type templateOutputter struct {
 	output   *config.Output
 	template render.Template
 	node     jsonnet.Node
-	importer *jsonnet.Importer
+	importer *jsonnet.ModuleImporter
 }
 
-func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output, importer *jsonnet.Importer) (*templateOutputter, error) {
+func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output, importer *jsonnet.ModuleImporter) (*templateOutputter, error) {
 	if output.Template == "" {
 		return nil, errors.New("template is required")
 	}

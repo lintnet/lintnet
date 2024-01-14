@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/config/reader"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/encoding"
 	"github.com/lintnet/lintnet/pkg/filefind"
@@ -20,12 +21,12 @@ type Controller struct {
 	fs              afero.Fs
 	stdout          io.Writer
 	moduleInstaller *module.Installer
-	importer        *jsonnet.Importer
+	importer        *jsonnet.ModuleImporter
 	param           *ParamController
 	dataFileParser  lint.DataFileParser
 	linter          Linter
 	fileFinder      FileFinder
-	configReader    *ConfigReader
+	configReader    *reader.Reader
 	outputGetter    *output.Getter
 }
 
@@ -41,7 +42,7 @@ type ParamController struct {
 	Version string
 }
 
-func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, moduleInstaller *module.Installer, importer *jsonnet.Importer) *Controller {
+func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, moduleInstaller *module.Installer, importer *jsonnet.ModuleImporter) *Controller {
 	dp := encoding.NewDataFileParser(fs)
 	return &Controller{
 		param:           param,
@@ -56,10 +57,7 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 		),
 		dataFileParser: dp,
 		fileFinder:     filefind.NewFileFinder(fs),
-		configReader: &ConfigReader{
-			fs:       fs,
-			importer: importer,
-		},
-		outputGetter: output.NewGetter(stdout, fs, importer),
+		configReader:   reader.New(fs, importer),
+		outputGetter:   output.NewGetter(stdout, fs, importer),
 	}
 }
