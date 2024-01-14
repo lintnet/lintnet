@@ -13,16 +13,14 @@ import (
 )
 
 type Controller struct {
-	fs                afero.Fs
-	stdout            io.Writer
-	moduleInstaller   *module.Installer
-	importer          *jsonnet.Importer
-	param             *ParamController
-	lintFileParser    *LintFileParser
-	lintFileEvaluator *LintFileEvaluator
-	dataFileParser    *DataFileParser
-	linter            *Linter
-	fileFinder        FileFinder
+	fs              afero.Fs
+	stdout          io.Writer
+	moduleInstaller *module.Installer
+	importer        *jsonnet.Importer
+	param           *ParamController
+	dataFileParser  *DataFileParser
+	linter          *Linter
+	fileFinder      FileFinder
 }
 
 type FileFinder interface {
@@ -50,12 +48,6 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 			dataFileParser: &DataFileParser{
 				fs: fs,
 			},
-		},
-		lintFileParser: &LintFileParser{
-			fs: fs,
-		},
-		lintFileEvaluator: &LintFileEvaluator{
-			importer: importer,
 		},
 		dataFileParser: &DataFileParser{
 			fs: fs,
