@@ -1,34 +1,26 @@
-package lint
+package encoding
 
 import (
 	"fmt"
 
-	"github.com/lintnet/lintnet/pkg/encoding"
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type Data struct {
-	Text     string `json:"text"`
-	Value    any    `json:"value"`
-	FilePath string `json:"file_path"`
-	FileType string `json:"file_type"`
-	JSON     []byte `json:"-"`
-}
-
-type TopLevelArgment struct {
-	Data         *Data          `json:"data,omitempty"`
-	CombinedData []*Data        `json:"combined_data,omitempty"`
-	Config       map[string]any `json:"config"`
-}
-
 type DataFileParser struct {
 	fs afero.Fs
 }
 
-func (dp *DataFileParser) Parse(filePath *Path) (*TopLevelArgment, error) {
-	unmarshaler, fileType, err := encoding.NewUnmarshaler(filePath.Abs)
+func NewDataFileParser(fs afero.Fs) *DataFileParser {
+	return &DataFileParser{
+		fs: fs,
+	}
+}
+
+func (dp *DataFileParser) Parse(filePath *domain.Path) (*domain.TopLevelArgment, error) {
+	unmarshaler, fileType, err := NewUnmarshaler(filePath.Abs)
 	if err != nil {
 		return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 			"file_path": filePath.Raw,
@@ -42,8 +34,8 @@ func (dp *DataFileParser) Parse(filePath *Path) (*TopLevelArgment, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decode a file: %w", err)
 	}
-	return &TopLevelArgment{
-		Data: &Data{
+	return &domain.TopLevelArgment{
+		Data: &domain.Data{
 			Text:     string(b),
 			FilePath: filePath.Raw,
 			FileType: fileType,

@@ -8,8 +8,10 @@ import (
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/errlevel"
+	"github.com/lintnet/lintnet/pkg/filefilter"
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
+	"github.com/lintnet/lintnet/pkg/output"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,24 +28,26 @@ type ParamLint struct {
 	PWD             string
 }
 
-type DataSet struct {
-	File  *Path
-	Files []*Path
+func (p *ParamLint) FilterParam() *filefilter.Param {
+	return &filefilter.Param{
+		DataRootDir: p.DataRootDir,
+		TargetID:    p.TargetID,
+		FilePaths:   p.FilePaths,
+		PWD:         p.PWD,
+	}
 }
 
-type Paths []*Path
-
-func (ps Paths) Raw() []string {
-	arr := make([]string, len(ps))
-	for i, p := range ps {
-		arr[i] = p.Raw
+func (p *ParamLint) OutputterParam() *output.ParamGet {
+	return &output.ParamGet{
+		RootDir:     p.RootDir,
+		DataRootDir: p.DataRootDir,
+		Output:      p.Output,
 	}
-	return arr
 }
 
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
 	rawCfg := &config.RawConfig{}
-	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
+	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
 		return err
 	}
 
@@ -64,9 +68,9 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	if !filepath.IsAbs(cfgDir) {
 		cfgDir = filepath.Join(param.PWD, cfgDir)
 	}
-	outputter, err := c.getOutputter(cfg.Outputs, param, cfgDir)
+	outputter, err := c.outputGetter.Get(cfg.Outputs, param.OutputterParam(), cfgDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("get an outputter: %w", err)
 	}
 
 	errLevel, err := getErrorLevel(param.ErrorLevel, cfg.ErrorLevel)
@@ -87,21 +91,23 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 
 	targets, err := c.fileFinder.Find(logE, cfg, param.RootDir, cfgDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("find files: %w", err)
 	}
+
+	filterParam := param.FilterParam()
 
 	if len(param.FilePaths) > 0 {
 		logE.Debug("filtering targets by given files")
-		targets = filterTargetsByFilePaths(param, targets)
+		targets = filefilter.FilterTargetsByFilePaths(filterParam, targets)
 	}
 
-	if err := filterTargetsByDataRootDir(logE, param, targets); err != nil {
-		return err
+	if err := filefilter.FilterTargetsByDataRootDir(logE, filterParam, targets); err != nil {
+		return fmt.Errorf("filter targets by data root directory: %w", err)
 	}
 
 	results, err := c.linter.Lint(targets)
 	if err != nil {
-		return err
+		return fmt.Errorf("lint targets: %w", err)
 	}
 	logE.WithFields(logrus.Fields{
 		"config":  log.JSON(cfg),
