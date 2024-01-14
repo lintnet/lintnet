@@ -17,6 +17,8 @@ type Controller struct {
 	lintFileParser    *LintFileParser
 	lintFileEvaluator *LintFileEvaluator
 	dataFileParser    *DataFileParser
+	linter            *Linter
+	fileFinder        *FileFinder
 }
 
 type ParamController struct {
@@ -30,6 +32,17 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 		stdout:          stdout,
 		moduleInstaller: moduleInstaller,
 		importer:        importer,
+		linter: &Linter{
+			lintFileParser: &LintFileParser{
+				fs: fs,
+			},
+			lintFileEvaluator: &LintFileEvaluator{
+				importer: importer,
+			},
+			dataFileParser: &DataFileParser{
+				fs: fs,
+			},
+		},
 		lintFileParser: &LintFileParser{
 			fs: fs,
 		},
@@ -37,6 +50,9 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 			importer: importer,
 		},
 		dataFileParser: &DataFileParser{
+			fs: fs,
+		},
+		fileFinder: &FileFinder{
 			fs: fs,
 		},
 	}

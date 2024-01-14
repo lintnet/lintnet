@@ -79,13 +79,13 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	if err := c.installModules(ctx, logE, &module.ParamInstall{
+	if err := c.moduleInstaller.Installs(ctx, logE, &module.ParamInstall{
 		BaseDir: param.RootDir,
 	}, cfg.ModuleArchives); err != nil {
-		return err
+		return fmt.Errorf("install modules: %w", err)
 	}
 
-	targets, err := c.findFiles(logE, cfg, param.RootDir, cfgDir)
+	targets, err := c.fileFinder.Find(logE, cfg, param.RootDir, cfgDir)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	results, err := c.getResults(targets)
+	results, err := c.linter.Lint(targets)
 	if err != nil {
 		return err
 	}

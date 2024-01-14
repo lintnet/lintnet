@@ -45,6 +45,18 @@ func NewInstaller(fs afero.Fs, gh GitHub, httpClient HTTPClient) *Installer {
 	}
 }
 
+func (mi *Installer) Installs(ctx context.Context, logE *logrus.Entry, param *ParamInstall, modules map[string]*config.ModuleArchive) error {
+	for _, mod := range modules {
+		logE := logE.WithField("module_id", mod.ID)
+		if err := mi.Install(ctx, logE, param, mod); err != nil {
+			return fmt.Errorf("install a module: %w", logerr.WithFields(err, logrus.Fields{
+				"module_id": mod.ID,
+			}))
+		}
+	}
+	return nil
+}
+
 func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *ParamInstall, mod *config.ModuleArchive) error { //nolint:funlen,cyclop
 	// Check if the module is already downloaded
 	dest := filepath.Join(param.BaseDir, filepath.FromSlash(mod.ID))

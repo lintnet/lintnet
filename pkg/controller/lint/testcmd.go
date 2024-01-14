@@ -92,7 +92,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 
 	cfgDir := filepath.Dir(rawCfg.FilePath)
 
-	targets, err := c.findFiles(logE, cfg, param.RootDir, cfgDir)
+	targets, err := c.fileFinder.Find(logE, cfg, param.RootDir, cfgDir)
 	if err != nil {
 		return err
 	}
