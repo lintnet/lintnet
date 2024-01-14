@@ -11,6 +11,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/lint"
 	"github.com/lintnet/lintnet/pkg/lintfile"
 	"github.com/lintnet/lintnet/pkg/module"
+	"github.com/lintnet/lintnet/pkg/output"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -25,6 +26,7 @@ type Controller struct {
 	linter          Linter
 	fileFinder      FileFinder
 	configReader    *ConfigReader
+	outputGetter    *output.Getter
 }
 
 type Linter interface {
@@ -58,5 +60,6 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 			fs:       fs,
 			importer: importer,
 		},
+		outputGetter: output.NewGetter(stdout, fs, importer),
 	}
 }

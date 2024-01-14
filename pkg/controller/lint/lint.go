@@ -11,6 +11,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/filefilter"
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
+	"github.com/lintnet/lintnet/pkg/output"
 	"github.com/sirupsen/logrus"
 )
 
@@ -33,6 +34,14 @@ func (p *ParamLint) FilterParam() *filefilter.Param {
 		TargetID:    p.TargetID,
 		FilePaths:   p.FilePaths,
 		PWD:         p.PWD,
+	}
+}
+
+func (p *ParamLint) OutputterParam() *output.ParamGet {
+	return &output.ParamGet{
+		RootDir:     p.RootDir,
+		DataRootDir: p.DataRootDir,
+		Output:      p.Output,
 	}
 }
 
@@ -59,9 +68,9 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	if !filepath.IsAbs(cfgDir) {
 		cfgDir = filepath.Join(param.PWD, cfgDir)
 	}
-	outputter, err := c.getOutputter(cfg.Outputs, param, cfgDir)
+	outputter, err := c.outputGetter.Get(cfg.Outputs, param.OutputterParam(), cfgDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("get an outputter: %w", err)
 	}
 
 	errLevel, err := getErrorLevel(param.ErrorLevel, cfg.ErrorLevel)

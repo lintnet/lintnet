@@ -1,4 +1,4 @@
-package lint
+package output
 
 import (
 	"encoding/json"
