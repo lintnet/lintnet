@@ -78,7 +78,7 @@ func (tr *TestResult) Any() any {
 
 func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLint) error {
 	rawCfg := &config.RawConfig{}
-	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
+	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
 		return err
 	}
 	cfg, err := rawCfg.Parse()

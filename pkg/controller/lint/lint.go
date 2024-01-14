@@ -38,7 +38,7 @@ func (p *ParamLint) FilterParam() *filefilter.Param {
 
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
 	rawCfg := &config.RawConfig{}
-	if err := c.findAndReadConfig(param.ConfigFilePath, rawCfg); err != nil {
+	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
 		return err
 	}
 

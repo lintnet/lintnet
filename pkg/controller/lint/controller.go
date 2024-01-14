@@ -23,6 +23,7 @@ type Controller struct {
 	dataFileParser  lint.DataFileParser
 	linter          Linter
 	fileFinder      FileFinder
+	configReader    *ConfigReader
 }
 
 type Linter interface {
@@ -56,5 +57,9 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 		),
 		dataFileParser: dp,
 		fileFinder:     filefind.NewFileFinder(fs),
+		configReader: &ConfigReader{
+			fs:       fs,
+			importer: importer,
+		},
 	}
 }

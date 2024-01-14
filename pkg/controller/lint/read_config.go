@@ -43,11 +43,3 @@ func (r *ConfigReader) Read(p string, cfg *config.RawConfig) error {
 	}
 	return fmt.Errorf("config file isn't found: %w", os.ErrNotExist)
 }
-
-func (c *Controller) findAndReadConfig(p string, cfg *config.RawConfig) error {
-	reader := &ConfigReader{
-		fs:       c.fs,
-		importer: c.importer,
-	}
-	return reader.Read(p, cfg)
-}
