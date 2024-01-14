@@ -50,9 +50,7 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 		linter: lint.NewLinter(
 			dp,
 			lintfile.NewParser(fs),
-			&LintFileEvaluator{
-				importer: importer,
-			},
+			lintfile.NewEvaluator(importer),
 		),
 		dataFileParser: dp,
 		fileFinder:     filefind.NewFileFinder(fs),

@@ -1,4 +1,4 @@
-package lint
+package lintfile
 
 import (
 	"encoding/json"
@@ -8,11 +8,17 @@ import (
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 )
 
-type LintFileEvaluator struct { //nolint:revive
+type Evaluator struct {
 	importer *jsonnet.Importer
 }
 
-func (le *LintFileEvaluator) Evaluate(tla *domain.TopLevelArgment, lintFile jsonnet.Node) (string, error) {
+func NewEvaluator(importer *jsonnet.Importer) *Evaluator {
+	return &Evaluator{
+		importer: importer,
+	}
+}
+
+func (le *Evaluator) Evaluate(tla *domain.TopLevelArgment, lintFile jsonnet.Node) (string, error) {
 	if tla.Config == nil {
 		tla.Config = map[string]any{}
 	}
@@ -28,7 +34,7 @@ func (le *LintFileEvaluator) Evaluate(tla *domain.TopLevelArgment, lintFile json
 	return result, nil
 }
 
-func (le *LintFileEvaluator) Evaluates(tla *domain.TopLevelArgment, lintFiles []*domain.Node) []*domain.Result {
+func (le *Evaluator) Evaluates(tla *domain.TopLevelArgment, lintFiles []*domain.Node) []*domain.Result {
 	results := make([]*domain.Result, len(lintFiles))
 	for i, lintFile := range lintFiles {
 		tla := &domain.TopLevelArgment{
