@@ -1,4 +1,4 @@
-package lint
+package filefilter
 
 import (
 	"path/filepath"
@@ -8,13 +8,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type LintFile struct { //nolint:revive
-	Path       string
-	ModulePath string
-	Config     map[string]any
+type Param struct {
+	DataRootDir string
+	TargetID    string
+	FilePaths   []string
+	PWD         string
 }
 
-func filterTargetsByFilePaths(param *ParamLint, targets []*domain.Target) []*domain.Target {
+func FilterTargetsByFilePaths(param *Param, targets []*domain.Target) []*domain.Target {
 	if param.TargetID == "" {
 		return filterTargets(targets, param.FilePaths)
 	}
@@ -76,7 +77,7 @@ func filterTarget(target *domain.Target, filePaths []string) *domain.Target {
 	return newTarget
 }
 
-func filterTargetsByDataRootDir(logE *logrus.Entry, param *ParamLint, targets []*domain.Target) error {
+func FilterTargetsByDataRootDir(logE *logrus.Entry, param *Param, targets []*domain.Target) error {
 	for _, target := range targets {
 		if err := filterTargetByDataRootDir(logE, param, target); err != nil {
 			return err
@@ -85,7 +86,7 @@ func filterTargetsByDataRootDir(logE *logrus.Entry, param *ParamLint, targets []
 	return nil
 }
 
-func filterTargetByDataRootDir(logE *logrus.Entry, param *ParamLint, target *domain.Target) error {
+func filterTargetByDataRootDir(logE *logrus.Entry, param *Param, target *domain.Target) error {
 	arr := make([]*domain.Path, 0, len(target.DataFiles))
 	for _, dataFile := range target.DataFiles {
 		if filterFileByDataRootDir(logE, param, dataFile.Abs) {
@@ -98,7 +99,7 @@ func filterTargetByDataRootDir(logE *logrus.Entry, param *ParamLint, target *dom
 	return nil
 }
 
-func filterFileByDataRootDir(logE *logrus.Entry, param *ParamLint, dataFile string) bool {
+func filterFileByDataRootDir(logE *logrus.Entry, param *Param, dataFile string) bool {
 	p := dataFile
 	if a, err := filepath.Rel(param.DataRootDir, p); err != nil {
 		logE.WithError(err).Warn("get a relative path")

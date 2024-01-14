@@ -8,6 +8,7 @@ import (
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/errlevel"
+	"github.com/lintnet/lintnet/pkg/filefilter"
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
@@ -24,6 +25,15 @@ type ParamLint struct {
 	Output          string
 	OutputSuccess   bool
 	PWD             string
+}
+
+func (p *ParamLint) FilterParam() *filefilter.Param {
+	return &filefilter.Param{
+		DataRootDir: p.DataRootDir,
+		TargetID:    p.TargetID,
+		FilePaths:   p.FilePaths,
+		PWD:         p.PWD,
+	}
 }
 
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
@@ -75,13 +85,15 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return fmt.Errorf("find files: %w", err)
 	}
 
+	filterParam := param.FilterParam()
+
 	if len(param.FilePaths) > 0 {
 		logE.Debug("filtering targets by given files")
-		targets = filterTargetsByFilePaths(param, targets)
+		targets = filefilter.FilterTargetsByFilePaths(filterParam, targets)
 	}
 
-	if err := filterTargetsByDataRootDir(logE, param, targets); err != nil {
-		return err
+	if err := filefilter.FilterTargetsByDataRootDir(logE, filterParam, targets); err != nil {
+		return fmt.Errorf("filter targets by data root directory: %w", err)
 	}
 
 	results, err := c.linter.Lint(targets)
