@@ -16,6 +16,12 @@ type Param struct {
 }
 
 func FilterTargetsByFilePaths(param *Param, targets []*domain.Target) []*domain.Target {
+	for i, filePath := range param.FilePaths {
+		if filepath.IsAbs(filePath) {
+			continue
+		}
+		param.FilePaths[i] = filepath.Join(param.PWD, filePath)
+	}
 	if param.TargetID == "" {
 		return filterTargets(targets, param.FilePaths)
 	}

@@ -47,6 +47,11 @@ func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootD
 	if err != nil {
 		return nil, err
 	}
+	for _, lintFile := range lintFiles {
+		if !filepath.IsAbs(lintFile.Path) {
+			lintFile.Path = filepath.Join(cfgDir, lintFile.Path)
+		}
+	}
 	logE.WithFields(logrus.Fields{
 		"lint_globs": log.JSON(target.LintFiles),
 		"lint_files": log.JSON(lintFiles),
