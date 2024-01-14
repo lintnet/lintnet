@@ -78,7 +78,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 
 	targets, err := c.fileFinder.Find(logE, cfg, param.RootDir, cfgDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("find files: %w", err)
 	}
 
 	if len(param.FilePaths) > 0 {

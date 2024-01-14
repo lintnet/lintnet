@@ -95,7 +95,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamLin
 
 	targets, err := c.fileFinder.Find(logE, cfg, param.RootDir, cfgDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("find files: %w", err)
 	}
 
 	pairs := c.filterTargetsWithTest(logE, targets)
