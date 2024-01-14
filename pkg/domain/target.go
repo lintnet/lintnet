@@ -3,9 +3,9 @@ package domain
 import "github.com/lintnet/lintnet/pkg/config"
 
 type Target struct {
-	ID        string
-	LintFiles []*config.LintFile
-	DataFiles Paths
+	ID        string             `json:"id,omitempty"`
+	LintFiles []*config.LintFile `json:"lint_files,omitempty"`
+	DataFiles Paths              `json:"data_files,omitempty"`
 }
 
 type Paths []*Path
@@ -19,8 +19,8 @@ func (ps Paths) Raw() []string {
 }
 
 type Path struct {
-	Raw string
-	Abs string
+	Raw string `json:"raw,omitempty"`
+	Abs string `json:"abs,omitempty"`
 }
 
 type Data struct {

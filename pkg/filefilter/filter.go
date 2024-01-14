@@ -9,10 +9,10 @@ import (
 )
 
 type Param struct {
-	DataRootDir string
-	TargetID    string
-	FilePaths   []string
-	PWD         string
+	DataRootDir string   `json:"data_root_dir,omitempty"`
+	TargetID    string   `json:"target_id,omitempty"`
+	FilePaths   []string `json:"file_paths,omitempty"`
+	PWD         string   `json:"pwd,omitempty"`
 }
 
 func FilterTargetsByFilePaths(param *Param, targets []*domain.Target) []*domain.Target {
