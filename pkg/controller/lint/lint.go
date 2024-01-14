@@ -92,22 +92,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 
 	if len(param.FilePaths) > 0 {
 		logE.Debug("filtering targets by given files")
-		if param.TargetID != "" {
-			arr := make([]*Path, len(param.FilePaths))
-			for i, filePath := range param.FilePaths {
-				p := &Path{
-					Abs: filePath,
-					Raw: filePath,
-				}
-				if !filepath.IsAbs(filePath) {
-					p.Abs = filepath.Join(param.PWD, filePath)
-				}
-				arr[i] = p
-			}
-			targets[0].DataFiles = arr
-		} else {
-			targets = filterTargets(targets, param.FilePaths)
-		}
+		targets = filterTargetsByFilePaths(param, targets)
 	}
 
 	if err := filterTargetsByDataRootDir(logE, param, targets); err != nil {

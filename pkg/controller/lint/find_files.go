@@ -46,6 +46,25 @@ func ignorePath(path string, ignorePatterns []string) error {
 	return nil
 }
 
+func filterTargetsByFilePaths(param *ParamLint, targets []*Target) []*Target {
+	if param.TargetID == "" {
+		return filterTargets(targets, param.FilePaths)
+	}
+	arr := make([]*Path, len(param.FilePaths))
+	for i, filePath := range param.FilePaths {
+		p := &Path{
+			Abs: filePath,
+			Raw: filePath,
+		}
+		if !filepath.IsAbs(filePath) {
+			p.Abs = filepath.Join(param.PWD, filePath)
+		}
+		arr[i] = p
+	}
+	targets[0].DataFiles = arr
+	return targets
+}
+
 func filterTargets(targets []*Target, filePaths []string) []*Target {
 	newTargets := make([]*Target, 0, len(targets))
 	for _, target := range targets {
