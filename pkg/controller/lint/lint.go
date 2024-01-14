@@ -79,10 +79,10 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return err
 	}
 
-	if err := c.installModules(ctx, logE, &module.ParamInstall{
+	if err := c.moduleInstaller.Installs(ctx, logE, &module.ParamInstall{
 		BaseDir: param.RootDir,
 	}, cfg.ModuleArchives); err != nil {
-		return err
+		return fmt.Errorf("install modules: %w", err)
 	}
 
 	targets, err := c.fileFinder.Find(logE, cfg, param.RootDir, cfgDir)
