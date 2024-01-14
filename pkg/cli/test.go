@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -27,9 +28,9 @@ func (tc *testCommand) command() *cli.Command {
 		Usage:  "Test lint files",
 		Action: tc.action,
 		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:    "output-success",
-				EnvVars: []string{"LINTNET_OUTPUT_SUCCESS"},
+			&cli.StringFlag{
+				Name:    "target-id",
+				Aliases: []string{"t"},
 			},
 		},
 	}
@@ -58,9 +59,20 @@ func (tc *testCommand) action(c *cli.Context) error {
 		Version: tc.version,
 	}
 	ctrl := testcmd.NewTestController(param, fs, os.Stdout, importer)
+	pwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get the current directory: %w", err)
+	}
+	dataRootDir := c.String("data-root-dir")
+	if dataRootDir == "" {
+		dataRootDir = pwd
+	}
 	return ctrl.Test(c.Context, logE, &testcmd.ParamTest{ //nolint:wrapcheck
 		FilePaths:      c.Args().Slice(),
 		ConfigFilePath: c.String("config"),
+		TargetID:       c.String("target-id"),
 		RootDir:        rootDir,
+		DataRootDir:    dataRootDir,
+		PWD:            pwd,
 	})
 }

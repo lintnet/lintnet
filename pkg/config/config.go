@@ -32,6 +32,15 @@ func getIgnoredPatterns(ignoredDirs []string) []string {
 	return ignoredPatterns
 }
 
+func (rc *RawConfig) GetTarget(targetID string) (*RawTarget, error) {
+	for _, target := range rc.Targets {
+		if target.ID == targetID {
+			return target, nil
+		}
+	}
+	return nil, errors.New("target isn't found")
+}
+
 func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
 	cfg := &Config{
 		ErrorLevel:      errlevel.Error,

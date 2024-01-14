@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/domain"
+	"github.com/lintnet/lintnet/pkg/filefilter"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -25,11 +26,29 @@ type ParamTest struct {
 	PWD            string
 }
 
+func (p *ParamTest) FilterParam() *filefilter.Param {
+	return &filefilter.Param{
+		DataRootDir: p.DataRootDir,
+		TargetID:    p.TargetID,
+		FilePaths:   p.FilePaths,
+		PWD:         p.PWD,
+	}
+}
+
 func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *ParamTest) error {
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
+
+	if param.TargetID != "" {
+		target, err := rawCfg.GetTarget(param.TargetID)
+		if err != nil {
+			return err
+		}
+		rawCfg.Targets = []*config.RawTarget{target}
+	}
+
 	cfg, err := rawCfg.Parse()
 	if err != nil {
 		return fmt.Errorf("parse a configuration file: %w", err)
@@ -45,6 +64,17 @@ func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *Para
 	targets, err := c.fileFinder.Find(logE, cfg, param.RootDir, cfgDir)
 	if err != nil {
 		return fmt.Errorf("find files: %w", err)
+	}
+
+	filterParam := param.FilterParam()
+
+	if len(param.FilePaths) > 0 {
+		logE.Debug("filtering targets by given files")
+		targets = filefilter.FilterTargetsByFilePaths(filterParam, targets)
+	}
+
+	if err := filefilter.FilterTargetsByDataRootDir(logE, filterParam, targets); err != nil {
+		return fmt.Errorf("filter targets by data root directory: %w", err)
 	}
 
 	pairs := c.filterTargetsWithTest(logE, targets)
