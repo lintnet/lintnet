@@ -119,7 +119,7 @@ func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint
 			Raw: td.DataFile,
 			Abs: filepath.Join(filepath.Dir(pair.TestFilePath), td.DataFile),
 		}
-		data, err := c.parseDataFile(p)
+		data, err := c.dataFileParser.Parse(p)
 		if err != nil {
 			return &FailedResult{
 				Error: fmt.Errorf("read a data file: %w", err).Error(),

@@ -88,12 +88,12 @@ func (c *Controller) lintNonCombineFile(nonCombineFiles []*Node, dataFile *Path)
 
 func (c *Controller) getTLA(dataSet *DataSet) (*TopLevelArgment, error) {
 	if dataSet.File != nil {
-		return c.parseDataFile(dataSet.File)
+		return c.dataFileParser.Parse(dataSet.File)
 	}
 	if len(dataSet.Files) > 0 {
 		combinedData := make([]*Data, len(dataSet.Files))
 		for i, dataFile := range dataSet.Files {
-			data, err := c.parseDataFile(dataFile)
+			data, err := c.dataFileParser.Parse(dataFile)
 			if err != nil {
 				return nil, err
 			}
