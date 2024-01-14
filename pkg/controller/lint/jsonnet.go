@@ -3,46 +3,10 @@ package lint
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
-	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-type LintFileParser struct { //nolint:revive
-	fs afero.Fs
-}
-
-func (p *LintFileParser) Parse(lintFile *config.LintFile) (*domain.Node, error) {
-	node, err := jsonnet.ReadToNode(p.fs, lintFile.Path)
-	if err != nil {
-		return nil, err //nolint:wrapcheck
-	}
-	return &domain.Node{
-		Node:    node,
-		Key:     lintFile.ID,
-		Config:  lintFile.Config,
-		Combine: strings.HasSuffix(lintFile.Path, "_combine.jsonnet"),
-	}, nil
-}
-
-func (p *LintFileParser) Parses(lintFiles []*config.LintFile) ([]*domain.Node, error) {
-	nodes := make([]*domain.Node, 0, len(lintFiles))
-	for _, lintFile := range lintFiles {
-		node, err := p.Parse(lintFile)
-		if err != nil {
-			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"file_path": lintFile.Path,
-			})
-		}
-		nodes = append(nodes, node)
-	}
-	return nodes, nil
-}
 
 type LintFileEvaluator struct { //nolint:revive
 	importer *jsonnet.Importer

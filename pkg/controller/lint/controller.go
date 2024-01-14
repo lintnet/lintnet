@@ -9,6 +9,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/lint"
+	"github.com/lintnet/lintnet/pkg/lintfile"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -48,9 +49,7 @@ func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, module
 		importer:        importer,
 		linter: lint.NewLinter(
 			dp,
-			&LintFileParser{
-				fs: fs,
-			},
+			lintfile.NewParser(fs),
 			&LintFileEvaluator{
 				importer: importer,
 			},
