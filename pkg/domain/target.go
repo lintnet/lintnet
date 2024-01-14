@@ -22,3 +22,17 @@ type Path struct {
 	Raw string
 	Abs string
 }
+
+type Data struct {
+	Text     string `json:"text"`
+	Value    any    `json:"value"`
+	FilePath string `json:"file_path"`
+	FileType string `json:"file_type"`
+	JSON     []byte `json:"-"`
+}
+
+type TopLevelArgment struct {
+	Data         *Data          `json:"data,omitempty"`
+	CombinedData []*Data        `json:"combined_data,omitempty"`
+	Config       map[string]any `json:"config"`
+}

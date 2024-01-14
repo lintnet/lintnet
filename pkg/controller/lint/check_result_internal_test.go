@@ -3,6 +3,7 @@ package lint
 import (
 	"testing"
 
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 )
 
@@ -10,14 +11,14 @@ func Test_isFailed(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name     string
-		results  []*FlatError
+		results  []*domain.FlatError
 		errLevel errlevel.Level
 		exp      bool
 		isErr    bool
 	}{
 		{
 			name: "false",
-			results: []*FlatError{
+			results: []*domain.FlatError{
 				{
 					Level: "warn",
 				},
@@ -27,7 +28,7 @@ func Test_isFailed(t *testing.T) {
 		},
 		{
 			name: "true",
-			results: []*FlatError{
+			results: []*domain.FlatError{
 				{
 					Level: "warn",
 				},

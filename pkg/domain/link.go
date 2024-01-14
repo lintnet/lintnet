@@ -1,4 +1,4 @@
-package lint
+package domain
 
 import (
 	"encoding/json"

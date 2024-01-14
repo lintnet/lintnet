@@ -8,8 +8,8 @@ type Linter struct {
 	lintFileEvaluator *LintFileEvaluator
 }
 
-func (l *Linter) Lint(targets []*domain.Target) ([]*Result, error) {
-	results := make([]*Result, 0, len(targets))
+func (l *Linter) Lint(targets []*domain.Target) ([]*domain.Result, error) {
+	results := make([]*domain.Result, 0, len(targets))
 	for _, target := range targets {
 		rs, err := l.lintTarget(target)
 		if err != nil {
@@ -23,14 +23,14 @@ func (l *Linter) Lint(targets []*domain.Target) ([]*Result, error) {
 	return results, nil
 }
 
-func (l *Linter) lintTarget(target *domain.Target) ([]*Result, error) {
+func (l *Linter) lintTarget(target *domain.Target) ([]*domain.Result, error) {
 	lintFiles, err := l.lintFileParser.Parses(target.LintFiles)
 	if err != nil {
 		return nil, err
 	}
 
-	combineFiles := []*Node{}
-	nonCombineFiles := []*Node{}
+	combineFiles := []*domain.Node{}
+	nonCombineFiles := []*domain.Node{}
 	for _, lintFile := range lintFiles {
 		if lintFile.Combine {
 			combineFiles = append(combineFiles, lintFile)
@@ -51,7 +51,7 @@ func (l *Linter) lintTarget(target *domain.Target) ([]*Result, error) {
 	return results, nil
 }
 
-func (l *Linter) lintCombineFiles(target *domain.Target, combineFiles []*Node) ([]*Result, error) {
+func (l *Linter) lintCombineFiles(target *domain.Target, combineFiles []*domain.Node) ([]*domain.Result, error) {
 	rs, err := l.lint(&DataSet{
 		Files: target.DataFiles,
 	}, combineFiles)
@@ -68,20 +68,20 @@ func (l *Linter) lintCombineFiles(target *domain.Target, combineFiles []*Node) (
 	return rs, nil
 }
 
-func (l *Linter) lintNonCombineFiles(target *domain.Target, nonCombineFiles []*Node) []*Result {
-	results := make([]*Result, 0, len(target.DataFiles))
+func (l *Linter) lintNonCombineFiles(target *domain.Target, nonCombineFiles []*domain.Node) []*domain.Result {
+	results := make([]*domain.Result, 0, len(target.DataFiles))
 	for _, dataFile := range target.DataFiles {
 		results = append(results, l.lintNonCombineFile(nonCombineFiles, dataFile)...)
 	}
 	return results
 }
 
-func (l *Linter) lintNonCombineFile(nonCombineFiles []*Node, dataFile *domain.Path) []*Result {
+func (l *Linter) lintNonCombineFile(nonCombineFiles []*domain.Node, dataFile *domain.Path) []*domain.Result {
 	rs, err := l.lint(&DataSet{
 		File: dataFile,
 	}, nonCombineFiles)
 	if err != nil {
-		return []*Result{
+		return []*domain.Result{
 			{
 				DataFile: dataFile.Raw,
 				Error:    err.Error(),
@@ -94,12 +94,12 @@ func (l *Linter) lintNonCombineFile(nonCombineFiles []*Node, dataFile *domain.Pa
 	return rs
 }
 
-func (l *Linter) getTLA(dataSet *DataSet) (*TopLevelArgment, error) {
+func (l *Linter) getTLA(dataSet *DataSet) (*domain.TopLevelArgment, error) {
 	if dataSet.File != nil {
 		return l.dataFileParser.Parse(dataSet.File)
 	}
 	if len(dataSet.Files) > 0 {
-		combinedData := make([]*Data, len(dataSet.Files))
+		combinedData := make([]*domain.Data, len(dataSet.Files))
 		for i, dataFile := range dataSet.Files {
 			data, err := l.dataFileParser.Parse(dataFile)
 			if err != nil {
@@ -107,14 +107,14 @@ func (l *Linter) getTLA(dataSet *DataSet) (*TopLevelArgment, error) {
 			}
 			combinedData[i] = data.Data
 		}
-		return &TopLevelArgment{
+		return &domain.TopLevelArgment{
 			CombinedData: combinedData,
 		}, nil
 	}
-	return &TopLevelArgment{}, nil
+	return &domain.TopLevelArgment{}, nil
 }
 
-func (l *Linter) lint(dataSet *DataSet, lintFiles []*Node) ([]*Result, error) {
+func (l *Linter) lint(dataSet *DataSet, lintFiles []*domain.Node) ([]*domain.Result, error) {
 	tla, err := l.getTLA(dataSet)
 	if err != nil {
 		return nil, err

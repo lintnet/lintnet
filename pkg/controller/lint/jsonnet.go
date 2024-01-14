@@ -6,29 +6,23 @@ import (
 	"strings"
 
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type Node struct {
-	Node    jsonnet.Node
-	Config  map[string]any
-	Key     string
-	Combine bool
-}
-
 type LintFileParser struct { //nolint:revive
 	fs afero.Fs
 }
 
-func (p *LintFileParser) Parse(lintFile *config.LintFile) (*Node, error) {
+func (p *LintFileParser) Parse(lintFile *config.LintFile) (*domain.Node, error) {
 	node, err := jsonnet.ReadToNode(p.fs, lintFile.Path)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-	return &Node{
+	return &domain.Node{
 		Node:    node,
 		Key:     lintFile.ID,
 		Config:  lintFile.Config,
@@ -36,8 +30,8 @@ func (p *LintFileParser) Parse(lintFile *config.LintFile) (*Node, error) {
 	}, nil
 }
 
-func (p *LintFileParser) Parses(lintFiles []*config.LintFile) ([]*Node, error) {
-	nodes := make([]*Node, 0, len(lintFiles))
+func (p *LintFileParser) Parses(lintFiles []*config.LintFile) ([]*domain.Node, error) {
+	nodes := make([]*domain.Node, 0, len(lintFiles))
 	for _, lintFile := range lintFiles {
 		node, err := p.Parse(lintFile)
 		if err != nil {
@@ -54,7 +48,7 @@ type LintFileEvaluator struct { //nolint:revive
 	importer *jsonnet.Importer
 }
 
-func (le *LintFileEvaluator) Evaluate(tla *TopLevelArgment, lintFile jsonnet.Node) (string, error) {
+func (le *LintFileEvaluator) Evaluate(tla *domain.TopLevelArgment, lintFile jsonnet.Node) (string, error) {
 	if tla.Config == nil {
 		tla.Config = map[string]any{}
 	}
@@ -70,24 +64,24 @@ func (le *LintFileEvaluator) Evaluate(tla *TopLevelArgment, lintFile jsonnet.Nod
 	return result, nil
 }
 
-func (le *LintFileEvaluator) Evaluates(tla *TopLevelArgment, lintFiles []*Node) []*Result {
-	results := make([]*Result, len(lintFiles))
+func (le *LintFileEvaluator) Evaluates(tla *domain.TopLevelArgment, lintFiles []*domain.Node) []*domain.Result {
+	results := make([]*domain.Result, len(lintFiles))
 	for i, lintFile := range lintFiles {
-		tla := &TopLevelArgment{
+		tla := &domain.TopLevelArgment{
 			Data:         tla.Data,
 			CombinedData: tla.CombinedData,
 			Config:       lintFile.Config,
 		}
 		s, err := le.Evaluate(tla, lintFile.Node)
 		if err != nil {
-			results[i] = &Result{
+			results[i] = &domain.Result{
 				LintFile: lintFile.Key,
 				Error:    err.Error(),
 			}
 			continue
 		}
 		rs, a, err := parseResult([]byte(s))
-		results[i] = &Result{
+		results[i] = &domain.Result{
 			LintFile:  lintFile.Key,
 			RawResult: rs,
 			RawOutput: s,
@@ -100,13 +94,13 @@ func (le *LintFileEvaluator) Evaluates(tla *TopLevelArgment, lintFiles []*Node) 
 	return results
 }
 
-func parseResult(result []byte) ([]*JsonnetResult, any, error) {
+func parseResult(result []byte) ([]*domain.JsonnetResult, any, error) {
 	var rs any
 	if err := json.Unmarshal(result, &rs); err != nil {
 		return nil, nil, fmt.Errorf("unmarshal the result as JSON: %w", err)
 	}
 
-	out := []*JsonnetResult{}
+	out := []*domain.JsonnetResult{}
 	if err := json.Unmarshal(result, &out); err != nil {
 		return nil, rs, fmt.Errorf("unmarshal the result as JSON: %w", err)
 	}

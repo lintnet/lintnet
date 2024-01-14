@@ -21,10 +21,10 @@ import (
 var testResultTemplateByte []byte
 
 type TestData struct {
-	Name     string           `json:"name,omitempty"`
-	DataFile string           `json:"data_file,omitempty"`
-	Param    *TopLevelArgment `json:"param,omitempty"`
-	Result   []any            `json:"result,omitempty"`
+	Name     string                  `json:"name,omitempty"`
+	DataFile string                  `json:"data_file,omitempty"`
+	Param    *domain.TopLevelArgment `json:"param,omitempty"`
+	Result   []any                   `json:"result,omitempty"`
 }
 
 type TestPair struct {

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 	"github.com/lintnet/lintnet/pkg/render"
 	"github.com/sirupsen/logrus"
@@ -19,7 +20,7 @@ type Outputter interface {
 	Output(result *Output) error
 }
 
-func (c *Controller) Output(logE *logrus.Entry, errLevel, shownErrLevel errlevel.Level, results []*Result, outputters []Outputter, outputSuccess bool) error {
+func (c *Controller) Output(logE *logrus.Entry, errLevel, shownErrLevel errlevel.Level, results []*domain.Result, outputters []Outputter, outputSuccess bool) error {
 	fes := c.formatResultToOutput(results, shownErrLevel)
 	failed, err := isFailed(fes.Errors, errLevel)
 	if err != nil {
@@ -112,41 +113,15 @@ func (c *Controller) getOutputter(outputs []*config.Output, param *ParamLint, cf
 	return nil, errors.New("unknown renderer")
 }
 
-type FlatError struct {
-	Name        string  `json:"name,omitempty"`
-	Description string  `json:"description,omitempty"`
-	Links       []*Link `json:"links,omitempty"`
-	Level       string  `json:"level,omitempty"`
-	Message     string  `json:"message,omitempty"`
-	LintFile    string  `json:"lint_file,omitempty"`
-	DataFile    string  `json:"data_file,omitempty"`
-	// DataFilePaths []string `json:"data_files,omitempty"`
-	TargetID string `json:"target_id,omitempty"`
-	Location any    `json:"location,omitempty"`
-	Custom   any    `json:"custom,omitempty"`
-}
-
-func (e *FlatError) Failed(errLevel errlevel.Level) (bool, error) {
-	level := errlevel.Error
-	if e.Level != "" {
-		feErrLevel, err := errlevel.New(e.Level)
-		if err != nil {
-			return false, fmt.Errorf("verify the error level of a result: %w", err)
-		}
-		level = feErrLevel
-	}
-	return level >= errLevel, nil
-}
-
 type Output struct {
-	LintnetVersion string         `json:"lintnet_version"`
-	Env            string         `json:"env"`
-	Errors         []*FlatError   `json:"errors,omitempty"`
-	Config         map[string]any `json:"config,omitempty"`
+	LintnetVersion string              `json:"lintnet_version"`
+	Env            string              `json:"env"`
+	Errors         []*domain.FlatError `json:"errors,omitempty"`
+	Config         map[string]any      `json:"config,omitempty"`
 }
 
-func (c *Controller) formatResultToOutput(results []*Result, errLevel errlevel.Level) *Output {
-	list := make([]*FlatError, 0, len(results))
+func (c *Controller) formatResultToOutput(results []*domain.Result, errLevel errlevel.Level) *Output {
+	list := make([]*domain.FlatError, 0, len(results))
 	for _, result := range results {
 		for _, fe := range result.FlatErrors() {
 			el, err := errlevel.New(fe.Level) // TODO output warning
