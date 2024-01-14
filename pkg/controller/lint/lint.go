@@ -2,7 +2,6 @@ package lint
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -52,9 +51,9 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	}
 
 	if param.TargetID != "" {
-		target, err := getTarget(rawCfg.Targets, param.TargetID)
+		target, err := rawCfg.GetTarget(param.TargetID)
 		if err != nil {
-			return err
+			return fmt.Errorf("get a target from configuration file by target id: %w", err)
 		}
 		rawCfg.Targets = []*config.RawTarget{target}
 	}
@@ -127,13 +126,4 @@ func getErrorLevel(errLevel string, defaultErrorLevel errlevel.Level) (errlevel.
 		return ll, err //nolint:wrapcheck
 	}
 	return ll, nil
-}
-
-func getTarget(targets []*config.RawTarget, targetID string) (*config.RawTarget, error) {
-	for _, target := range targets {
-		if target.ID == targetID {
-			return target, nil
-		}
-	}
-	return nil, errors.New("target isn't found")
 }
