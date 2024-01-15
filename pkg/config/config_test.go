@@ -19,21 +19,21 @@ func TestRawModule_UnmarshalJSON(t *testing.T) {
 	}{
 		{
 			name: "string",
-			s:    `"github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3"`,
+			s:    `"github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3"`,
 			exp: &config.RawModule{
-				Glob: "github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
+				Glob: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
 			},
 		},
 		{
 			name: "string",
 			s: `{
-				"path": "github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
+				"path": "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
 				"param": {
 					"excludes": ["foo"]
 				}
 				}`,
 			exp: &config.RawModule{
-				Glob: "github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
+				Glob: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
 				Config: map[string]any{
 					"excludes": []any{"foo"},
 				},
@@ -88,13 +88,13 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 						},
 						Modules: []*config.RawModule{
 							{
-								Glob: "github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+								Glob: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 								Config: map[string]any{
 									"excluded": []string{"test"},
 								},
 							},
 							{
-								Glob: "github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+								Glob: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 							},
 						},
 						DataFiles: []string{
@@ -134,10 +134,10 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 						},
 						Modules: []*config.ModuleGlob{
 							{
-								ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
-								SlashPath: "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/*.jsonnet",
+								ID:        "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+								SlashPath: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/*.jsonnet",
 								Archive: &config.ModuleArchive{
-									Type:      "github",
+									Type:      "github_archive",
 									Host:      "github.com",
 									RepoOwner: "suzuki-shunsuke",
 									RepoName:  "example-lintnet-modules",
@@ -149,10 +149,10 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 								},
 							},
 							{
-								ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
-								SlashPath: "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/bar/*.jsonnet",
+								ID:        "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+								SlashPath: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/bar/*.jsonnet",
 								Archive: &config.ModuleArchive{
-									Type:      "github",
+									Type:      "github_archive",
 									Host:      "github.com",
 									RepoOwner: "suzuki-shunsuke",
 									RepoName:  "example-lintnet-modules",
@@ -162,8 +162,8 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 							},
 						},
 						ModuleArchives: map[string]*config.ModuleArchive{
-							"github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3": {
-								Type:      "github",
+							"github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3": {
+								Type:      "github_archive",
 								Host:      "github.com",
 								RepoOwner: "suzuki-shunsuke",
 								RepoName:  "example-lintnet-modules",
@@ -174,8 +174,8 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 					},
 				},
 				ModuleArchives: map[string]*config.ModuleArchive{
-					"github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3": {
-						Type:      "github",
+					"github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3": {
+						Type:      "github_archive",
 						Host:      "github.com",
 						RepoOwner: "suzuki-shunsuke",
 						RepoName:  "example-lintnet-modules",
