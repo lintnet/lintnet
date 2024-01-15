@@ -18,6 +18,7 @@ type ParamInfo struct {
 	ConfigFilePath string
 	PWD            string
 	ModuleRootDir  bool
+	MaskUser       bool
 }
 
 type Info struct {
@@ -28,7 +29,7 @@ type Info struct {
 	Env         map[string]string `json:"env"`
 }
 
-func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:cyclop
+func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:cyclop,funlen
 	currentUser, err := user.Current()
 	if err != nil {
 		return fmt.Errorf("get a current user: %w", err)
@@ -36,7 +37,11 @@ func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:
 	userName := currentUser.Username
 
 	if param.ModuleRootDir {
-		fmt.Fprintln(c.stdout, filepath.Join(param.RootDir, "modules"))
+		p := filepath.Join(param.RootDir, "modules")
+		if param.MaskUser {
+			p = maskUser(p, userName)
+		}
+		fmt.Fprintln(c.stdout, p)
 		return nil
 	}
 
@@ -64,7 +69,10 @@ func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:
 	m := make(map[string]string, len(envs))
 	for _, e := range envs {
 		if v, b := os.LookupEnv(e); b {
-			m[e] = maskUser(v, userName)
+			if param.MaskUser {
+				v = maskUser(v, userName)
+			}
+			m[e] = v
 		}
 	}
 	for _, e := range []string{"GITHUB_TOKEN", "LINTNET_GITHUB_TOKEN"} {
@@ -74,10 +82,15 @@ func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:
 	}
 	info := &Info{
 		Version:     c.param.Version,
-		ConfigFile:  maskUser(param.ConfigFilePath, userName),
-		RootDir:     maskUser(param.RootDir, userName),
-		DataRootDir: maskUser(param.DataRootDir, userName),
+		ConfigFile:  param.ConfigFilePath,
+		RootDir:     param.RootDir,
+		DataRootDir: param.DataRootDir,
 		Env:         m,
+	}
+	if param.MaskUser {
+		info.ConfigFile = maskUser(info.ConfigFile, userName)
+		info.RootDir = maskUser(info.RootDir, userName)
+		info.DataRootDir = maskUser(info.DataRootDir, userName)
 	}
 	encoder := json.NewEncoder(c.stdout)
 	encoder.SetIndent("", "  ")

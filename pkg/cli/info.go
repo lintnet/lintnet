@@ -24,8 +24,10 @@ func (lc *infoCommand) command() *cli.Command {
 		Action: lc.action,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:    "module-root-dir",
-				Aliases: []string{"m"},
+				Name: "module-root-dir",
+			},
+			&cli.BoolFlag{
+				Name: "mask-user",
 			},
 		},
 	}
@@ -56,5 +58,6 @@ func (lc *infoCommand) action(c *cli.Context) error {
 		PWD:            pwd,
 		DataRootDir:    pwd,
 		ModuleRootDir:  c.Bool("module-root-dir"),
+		MaskUser:       c.Bool("mask-user"),
 	})
 }
