@@ -14,8 +14,16 @@ type initCommand struct {
 
 func (lc *initCommand) command() *cli.Command {
 	return &cli.Command{
-		Name:   "init",
-		Usage:  "Scaffold configuration file",
+		Name:      "init",
+		Usage:     "Scaffold configuration file",
+		UsageText: "lintnet init",
+		Description: `Scaffold configuration file.
+
+$ lintnet init
+
+This command generates lintnet.jsonnet.
+If the file already exists, this command does nothing.
+`,
 		Action: lc.action,
 	}
 }

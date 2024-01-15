@@ -24,8 +24,17 @@ type testCommand struct {
 
 func (tc *testCommand) command() *cli.Command {
 	return &cli.Command{
-		Name:   "test",
-		Usage:  "Test lint files",
+		Name:      "test",
+		Usage:     "Test lint files",
+		UsageText: "lintnet test [command options]",
+		Description: `Test lint files.
+
+$ lintnet test
+
+You can test only a specific target.
+
+$ lintnet test -target [target id]
+`,
 		Action: tc.action,
 		Flags: []cli.Flag{
 			&cli.StringFlag{

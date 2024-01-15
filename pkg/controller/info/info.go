@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -23,6 +24,8 @@ type ParamInfo struct {
 
 type Info struct {
 	Version     string            `json:"vesrion,omitempty"`
+	Commit      string            `json:"commit,omitempty"`
+	Runtime     string            `json:"runtime"`
 	ConfigFile  string            `json:"config_file,omitempty"`
 	RootDir     string            `json:"root_dir"`
 	DataRootDir string            `json:"data_root_dir"`
@@ -82,6 +85,8 @@ func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:
 	}
 	info := &Info{
 		Version:     c.param.Version,
+		Commit:      c.param.Commit,
+		Runtime:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		ConfigFile:  param.ConfigFilePath,
 		RootDir:     param.RootDir,
 		DataRootDir: param.DataRootDir,

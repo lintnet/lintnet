@@ -30,10 +30,9 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 	}
 	app := cli.App{
 		Name:     "lintnet",
-		Usage:    "Lint with Jsonnet. https://github.com/lintnet/lintnet",
+		Usage:    "Powerful, Secure, Shareable Linter Powered by Jsonnet. https://lintnet.github.io/",
 		Version:  r.LDFlags.Version + " (" + r.LDFlags.Commit + ")",
 		Compiled: compiledDate,
-		// DefaultCommand: "lint",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "data-root-dir",
@@ -67,6 +66,7 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 			(&infoCommand{
 				logE:    r.LogE,
 				version: r.LDFlags.Version,
+				commit:  r.LDFlags.Commit,
 			}).command(),
 			(&initCommand{
 				logE: r.LogE,
