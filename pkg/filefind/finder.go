@@ -25,12 +25,12 @@ func NewFileFinder(fs afero.Fs) *FileFinder {
 	}
 }
 
-func (f *FileFinder) Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*domain.Target, error) {
+func (f *FileFinder) Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*Target, error) {
 	if len(cfg.Targets) == 0 {
 		return nil, nil
 	}
 
-	targets := make([]*domain.Target, len(cfg.Targets))
+	targets := make([]*Target, len(cfg.Targets))
 	for i, target := range cfg.Targets {
 		t, err := f.findTarget(logE, target, rootDir, cfgDir, cfg.IgnoredPatterns)
 		if err != nil {
@@ -42,7 +42,7 @@ func (f *FileFinder) Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDi
 	return targets, nil
 }
 
-func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootDir, cfgDir string, ignorePatterns []string) (*domain.Target, error) {
+func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootDir, cfgDir string, ignorePatterns []string) (*Target, error) {
 	lintFiles, err := f.findFilesFromModules(target.LintFiles, cfgDir, ignorePatterns)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootD
 		"modules":      log.JSON(modules),
 	}).Debug("found modules")
 	lintFiles = append(lintFiles, modules...)
-	return &domain.Target{
+	return &Target{
 		LintFiles: lintFiles,
 		DataFiles: dataFiles,
 	}, nil
@@ -214,4 +214,10 @@ func ignorePath(path string, ignorePatterns []string) error {
 		}
 	}
 	return nil
+}
+
+type Target struct {
+	ID        string             `json:"id,omitempty"`
+	LintFiles []*config.LintFile `json:"lint_files,omitempty"`
+	DataFiles domain.Paths       `json:"data_files,omitempty"`
 }

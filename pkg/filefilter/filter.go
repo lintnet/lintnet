@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/lintnet/lintnet/pkg/domain"
+	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,7 +16,7 @@ type Param struct {
 	PWD         string   `json:"pwd,omitempty"`
 }
 
-func FilterTargetsByFilePaths(param *Param, targets []*domain.Target) []*domain.Target {
+func FilterTargetsByFilePaths(param *Param, targets []*filefind.Target) []*filefind.Target {
 	for i, filePath := range param.FilePaths {
 		if filepath.IsAbs(filePath) {
 			continue
@@ -40,8 +41,8 @@ func FilterTargetsByFilePaths(param *Param, targets []*domain.Target) []*domain.
 	return targets
 }
 
-func filterTargets(targets []*domain.Target, filePaths []string) []*domain.Target {
-	newTargets := make([]*domain.Target, 0, len(targets))
+func filterTargets(targets []*filefind.Target, filePaths []string) []*filefind.Target {
+	newTargets := make([]*filefind.Target, 0, len(targets))
 	for _, target := range targets {
 		newTarget := filterTarget(target, filePaths)
 		if len(newTarget.LintFiles) > 0 {
@@ -51,8 +52,8 @@ func filterTargets(targets []*domain.Target, filePaths []string) []*domain.Targe
 	return newTargets
 }
 
-func filterTarget(target *domain.Target, filePaths []string) *domain.Target {
-	newTarget := &domain.Target{}
+func filterTarget(target *filefind.Target, filePaths []string) *filefind.Target {
+	newTarget := &filefind.Target{}
 	for _, lintFile := range target.LintFiles {
 		for _, filePath := range filePaths {
 			if lintFile.Path == filePath {
@@ -83,7 +84,7 @@ func filterTarget(target *domain.Target, filePaths []string) *domain.Target {
 	return newTarget
 }
 
-func FilterTargetsByDataRootDir(logE *logrus.Entry, param *Param, targets []*domain.Target) error {
+func FilterTargetsByDataRootDir(logE *logrus.Entry, param *Param, targets []*filefind.Target) error {
 	for _, target := range targets {
 		if err := filterTargetByDataRootDir(logE, param, target); err != nil {
 			return err
@@ -92,7 +93,7 @@ func FilterTargetsByDataRootDir(logE *logrus.Entry, param *Param, targets []*dom
 	return nil
 }
 
-func filterTargetByDataRootDir(logE *logrus.Entry, param *Param, target *domain.Target) error {
+func filterTargetByDataRootDir(logE *logrus.Entry, param *Param, target *filefind.Target) error {
 	arr := make([]*domain.Path, 0, len(target.DataFiles))
 	for _, dataFile := range target.DataFiles {
 		if filterFileByDataRootDir(logE, param, dataFile.Abs) {
