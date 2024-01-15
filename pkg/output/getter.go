@@ -46,6 +46,44 @@ type ParamGet struct {
 	Output      string
 }
 
+func setTransform(output *config.Output, param *ParamGet, cfgDir string) error {
+	if output.TransformModule != nil {
+		output.Transform = filepath.Join(param.RootDir, output.TransformModule.FilePath())
+		return nil
+	}
+	output.Transform = filepath.FromSlash(output.Transform)
+	if !filepath.IsAbs(output.Transform) {
+		output.Transform = filepath.Join(cfgDir, output.Transform)
+	}
+	a, err := filepath.Rel(param.DataRootDir, output.Transform)
+	if err != nil {
+		return fmt.Errorf("get a relative path to transform: %w", err)
+	}
+	if strings.HasPrefix(a, "..") {
+		return errors.New("this transform is unavailable because the transform is out of data root directory")
+	}
+	return nil
+}
+
+func setTemplate(output *config.Output, param *ParamGet, cfgDir string) error {
+	if output.TemplateModule != nil {
+		output.Template = filepath.Join(param.RootDir, output.TemplateModule.FilePath())
+		return nil
+	}
+	output.Template = filepath.FromSlash(output.Template)
+	if !filepath.IsAbs(output.Template) {
+		output.Template = filepath.Join(cfgDir, output.Template)
+	}
+	a, err := filepath.Rel(param.DataRootDir, output.Template)
+	if err != nil {
+		return fmt.Errorf("get a relative path to template: %w", err)
+	}
+	if strings.HasPrefix(a, "..") {
+		return errors.New("this template is unavailable because the template is out of data root directory")
+	}
+	return nil
+}
+
 func (g *Getter) Get(outputs []*config.Output, param *ParamGet, cfgDir string) (Outputter, error) { //nolint:cyclop
 	if param.Output == "" {
 		return &jsonOutputter{
@@ -57,35 +95,15 @@ func (g *Getter) Get(outputs []*config.Output, param *ParamGet, cfgDir string) (
 		return nil, err
 	}
 
-	if output.TemplateModule != nil {
-		output.Template = filepath.Join(param.RootDir, output.TemplateModule.FilePath())
-	} else {
-		output.Template = filepath.FromSlash(output.Template)
-		if !filepath.IsAbs(output.Template) {
-			output.Template = filepath.Join(cfgDir, output.Template)
-		}
-		a, err := filepath.Rel(param.DataRootDir, output.Template)
-		if err != nil {
-			return nil, fmt.Errorf("get a relative path to template: %w", err)
-		}
-		if strings.HasPrefix(a, "..") {
-			return nil, errors.New("this template is unavailable because the template is out of data root directory")
+	if output.Template != "" {
+		if err := setTemplate(output, param, cfgDir); err != nil {
+			return nil, err
 		}
 	}
 
-	if output.TransformModule != nil {
-		output.Transform = filepath.Join(param.RootDir, output.TransformModule.FilePath())
-	} else {
-		output.Transform = filepath.FromSlash(output.Transform)
-		if !filepath.IsAbs(output.Transform) {
-			output.Transform = filepath.Join(cfgDir, output.Transform)
-		}
-		a, err := filepath.Rel(param.DataRootDir, output.Transform)
-		if err != nil {
-			return nil, fmt.Errorf("get a relative path to transform: %w", err)
-		}
-		if strings.HasPrefix(a, "..") {
-			return nil, errors.New("this transform is unavailable because the transform is out of data root directory")
+	if output.Transform != "" {
+		if err := setTransform(output, param, cfgDir); err != nil {
+			return nil, err
 		}
 	}
 
