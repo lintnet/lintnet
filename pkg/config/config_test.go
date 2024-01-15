@@ -137,7 +137,6 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 								ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 								SlashPath: "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/*.jsonnet",
 								Archive: &config.ModuleArchive{
-									ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 									Type:      "github",
 									Host:      "github.com",
 									RepoOwner: "suzuki-shunsuke",
@@ -153,7 +152,6 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 								ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 								SlashPath: "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/bar/*.jsonnet",
 								Archive: &config.ModuleArchive{
-									ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 									Type:      "github",
 									Host:      "github.com",
 									RepoOwner: "suzuki-shunsuke",
@@ -165,7 +163,6 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 						},
 						ModuleArchives: map[string]*config.ModuleArchive{
 							"github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3": {
-								ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 								Type:      "github",
 								Host:      "github.com",
 								RepoOwner: "suzuki-shunsuke",
@@ -178,7 +175,6 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 				},
 				ModuleArchives: map[string]*config.ModuleArchive{
 					"github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3": {
-						ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 						Type:      "github",
 						Host:      "github.com",
 						RepoOwner: "suzuki-shunsuke",

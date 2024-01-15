@@ -62,7 +62,6 @@ func TestParseModuleLine(t *testing.T) {
 				ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/foo/bar.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 				SlashPath: "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/bar.jsonnet",
 				Archive: &config.ModuleArchive{
-					ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 					Type:      "github",
 					Host:      "github.com",
 					RepoOwner: "suzuki-shunsuke",

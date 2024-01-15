@@ -114,11 +114,9 @@ func (f *FileFinder) findFilesFromModule(m *config.ModuleGlob, rootDir string, m
 		if err != nil {
 			return fmt.Errorf("get a relative path from the root directory to a module: %w", err)
 		}
-		var id string
-		if m.Archive == nil {
-			id = filepath.ToSlash(file)
-		} else {
-			id = filepath.ToSlash(relPath) // TODO add tag
+		id := filepath.ToSlash(relPath)
+		if m.Archive != nil && m.Archive.Tag != "" {
+			id = fmt.Sprintf("%s:%s", id, m.Archive.Tag)
 		}
 		matchFiles[file] = append(matchFiles[file], &config.LintFile{
 			ID:     id,

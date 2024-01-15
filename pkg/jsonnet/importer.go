@@ -46,7 +46,7 @@ func (ip *ModuleImporter) Import(importedFrom, importedPath string) (jsonnet.Con
 	}
 	if err := ip.moduleInstaller.Install(ip.ctx, ip.logE, ip.param, mod.Archive); err != nil {
 		return contents, foundAt, fmt.Errorf("install a module: %w", logerr.WithFields(err, logrus.Fields{
-			"module_id": mod.Archive.ID,
+			"module_id": mod.Archive.String(),
 			"import":    importedPath,
 		}))
 	}

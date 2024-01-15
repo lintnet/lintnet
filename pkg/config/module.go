@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -30,13 +31,23 @@ func (m *Module) FilePath() string {
 }
 
 type ModuleArchive struct {
-	ID        string `json:"id,omitempty"`
 	Type      string `json:"type,omitempty"`
 	Host      string `json:"host,omitempty"`
 	RepoOwner string `json:"repo_owner,omitempty"`
 	RepoName  string `json:"repo_name,omitempty"`
 	Ref       string `json:"ref,omitempty"`
 	Tag       string `json:"tag,omitempty"`
+}
+
+// String returns a human readable string.
+// This is different from file path.
+// This is used for log.
+func (m *ModuleArchive) String() string {
+	a := fmt.Sprintf("%s/%s/%s/%s", m.Host, m.RepoOwner, m.RepoName, m.Ref)
+	if m.Tag != "" {
+		a = fmt.Sprintf("%s:%s", a, m.Tag)
+	}
+	return a
 }
 
 var fullCommitHashPattern = regexp.MustCompile("[a-fA-F0-9]{40}")
@@ -92,7 +103,6 @@ func ParseModuleLine(line string) (*ModuleGlob, error) {
 		ID:        line,
 		SlashPath: strings.Join(append(elems[:3], ref, path), "/"),
 		Archive: &ModuleArchive{
-			ID:        strings.Join(append(elems[:3], refAndTag), "/"),
 			Type:      "github",
 			Host:      "github.com",
 			RepoOwner: elems[1],
