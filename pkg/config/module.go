@@ -43,7 +43,7 @@ type ModuleArchive struct {
 // This is different from file path.
 // This is used for log.
 func (m *ModuleArchive) String() string {
-	a := fmt.Sprintf("%s/%s/%s/%s", m.Host, m.RepoOwner, m.RepoName, m.Ref)
+	a := fmt.Sprintf("%s/%s/%s/%s/%s", m.Type, m.Host, m.RepoOwner, m.RepoName, m.Ref)
 	if m.Tag != "" {
 		a = fmt.Sprintf("%s:%s", a, m.Tag)
 	}
@@ -60,7 +60,7 @@ func validateRef(ref string) error {
 }
 
 func (m *ModuleArchive) FilePath() string {
-	return filepath.Join(m.Host, m.RepoOwner, m.RepoName, m.Ref)
+	return filepath.Join(m.Type, m.Host, m.RepoOwner, m.RepoName, m.Ref)
 }
 
 func ParseImport(line string) (*Module, error) {
@@ -76,7 +76,7 @@ func ParseImport(line string) (*Module, error) {
 }
 
 func ParseModuleLine(line string) (*ModuleGlob, error) {
-	// github.com/<repo owner>/<repo name>/<path>@<commit hash>[:<tag>]
+	// <type>/github.com/<repo owner>/<repo name>/<path>@<commit hash>[:<tag>]
 	line = strings.TrimSpace(line)
 	excluded := false
 	if l := strings.TrimPrefix(line, "!"); l != line {
@@ -84,13 +84,16 @@ func ParseModuleLine(line string) (*ModuleGlob, error) {
 		line = strings.TrimSpace(l)
 	}
 	elems := strings.Split(line, "/")
-	if len(elems) < 4 { //nolint:gomnd
+	if len(elems) < 5 { //nolint:gomnd
 		return nil, errors.New("line is invalid")
 	}
-	if elems[0] != "github.com" {
-		return nil, errors.New("module must start with 'github.com/'")
+	if elems[0] != "github_archive" {
+		return nil, errors.New("unsupported module type")
 	}
-	pathAndRefAndTag := strings.Join(elems[3:], "/")
+	if elems[1] != "github.com" {
+		return nil, errors.New("module host must be 'github.com'")
+	}
+	pathAndRefAndTag := strings.Join(elems[4:], "/")
 	path, refAndTag, ok := strings.Cut(pathAndRefAndTag, "@")
 	if !ok {
 		return nil, errors.New("ref is required")
@@ -101,12 +104,12 @@ func ParseModuleLine(line string) (*ModuleGlob, error) {
 	}
 	return &ModuleGlob{
 		ID:        line,
-		SlashPath: strings.Join(append(elems[:3], ref, path), "/"),
+		SlashPath: strings.Join(append(elems[:4], ref, path), "/"),
 		Archive: &ModuleArchive{
-			Type:      "github",
+			Type:      "github_archive",
 			Host:      "github.com",
-			RepoOwner: elems[1],
-			RepoName:  elems[2],
+			RepoOwner: elems[2],
+			RepoName:  elems[3],
 			Ref:       ref,
 			Tag:       tag,
 		},

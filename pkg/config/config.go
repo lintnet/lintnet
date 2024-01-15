@@ -89,7 +89,7 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
 		}
 	}
 	for _, output := range rc.Outputs {
-		if strings.HasPrefix(output.Template, "github.com/") {
+		if strings.HasPrefix(output.Template, "github_archive/github.com/") {
 			m, err := ParseImport(output.Template)
 			if err != nil {
 				return nil, fmt.Errorf("parse a module path: %w", err)
@@ -97,7 +97,7 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
 			output.TemplateModule = m
 			moduleArchives[m.Archive.String()] = m.Archive
 		}
-		if strings.HasPrefix(output.Transform, "github.com/") {
+		if strings.HasPrefix(output.Transform, "github_archive/github.com/") {
 			m, err := ParseImport(output.Transform)
 			if err != nil {
 				return nil, fmt.Errorf("parse a module path: %w", err)

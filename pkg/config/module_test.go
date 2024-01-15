@@ -26,13 +26,14 @@ func TestModule_FilePath(t *testing.T) {
 			mod: &config.Module{
 				SlashPath: "foo/bar.jsonnet",
 				Archive: &config.ModuleArchive{
+					Type:      "github_archive",
 					Host:      "github.com",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "example-lintnet-modules",
 					Ref:       "0ed62adf055a4fbd7ef7ebe304f01794508ed325",
 				},
 			},
-			exp: "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/bar.jsonnet",
+			exp: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/bar.jsonnet",
 		},
 	}
 	for _, d := range data {
@@ -57,12 +58,12 @@ func TestParseModuleLine(t *testing.T) {
 	}{
 		{
 			name: "module",
-			line: "github.com/suzuki-shunsuke/example-lintnet-modules/foo/bar.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+			line: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/bar.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 			mod: &config.ModuleGlob{
-				ID:        "github.com/suzuki-shunsuke/example-lintnet-modules/foo/bar.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
-				SlashPath: "github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/bar.jsonnet",
+				ID:        "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/bar.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+				SlashPath: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/bar.jsonnet",
 				Archive: &config.ModuleArchive{
-					Type:      "github",
+					Type:      "github_archive",
 					Host:      "github.com",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "example-lintnet-modules",
