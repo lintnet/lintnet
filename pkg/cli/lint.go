@@ -33,7 +33,7 @@ func (lc *lintCommand) command() *cli.Command {
 				Aliases: []string{"o"},
 			},
 			&cli.StringFlag{
-				Name:    "target-id",
+				Name:    "target",
 				Aliases: []string{"t"},
 			},
 			&cli.StringFlag{
@@ -89,7 +89,7 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		ErrorLevel:      c.String("error-level"),
 		ShownErrorLevel: c.String("shown-error-level"),
 		ConfigFilePath:  c.String("config"),
-		TargetID:        c.String("target-id"),
+		TargetID:        c.String("target"),
 		OutputSuccess:   c.Bool("output-success"),
 		Output:          c.String("output"),
 		RootDir:         rootDir,

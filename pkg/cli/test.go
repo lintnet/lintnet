@@ -29,7 +29,7 @@ func (tc *testCommand) command() *cli.Command {
 		Action: tc.action,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "target-id",
+				Name:    "target",
 				Aliases: []string{"t"},
 			},
 		},
@@ -70,7 +70,7 @@ func (tc *testCommand) action(c *cli.Context) error {
 	return ctrl.Test(c.Context, logE, &testcmd.ParamTest{ //nolint:wrapcheck
 		FilePaths:      c.Args().Slice(),
 		ConfigFilePath: c.String("config"),
-		TargetID:       c.String("target-id"),
+		TargetID:       c.String("target"),
 		RootDir:        rootDir,
 		DataRootDir:    dataRootDir,
 		PWD:            pwd,
