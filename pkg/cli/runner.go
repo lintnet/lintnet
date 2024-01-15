@@ -60,6 +60,10 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			(&versionCommand{}).command(),
+			(&lintCommand{
+				logE:    r.LogE,
+				version: r.LDFlags.Version,
+			}).command(),
 			(&infoCommand{
 				logE:    r.LogE,
 				version: r.LDFlags.Version,
