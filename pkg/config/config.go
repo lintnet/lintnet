@@ -95,7 +95,7 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
 				return nil, fmt.Errorf("parse a module path: %w", err)
 			}
 			output.TemplateModule = m
-			moduleArchives[m.Archive.ID] = m.Archive
+			moduleArchives[m.Archive.String()] = m.Archive
 		}
 		if strings.HasPrefix(output.Transform, "github.com/") {
 			m, err := ParseImport(output.Transform)
@@ -103,7 +103,7 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
 				return nil, fmt.Errorf("parse a module path: %w", err)
 			}
 			output.TransformModule = m
-			moduleArchives[m.Archive.ID] = m.Archive
+			moduleArchives[m.Archive.String()] = m.Archive
 		}
 	}
 	cfg.ModuleArchives = moduleArchives
@@ -191,7 +191,7 @@ func (rt *RawTarget) Parse() (*Target, error) {
 			return nil, err
 		}
 		target.Modules[i] = a
-		archives[a.Archive.ID] = a.Archive
+		archives[a.Archive.String()] = a.Archive
 	}
 	target.ModuleArchives = archives
 	return target, nil
