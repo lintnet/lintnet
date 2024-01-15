@@ -77,7 +77,6 @@ func (tc *testCommand) action(c *cli.Context) error {
 		dataRootDir = pwd
 	}
 	return ctrl.Test(c.Context, logE, &testcmd.ParamTest{ //nolint:wrapcheck
-		FilePaths:      c.Args().Slice(),
 		ConfigFilePath: c.String("config"),
 		TargetID:       c.String("target"),
 		RootDir:        rootDir,
