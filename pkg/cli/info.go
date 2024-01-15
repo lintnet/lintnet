@@ -44,7 +44,7 @@ func (lc *infoCommand) action(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	return ctrl.Info(c.Context, logE, &info.ParamInfo{ //nolint:wrapcheck
+	return ctrl.Info(c.Context, &info.ParamInfo{ //nolint:wrapcheck
 		ConfigFilePath: c.String("config"),
 		RootDir:        rootDir,
 		PWD:            pwd,

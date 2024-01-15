@@ -1,7 +1,6 @@
 package info
 
 import (
-	_ "embed"
 	"io"
 
 	"github.com/lintnet/lintnet/pkg/config"

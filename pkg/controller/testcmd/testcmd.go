@@ -35,7 +35,7 @@ func (p *ParamTest) FilterParam() *filefilter.Param {
 	}
 }
 
-func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *ParamTest) error { //nolint:cyclop
+func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTest) error { //nolint:cyclop
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
@@ -95,7 +95,7 @@ func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *Para
 	return nil
 }
 
-func (c *TestController) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
+func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
 	if td.DataFile != "" {
 		p := &domain.Path{
 			Raw: td.DataFile,
@@ -150,7 +150,7 @@ func (c *TestController) test(pair *TestPair, td *TestData) *FailedResult { //no
 	return nil
 }
 
-func (c *TestController) tests(pair *TestPair) []*FailedResult {
+func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	testData := []*TestData{}
 	if err := jsonnet.Read(c.fs, pair.TestFilePath, "{}", c.importer, &testData); err != nil {
 		return []*FailedResult{
@@ -174,7 +174,7 @@ func (c *TestController) tests(pair *TestPair) []*FailedResult {
 	return results
 }
 
-func (c *TestController) filterTargetsWithTest(logE *logrus.Entry, targets []*domain.Target) []*TestPair {
+func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*domain.Target) []*TestPair {
 	pairs := []*TestPair{}
 	for _, target := range targets {
 		for _, lintFile := range target.LintFiles {

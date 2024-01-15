@@ -58,7 +58,7 @@ func (tc *testCommand) action(c *cli.Context) error {
 	param := &testcmd.ParamController{
 		Version: tc.version,
 	}
-	ctrl := testcmd.NewTestController(param, fs, os.Stdout, importer)
+	ctrl := testcmd.NewController(param, fs, os.Stdout, importer)
 	pwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)

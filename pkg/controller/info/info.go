@@ -8,7 +8,6 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -27,7 +26,7 @@ type Info struct {
 	Env         map[string]string `json:"env"`
 }
 
-func (c *Controller) Info(_ context.Context, logE *logrus.Entry, param *ParamInfo) error { //nolint:cyclop
+func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:cyclop
 	if param.ConfigFilePath == "" {
 		for _, p := range []string{"lintnet.jsonnet", ".lintnet.jsonnet"} {
 			f, err := afero.Exists(c.fs, p)
