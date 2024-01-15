@@ -22,7 +22,6 @@ type ParamTest struct {
 	DataRootDir    string
 	ConfigFilePath string
 	TargetID       string
-	FilePaths      []string
 	PWD            string
 }
 
@@ -30,7 +29,6 @@ func (p *ParamTest) FilterParam() *filefilter.Param {
 	return &filefilter.Param{
 		DataRootDir: p.DataRootDir,
 		TargetID:    p.TargetID,
-		FilePaths:   p.FilePaths,
 		PWD:         p.PWD,
 	}
 }
@@ -69,11 +67,6 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 	}
 
 	filterParam := param.FilterParam()
-
-	if len(param.FilePaths) > 0 {
-		logE.Debug("filtering targets by given files")
-		targets = filefilter.FilterTargetsByFilePaths(filterParam, targets)
-	}
 
 	if err := filefilter.FilterTargetsByDataRootDir(logE, filterParam, targets); err != nil {
 		return fmt.Errorf("filter targets by data root directory: %w", err)
