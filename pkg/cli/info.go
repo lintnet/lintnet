@@ -22,6 +22,12 @@ func (lc *infoCommand) command() *cli.Command {
 		Name:   "info",
 		Usage:  "Show information",
 		Action: lc.action,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "module-root-dir",
+				Aliases: []string{"m"},
+			},
+		},
 	}
 }
 
@@ -49,5 +55,6 @@ func (lc *infoCommand) action(c *cli.Context) error {
 		RootDir:        rootDir,
 		PWD:            pwd,
 		DataRootDir:    pwd,
+		ModuleRootDir:  c.Bool("module-root-dir"),
 	})
 }

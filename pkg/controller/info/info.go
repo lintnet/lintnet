@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -16,6 +17,7 @@ type ParamInfo struct {
 	DataRootDir    string
 	ConfigFilePath string
 	PWD            string
+	ModuleRootDir  bool
 }
 
 type Info struct {
@@ -27,6 +29,17 @@ type Info struct {
 }
 
 func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:cyclop
+	currentUser, err := user.Current()
+	if err != nil {
+		return fmt.Errorf("get a current user: %w", err)
+	}
+	userName := currentUser.Username
+
+	if param.ModuleRootDir {
+		fmt.Fprintln(c.stdout, filepath.Join(param.RootDir, "modules"))
+		return nil
+	}
+
 	if param.ConfigFilePath == "" {
 		for _, p := range []string{"lintnet.jsonnet", ".lintnet.jsonnet"} {
 			f, err := afero.Exists(c.fs, p)
@@ -38,12 +51,6 @@ func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:
 			}
 		}
 	}
-
-	currentUser, err := user.Current()
-	if err != nil {
-		return fmt.Errorf("get a current user: %w", err)
-	}
-	userName := currentUser.Username
 
 	envs := []string{
 		"LINTNET_CONFIG",
