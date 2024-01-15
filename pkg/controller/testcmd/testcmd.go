@@ -61,7 +61,9 @@ func (c *TestController) Test(_ context.Context, logE *logrus.Entry, param *Para
 
 	cfgDir := filepath.Dir(rawCfg.FilePath)
 
-	targets, err := c.fileFinder.Find(logE, cfg, param.RootDir, cfgDir)
+	modRootDir := filepath.Join(param.RootDir, "modules")
+
+	targets, err := c.fileFinder.Find(logE, cfg, modRootDir, cfgDir)
 	if err != nil {
 		return fmt.Errorf("find files: %w", err)
 	}
