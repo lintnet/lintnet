@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/config/parser"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefilter"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
@@ -47,7 +48,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 		rawCfg.Targets = []*config.RawTarget{target}
 	}
 
-	cfg, err := rawCfg.Parse()
+	cfg, err := parser.Parse(rawCfg)
 	if err != nil {
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}

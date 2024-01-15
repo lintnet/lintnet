@@ -18,20 +18,6 @@ type RawConfig struct {
 	Outputs         []*Output    `json:"outputs,omitempty"`
 }
 
-func getIgnoredPatterns(ignoredDirs []string) []string {
-	if ignoredDirs == nil {
-		ignoredDirs = []string{
-			".git",
-			"node_modules",
-		}
-	}
-	ignoredPatterns := make([]string, len(ignoredDirs))
-	for i, d := range ignoredDirs {
-		ignoredPatterns[i] = fmt.Sprintf("**/%s/**", d)
-	}
-	return ignoredPatterns
-}
-
 func (rc *RawConfig) GetTarget(targetID string) (*RawTarget, error) {
 	for _, target := range rc.Targets {
 		if target.ID == targetID {
@@ -39,75 +25,6 @@ func (rc *RawConfig) GetTarget(targetID string) (*RawTarget, error) {
 		}
 	}
 	return nil, errors.New("target isn't found")
-}
-
-func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
-	cfg := &Config{
-		ErrorLevel:      errlevel.Error,
-		ShownErrorLevel: errlevel.Info,
-		Targets:         make([]*Target, len(rc.Targets)),
-		Outputs:         rc.Outputs,
-		IgnoredPatterns: getIgnoredPatterns(rc.IgnoredDirs),
-	}
-
-	if cfg.IgnoredPatterns == nil {
-		cfg.IgnoredPatterns = []string{
-			"node_modules",
-			".git",
-		}
-	}
-
-	if rc.ErrorLevel != "" {
-		level, err := errlevel.New(rc.ErrorLevel)
-		if err != nil {
-			return nil, fmt.Errorf("parse the error level: %w", err)
-		}
-		cfg.ErrorLevel = level
-	}
-
-	if rc.ShownErrorLevel != "" {
-		level, err := errlevel.New(rc.ShownErrorLevel)
-		if err != nil {
-			return nil, fmt.Errorf("parse the error level: %w", err)
-		}
-		cfg.ShownErrorLevel = level
-	}
-
-	if cfg.ShownErrorLevel > cfg.ErrorLevel {
-		cfg.ShownErrorLevel = cfg.ErrorLevel
-	}
-
-	moduleArchives := map[string]*ModuleArchive{}
-	for i, rt := range rc.Targets {
-		target, err := rt.Parse()
-		if err != nil {
-			return nil, err
-		}
-		cfg.Targets[i] = target
-		for k, ma := range target.ModuleArchives {
-			moduleArchives[k] = ma
-		}
-	}
-	for _, output := range rc.Outputs {
-		if strings.HasPrefix(output.Template, "github_archive/github.com/") {
-			m, err := ParseImport(output.Template)
-			if err != nil {
-				return nil, fmt.Errorf("parse a module path: %w", err)
-			}
-			output.TemplateModule = m
-			moduleArchives[m.Archive.String()] = m.Archive
-		}
-		if strings.HasPrefix(output.Transform, "github_archive/github.com/") {
-			m, err := ParseImport(output.Transform)
-			if err != nil {
-				return nil, fmt.Errorf("parse a module path: %w", err)
-			}
-			output.TransformModule = m
-			moduleArchives[m.Archive.String()] = m.Archive
-		}
-	}
-	cfg.ModuleArchives = moduleArchives
-	return cfg, nil
 }
 
 type Config struct {
@@ -173,42 +90,9 @@ func (lg *LintGlob) ToModule() *ModuleGlob {
 	}
 }
 
-func (rt *RawTarget) Parse() (*Target, error) {
-	lintFiles := make([]*ModuleGlob, len(rt.LintGlobs))
-	for i, lintGlob := range rt.LintGlobs {
-		lintFiles[i] = lintGlob.ToModule()
-	}
-	target := &Target{
-		ID:        rt.ID,
-		LintFiles: lintFiles,
-		Modules:   make([]*ModuleGlob, len(rt.Modules)),
-		DataFiles: rt.DataFiles,
-	}
-	archives := make(map[string]*ModuleArchive, len(rt.Modules))
-	for i, m := range rt.Modules {
-		a, err := m.Parse()
-		if err != nil {
-			return nil, err
-		}
-		target.Modules[i] = a
-		archives[a.Archive.String()] = a.Archive
-	}
-	target.ModuleArchives = archives
-	return target, nil
-}
-
 type RawModule struct {
 	Glob   string         `json:"path"`
 	Config map[string]any `json:"config"`
-}
-
-func (rm *RawModule) Parse() (*ModuleGlob, error) {
-	m, err := ParseModuleLine(rm.Glob)
-	if err != nil {
-		return nil, fmt.Errorf("parse a module path: %w", err)
-	}
-	m.Config = rm.Config
-	return m, nil
 }
 
 type LintFile struct {

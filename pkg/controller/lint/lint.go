@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/config/parser"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 	"github.com/lintnet/lintnet/pkg/filefilter"
 	"github.com/lintnet/lintnet/pkg/log"
@@ -61,7 +62,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		rawCfg.Targets = []*config.RawTarget{target}
 	}
 
-	cfg, err := rawCfg.Parse()
+	cfg, err := parser.Parse(rawCfg)
 	if err != nil {
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}
