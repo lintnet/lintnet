@@ -21,6 +21,7 @@ type FileFinder interface {
 
 type ParamController struct {
 	Version string
+	Commit  string
 }
 
 func NewController(param *ParamController, fs afero.Fs, stdout io.Writer) *Controller {

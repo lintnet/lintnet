@@ -24,29 +24,52 @@ type lintCommand struct {
 
 func (lc *lintCommand) command() *cli.Command {
 	return &cli.Command{
-		Name:   "lint",
-		Usage:  "Lint files",
+		Name:      "lint",
+		Usage:     "Lint files",
+		UsageText: "lintnet lint [command options] [lint file paths and data file paths]",
+		Description: `Lint files
+
+$ lintnet lint
+
+You can lint only specific files.
+
+$ lintnet lint [lint file paths and data file paths]
+
+You can also lint only a specific target.
+
+$ lintnet lint -target [target id]
+
+By default, lintnet outputs nothing when the lint succeeds.
+You can output JSON even if the lint succeeds. This is useful if you pass the output to other program such as jq.
+
+$ lintnet lint -output-success
+`,
 		Action: lc.action,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "output",
 				Aliases: []string{"o"},
+				Usage:   "You can customize the output format. You can specify an output id",
 			},
 			&cli.StringFlag{
 				Name:    "target",
 				Aliases: []string{"t"},
+				Usage:   "Lint only a specific target. You can specify a target id",
 			},
 			&cli.StringFlag{
 				Name:    "error-level",
 				Aliases: []string{"e"},
+				Usage:   "Set the error level",
 				EnvVars: []string{"LINTNET_ERROR_LEVEL"},
 			},
 			&cli.StringFlag{
 				Name:    "shown-error-level",
+				Usage:   "Set the shown error level",
 				EnvVars: []string{"LINTNET_SHOWN_ERROR_LEVEL"},
 			},
 			&cli.BoolFlag{
 				Name:    "output-success",
+				Usage:   "Output the result even if the lint succeeds",
 				EnvVars: []string{"LINTNET_OUTPUT_SUCCESS"},
 			},
 		},
