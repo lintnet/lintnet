@@ -74,7 +74,7 @@ func (tr *TestResult) Any() any {
 	return m
 }
 
-type TestController struct {
+type Controller struct {
 	fs             afero.Fs
 	stdout         io.Writer
 	importer       *jsonnet.ModuleImporter
@@ -92,9 +92,9 @@ type ParamController struct {
 	Version string
 }
 
-func NewTestController(param *ParamController, fs afero.Fs, stdout io.Writer, importer *jsonnet.ModuleImporter) *TestController {
+func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, importer *jsonnet.ModuleImporter) *Controller {
 	dp := encoding.NewDataFileParser(fs)
-	return &TestController{
+	return &Controller{
 		param:          param,
 		fs:             fs,
 		stdout:         stdout,

@@ -64,6 +64,10 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 				logE:    r.LogE,
 				version: r.LDFlags.Version,
 			}).command(),
+			(&infoCommand{
+				logE:    r.LogE,
+				version: r.LDFlags.Version,
+			}).command(),
 			(&initCommand{
 				logE: r.LogE,
 			}).command(),
