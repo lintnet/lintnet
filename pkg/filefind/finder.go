@@ -43,7 +43,7 @@ func (f *FileFinder) Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDi
 }
 
 func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootDir, cfgDir string, ignorePatterns []string) (*domain.Target, error) {
-	lintFiles, err := f.findFilesFromModules(target.LintFiles, "", ignorePatterns)
+	lintFiles, err := f.findFilesFromModules(target.LintFiles, cfgDir, ignorePatterns)
 	if err != nil {
 		return nil, err
 	}
