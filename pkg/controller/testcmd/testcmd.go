@@ -12,6 +12,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefilter"
+	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -167,7 +168,7 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	return results
 }
 
-func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*domain.Target) []*TestPair {
+func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*filefind.Target) []*TestPair {
 	pairs := []*TestPair{}
 	for _, target := range targets {
 		for _, lintFile := range target.LintFiles {
