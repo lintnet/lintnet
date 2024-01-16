@@ -49,7 +49,12 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 		rawCfg.Targets = []*config.RawTarget{target}
 	}
 
-	cfg, err := parser.Parse(rawCfg)
+	cfgDir := filepath.Dir(rawCfg.FilePath)
+	if !filepath.IsAbs(cfgDir) {
+		cfgDir = filepath.Join(param.PWD, cfgDir)
+	}
+
+	cfg, err := parser.Parse(rawCfg, cfgDir)
 	if err != nil {
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}
@@ -58,8 +63,6 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 	if err != nil {
 		return fmt.Errorf("parse the template of test result: %w", err)
 	}
-
-	cfgDir := filepath.Dir(rawCfg.FilePath)
 
 	modRootDir := filepath.Join(param.RootDir, "modules")
 

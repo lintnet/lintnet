@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"path/filepath"
+
+	"github.com/lintnet/lintnet/pkg/domain"
 )
 
 type Module struct {
@@ -13,11 +15,10 @@ type Module struct {
 }
 
 type ModuleGlob struct {
-	ID        string                 `json:"id,omitempty"`
-	SlashPath string                 `json:"slash_path,omitempty"`
-	Archive   *ModuleArchive         `json:"archive,omitempty"`
-	Config    map[string]interface{} `json:"config,omitempty"`
-	Excluded  bool                   `json:"excluded,omitempty"`
+	Path     *domain.Path           `json:"path,omitempty"`
+	Archive  *ModuleArchive         `json:"archive,omitempty"`
+	Config   map[string]interface{} `json:"config,omitempty"`
+	Excluded bool                   `json:"excluded,omitempty"`
 }
 
 func (m *Module) FilePath() string {

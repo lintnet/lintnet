@@ -13,13 +13,13 @@ func TestRawModule_UnmarshalJSON(t *testing.T) {
 	data := []struct {
 		name  string
 		s     string
-		exp   *config.RawModule
+		exp   *config.RawModuleGlob
 		isErr bool
 	}{
 		{
 			name: "string",
 			s:    `"github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3"`,
-			exp: &config.RawModule{
+			exp: &config.RawModuleGlob{
 				Glob: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
 			},
 		},
@@ -31,7 +31,7 @@ func TestRawModule_UnmarshalJSON(t *testing.T) {
 					"excludes": ["foo"]
 				}
 				}`,
-			exp: &config.RawModule{
+			exp: &config.RawModuleGlob{
 				Glob: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
 				Config: map[string]any{
 					"excludes": []any{"foo"},
@@ -43,7 +43,7 @@ func TestRawModule_UnmarshalJSON(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			m := &config.RawModule{}
+			m := &config.RawModuleGlob{}
 			if err := json.Unmarshal([]byte(d.s), m); err != nil {
 				if d.isErr {
 					return

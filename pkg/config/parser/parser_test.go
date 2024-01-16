@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/config/parser"
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 )
 
@@ -34,7 +35,7 @@ func TestParse(t *testing.T) { //nolint:funlen
 								},
 							},
 						},
-						Modules: []*config.RawModule{
+						Modules: []*config.RawModuleGlob{
 							{
 								Glob: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 								Config: map[string]any{
@@ -64,12 +65,16 @@ func TestParse(t *testing.T) { //nolint:funlen
 					{
 						LintFiles: []*config.ModuleGlob{
 							{
-								ID:        "yoo/*.jsonnet",
-								SlashPath: "yoo/*.jsonnet",
+								Path: &domain.Path{
+									Raw: "yoo/*.jsonnet",
+									Abs: "/home/foo/workspace/yoo/*.jsonnet",
+								},
 							},
 							{
-								ID:        "zoo/*.jsonnet",
-								SlashPath: "zoo/*.jsonnet",
+								Path: &domain.Path{
+									Raw: "zoo/*.jsonnet",
+									Abs: "/home/foo/workspace/zoo/*.jsonnet",
+								},
 								Config: map[string]any{
 									"limit": 10,
 								},
@@ -82,8 +87,10 @@ func TestParse(t *testing.T) { //nolint:funlen
 						},
 						Modules: []*config.ModuleGlob{
 							{
-								ID:        "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
-								SlashPath: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/*.jsonnet",
+								Path: &domain.Path{
+									Raw: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+									Abs: "/home/foo/.local/share/lintnet/modules/github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/*.jsonnet",
+								},
 								Archive: &config.ModuleArchive{
 									Type:      "github_archive",
 									Host:      "github.com",
@@ -97,8 +104,10 @@ func TestParse(t *testing.T) { //nolint:funlen
 								},
 							},
 							{
-								ID:        "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
-								SlashPath: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/bar/*.jsonnet",
+								Path: &domain.Path{
+									Raw: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+									Abs: "/home/foo/.local/share/lintnet/modules/github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/bar/*.jsonnet",
+								},
 								Archive: &config.ModuleArchive{
 									Type:      "github_archive",
 									Host:      "github.com",
@@ -138,7 +147,7 @@ func TestParse(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			cfg, err := parser.Parse(d.rawCfg)
+			cfg, err := parser.Parse(d.rawCfg, "/home/foo/workspace")
 			if err != nil {
 				if d.isErr {
 					return
@@ -167,8 +176,10 @@ func TestParseModuleLine(t *testing.T) {
 			name: "module",
 			line: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/bar.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 			mod: &config.ModuleGlob{
-				ID:        "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/bar.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
-				SlashPath: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/bar.jsonnet",
+				Path: &domain.Path{
+					Raw: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/bar.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+					Abs: "/home/foo/.local/share/lintnet/modules/github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/bar.jsonnet",
+				},
 				Archive: &config.ModuleArchive{
 					Type:      "github_archive",
 					Host:      "github.com",

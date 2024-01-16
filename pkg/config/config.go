@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 )
 
@@ -15,7 +17,7 @@ type RawConfig struct {
 	ShownErrorLevel string       `json:"shown_error_level,omitempty"`
 	IgnoredDirs     []string     `json:"ignored_dirs,omitempty"`
 	Targets         []*RawTarget `json:"targets"`
-	Outputs         []*Output    `json:"outputs,omitempty"`
+	Outputs         []*RawOutput `json:"outputs,omitempty"`
 }
 
 func (rc *RawConfig) GetTarget(targetID string) (*RawTarget, error) {
@@ -36,12 +38,26 @@ type Config struct {
 	IgnoredPatterns []string                  `json:"ignore_patterns,omitempty"`
 }
 
+type RawOutput struct {
+	ID string `json:"id"`
+	// text/template, html/template, jsonnet
+	Renderer string `json:"renderer"`
+	// path to a template file
+	Template *RawModule `json:"template"`
+	// parameter
+	Config map[string]any `json:"config"`
+	// Transform parameter
+	Transform       string  `json:"transform"`
+	TemplateModule  *Module `json:"-"`
+	TransformModule *Module `json:"-"`
+}
+
 type Output struct {
 	ID string `json:"id"`
 	// text/template, html/template, jsonnet
 	Renderer string `json:"renderer"`
 	// path to a template file
-	Template string `json:"template"`
+	Template *Module `json:"template"`
 	// parameter
 	Config map[string]any `json:"config"`
 	// Transform parameter
@@ -59,10 +75,10 @@ type Target struct {
 }
 
 type RawTarget struct {
-	ID        string       `json:"id,omitempty"`
-	LintGlobs []*LintGlob  `json:"lint_files"`
-	Modules   []*RawModule `json:"modules"`
-	DataFiles []string     `json:"data_files"`
+	ID        string           `json:"id,omitempty"`
+	LintGlobs []*LintGlob      `json:"lint_files"`
+	Modules   []*RawModuleGlob `json:"modules"`
+	DataFiles []string         `json:"data_files"`
 }
 
 type LintGlob struct {
@@ -71,7 +87,7 @@ type LintGlob struct {
 }
 
 func (lg *LintGlob) UnmarshalJSON(b []byte) error {
-	rm := &RawModule{}
+	rm := &RawModuleGlob{}
 	if err := json.Unmarshal(b, rm); err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -80,17 +96,36 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (lg *LintGlob) ToModule() *ModuleGlob {
+func (lg *LintGlob) ToModule(cfgDir string) *ModuleGlob {
 	p := strings.TrimPrefix(lg.Glob, "!")
+	a := filepath.FromSlash(p)
+	if !filepath.IsAbs(a) {
+		a = filepath.Join(cfgDir, a)
+	}
 	return &ModuleGlob{
-		ID:        p,
-		SlashPath: p,
-		Config:    lg.Config,
-		Excluded:  p != lg.Glob,
+		Path: &domain.Path{
+			Raw: p,
+			Abs: a,
+		},
+		Config:   lg.Config,
+		Excluded: p != lg.Glob,
 	}
 }
 
 type RawModule struct {
+	Path   string         `json:"path"`
+	Config map[string]any `json:"config"`
+}
+
+func (rm *RawModule) ToModule() *Module {
+	return &Module{
+		ID:        rm.Path,
+		SlashPath: rm.Path,
+		Config:    rm.Config,
+	}
+}
+
+type RawModuleGlob struct {
 	Glob   string         `json:"path"`
 	Config map[string]any `json:"config"`
 }
@@ -101,7 +136,7 @@ type LintFile struct {
 	Config map[string]any `json:"config,omitempty"`
 }
 
-func (rm *RawModule) UnmarshalJSON(b []byte) error {
+func (rm *RawModuleGlob) UnmarshalJSON(b []byte) error {
 	var a any
 	if err := json.Unmarshal(b, &a); err != nil {
 		return fmt.Errorf("unmarshal as JSON: %w", err)

@@ -25,6 +25,9 @@ func NewFileFinder(fs afero.Fs) *FileFinder {
 	}
 }
 
+// Find finds lint files and data files.
+// If targets is empty, this method returns nil.
+// rootDir and cfgDir must be absolute paths.
 func (f *FileFinder) Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*Target, error) {
 	if len(cfg.Targets) == 0 {
 		return nil, nil
@@ -81,7 +84,7 @@ func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootD
 
 func (f *FileFinder) findFilesFromModule(m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop
 	if m.Excluded {
-		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
+		pattern := m.Path.Abs
 		for file := range matchFiles {
 			matched, err := doublestar.Match(pattern, file)
 			if err != nil {
@@ -94,7 +97,7 @@ func (f *FileFinder) findFilesFromModule(m *config.ModuleGlob, rootDir string, m
 		return nil
 	}
 	matches := map[string]struct{}{}
-	if err := doublestar.GlobWalk(afero.NewIOFS(f.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), func(path string, d fs.DirEntry) error {
+	if err := doublestar.GlobWalk(afero.NewIOFS(f.fs), m.Path.Abs, func(path string, d fs.DirEntry) error {
 		if err := ignorePath(path, ignorePatterns); err != nil {
 			return err
 		}

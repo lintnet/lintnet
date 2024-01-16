@@ -3,21 +3,44 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 )
 
-func Parse(rc *config.RawConfig) (*config.Config, error) { //nolint:cyclop,funlen
+func Parse(rc *config.RawConfig, cfgDir string) (*config.Config, error) { //nolint:cyclop,funlen
 	cfg := &config.Config{
 		ErrorLevel:      errlevel.Error,
 		ShownErrorLevel: errlevel.Info,
 		Targets:         make([]*config.Target, len(rc.Targets)),
-		Outputs:         rc.Outputs,
 		IgnoredPatterns: getIgnoredPatterns(rc.IgnoredDirs),
 	}
+
+	outputs := make([]*config.Output, len(rc.Outputs))
+	for i, output := range rc.Outputs {
+		tpl := filepath.FromSlash(output.Template.Path)
+		if !filepath.IsAbs(tpl) {
+			tpl = filepath.Join(cfgDir, tpl)
+		}
+		if strings.HasPrefix(output.Template.Path, "github_archive/github.com/") {
+		}
+		outputs[i] = &config.Output{
+			ID:       output.ID,
+			Renderer: output.Renderer,
+			Template: &config.Module{
+				ID:        output.Template.Path,
+				SlashPath: tpl,
+				Config:    output.Template.Config,
+			},
+			Config:    output.Config,
+			Transform: output.Transform,
+		}
+	}
+	cfg.Outputs = outputs
 
 	if cfg.IgnoredPatterns == nil {
 		cfg.IgnoredPatterns = []string{
@@ -48,7 +71,7 @@ func Parse(rc *config.RawConfig) (*config.Config, error) { //nolint:cyclop,funle
 
 	moduleArchives := map[string]*config.ModuleArchive{}
 	for i, rt := range rc.Targets {
-		target, err := ParseTarget(rt)
+		target, err := parseTarget(rt, cfgDir)
 		if err != nil {
 			return nil, err
 		}
@@ -99,9 +122,9 @@ func ParseImport(line string) (*config.Module, error) {
 		return nil, err
 	}
 	return &config.Module{
-		ID:        mg.ID,
+		ID:        mg.Path.Raw,
 		Archive:   mg.Archive,
-		SlashPath: mg.SlashPath,
+		SlashPath: mg.Path.Abs,
 	}, nil
 }
 
@@ -133,8 +156,10 @@ func ParseModuleLine(line string) (*config.ModuleGlob, error) {
 		return nil, err
 	}
 	return &config.ModuleGlob{
-		ID:        line,
-		SlashPath: strings.Join(append(elems[:4], ref, path), "/"),
+		Path: &domain.Path{
+			Raw: line,
+			Abs: strings.Join(append(elems[:4], ref, path), "/"),
+		},
 		Archive: &config.ModuleArchive{
 			Type:      "github_archive",
 			Host:      "github.com",
@@ -156,7 +181,7 @@ func validateRef(ref string) error {
 	return errors.New("ref must be full commit hash")
 }
 
-func ParseModule(rm *config.RawModule) (*config.ModuleGlob, error) {
+func ParseModule(rm *config.RawModuleGlob) (*config.ModuleGlob, error) {
 	m, err := ParseModuleLine(rm.Glob)
 	if err != nil {
 		return nil, fmt.Errorf("parse a module path: %w", err)
@@ -165,10 +190,10 @@ func ParseModule(rm *config.RawModule) (*config.ModuleGlob, error) {
 	return m, nil
 }
 
-func ParseTarget(rt *config.RawTarget) (*config.Target, error) {
+func parseTarget(rt *config.RawTarget, cfgDir string) (*config.Target, error) {
 	lintFiles := make([]*config.ModuleGlob, len(rt.LintGlobs))
 	for i, lintGlob := range rt.LintGlobs {
-		lintFiles[i] = lintGlob.ToModule()
+		lintFiles[i] = lintGlob.ToModule(cfgDir)
 	}
 	target := &config.Target{
 		ID:        rt.ID,
