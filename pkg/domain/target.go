@@ -1,13 +1,5 @@
 package domain
 
-import "github.com/lintnet/lintnet/pkg/config"
-
-type Target struct {
-	ID        string             `json:"id,omitempty"`
-	LintFiles []*config.LintFile `json:"lint_files,omitempty"`
-	DataFiles Paths              `json:"data_files,omitempty"`
-}
-
 type Paths []*Path
 
 func (ps Paths) Raw() []string {

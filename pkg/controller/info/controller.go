@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/lintnet/lintnet/pkg/config"
-	"github.com/lintnet/lintnet/pkg/domain"
+	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -16,7 +16,7 @@ type Controller struct {
 }
 
 type FileFinder interface {
-	Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*domain.Target, error)
+	Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*filefind.Target, error)
 }
 
 type ParamController struct {

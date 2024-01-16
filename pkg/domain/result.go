@@ -3,8 +3,8 @@ package domain
 import (
 	"fmt"
 
+	"github.com/google/go-jsonnet/ast"
 	"github.com/lintnet/lintnet/pkg/errlevel"
-	"github.com/lintnet/lintnet/pkg/jsonnet"
 )
 
 type (
@@ -93,7 +93,7 @@ func (e *Error) Failed(errLevel errlevel.Level) (bool, error) {
 }
 
 type Node struct {
-	Node    jsonnet.Node
+	Node    ast.Node
 	Config  map[string]any
 	Key     string
 	Combine bool

@@ -10,8 +10,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/lintnet/lintnet/pkg/config"
+	"github.com/lintnet/lintnet/pkg/config/parser"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefilter"
+	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -47,7 +49,12 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 		rawCfg.Targets = []*config.RawTarget{target}
 	}
 
-	cfg, err := rawCfg.Parse()
+	cfgDir := filepath.Dir(rawCfg.FilePath)
+	if !filepath.IsAbs(cfgDir) {
+		cfgDir = filepath.Join(param.PWD, cfgDir)
+	}
+
+	cfg, err := parser.Parse(rawCfg, cfgDir)
 	if err != nil {
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}
@@ -56,8 +63,6 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 	if err != nil {
 		return fmt.Errorf("parse the template of test result: %w", err)
 	}
-
-	cfgDir := filepath.Dir(rawCfg.FilePath)
 
 	modRootDir := filepath.Join(param.RootDir, "modules")
 
@@ -167,7 +172,7 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	return results
 }
 
-func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*domain.Target) []*TestPair {
+func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*filefind.Target) []*TestPair {
 	pairs := []*TestPair{}
 	for _, target := range targets {
 		for _, lintFile := range target.LintFiles {

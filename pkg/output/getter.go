@@ -84,7 +84,7 @@ func setTemplate(output *config.Output, param *ParamGet, cfgDir string) error {
 	return nil
 }
 
-func (g *Getter) Get(outputs []*config.Output, param *ParamGet, cfgDir string) (Outputter, error) {
+func (g *Getter) Get(outputs []*config.Output, param *ParamGet, cfgDir string) (Outputter, error) { //nolint:cyclop
 	if param.Output == "" {
 		return &jsonOutputter{
 			stdout: g.stdout,
@@ -95,7 +95,7 @@ func (g *Getter) Get(outputs []*config.Output, param *ParamGet, cfgDir string) (
 		return nil, err
 	}
 
-	if output.Template != "" {
+	if output.Template != nil {
 		if err := setTemplate(output, param, cfgDir); err != nil {
 			return nil, err
 		}

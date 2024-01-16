@@ -5,6 +5,7 @@ import (
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/domain"
+	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -38,7 +39,7 @@ type LintFileEvaluator interface { //nolint:revive
 	Evaluates(tla *domain.TopLevelArgment, lintFiles []*domain.Node) []*domain.Result
 }
 
-func (l *Linter) Lint(targets []*domain.Target) ([]*domain.Result, error) {
+func (l *Linter) Lint(targets []*filefind.Target) ([]*domain.Result, error) {
 	results := make([]*domain.Result, 0, len(targets))
 	for _, target := range targets {
 		rs, err := l.lintTarget(target)
@@ -53,7 +54,7 @@ func (l *Linter) Lint(targets []*domain.Target) ([]*domain.Result, error) {
 	return results, nil
 }
 
-func (l *Linter) lintTarget(target *domain.Target) ([]*domain.Result, error) {
+func (l *Linter) lintTarget(target *filefind.Target) ([]*domain.Result, error) {
 	lintFiles, err := l.lintFileParser.Parses(target.LintFiles)
 	if err != nil {
 		return nil, fmt.Errorf("parse lint files: %w", err)
@@ -81,7 +82,7 @@ func (l *Linter) lintTarget(target *domain.Target) ([]*domain.Result, error) {
 	return results, nil
 }
 
-func (l *Linter) lintCombineFiles(target *domain.Target, combineFiles []*domain.Node) ([]*domain.Result, error) {
+func (l *Linter) lintCombineFiles(target *filefind.Target, combineFiles []*domain.Node) ([]*domain.Result, error) {
 	rs, err := l.lint(&domain.DataSet{
 		Files: target.DataFiles,
 	}, combineFiles)
@@ -98,7 +99,7 @@ func (l *Linter) lintCombineFiles(target *domain.Target, combineFiles []*domain.
 	return rs, nil
 }
 
-func (l *Linter) lintNonCombineFiles(target *domain.Target, nonCombineFiles []*domain.Node) []*domain.Result {
+func (l *Linter) lintNonCombineFiles(target *filefind.Target, nonCombineFiles []*domain.Node) []*domain.Result {
 	results := make([]*domain.Result, 0, len(target.DataFiles))
 	for _, dataFile := range target.DataFiles {
 		results = append(results, l.lintNonCombineFile(nonCombineFiles, dataFile)...)

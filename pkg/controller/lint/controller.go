@@ -31,11 +31,11 @@ type Controller struct {
 }
 
 type Linter interface {
-	Lint(targets []*domain.Target) ([]*domain.Result, error)
+	Lint(targets []*filefind.Target) ([]*domain.Result, error)
 }
 
 type FileFinder interface {
-	Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*domain.Target, error)
+	Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*filefind.Target, error)
 }
 
 type ParamController struct {

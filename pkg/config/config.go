@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 
+	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 )
 
@@ -15,21 +17,7 @@ type RawConfig struct {
 	ShownErrorLevel string       `json:"shown_error_level,omitempty"`
 	IgnoredDirs     []string     `json:"ignored_dirs,omitempty"`
 	Targets         []*RawTarget `json:"targets"`
-	Outputs         []*Output    `json:"outputs,omitempty"`
-}
-
-func getIgnoredPatterns(ignoredDirs []string) []string {
-	if ignoredDirs == nil {
-		ignoredDirs = []string{
-			".git",
-			"node_modules",
-		}
-	}
-	ignoredPatterns := make([]string, len(ignoredDirs))
-	for i, d := range ignoredDirs {
-		ignoredPatterns[i] = fmt.Sprintf("**/%s/**", d)
-	}
-	return ignoredPatterns
+	Outputs         []*RawOutput `json:"outputs,omitempty"`
 }
 
 func (rc *RawConfig) GetTarget(targetID string) (*RawTarget, error) {
@@ -41,75 +29,6 @@ func (rc *RawConfig) GetTarget(targetID string) (*RawTarget, error) {
 	return nil, errors.New("target isn't found")
 }
 
-func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
-	cfg := &Config{
-		ErrorLevel:      errlevel.Error,
-		ShownErrorLevel: errlevel.Info,
-		Targets:         make([]*Target, len(rc.Targets)),
-		Outputs:         rc.Outputs,
-		IgnoredPatterns: getIgnoredPatterns(rc.IgnoredDirs),
-	}
-
-	if cfg.IgnoredPatterns == nil {
-		cfg.IgnoredPatterns = []string{
-			"node_modules",
-			".git",
-		}
-	}
-
-	if rc.ErrorLevel != "" {
-		level, err := errlevel.New(rc.ErrorLevel)
-		if err != nil {
-			return nil, fmt.Errorf("parse the error level: %w", err)
-		}
-		cfg.ErrorLevel = level
-	}
-
-	if rc.ShownErrorLevel != "" {
-		level, err := errlevel.New(rc.ShownErrorLevel)
-		if err != nil {
-			return nil, fmt.Errorf("parse the error level: %w", err)
-		}
-		cfg.ShownErrorLevel = level
-	}
-
-	if cfg.ShownErrorLevel > cfg.ErrorLevel {
-		cfg.ShownErrorLevel = cfg.ErrorLevel
-	}
-
-	moduleArchives := map[string]*ModuleArchive{}
-	for i, rt := range rc.Targets {
-		target, err := rt.Parse()
-		if err != nil {
-			return nil, err
-		}
-		cfg.Targets[i] = target
-		for k, ma := range target.ModuleArchives {
-			moduleArchives[k] = ma
-		}
-	}
-	for _, output := range rc.Outputs {
-		if strings.HasPrefix(output.Template, "github_archive/github.com/") {
-			m, err := ParseImport(output.Template)
-			if err != nil {
-				return nil, fmt.Errorf("parse a module path: %w", err)
-			}
-			output.TemplateModule = m
-			moduleArchives[m.Archive.String()] = m.Archive
-		}
-		if strings.HasPrefix(output.Transform, "github_archive/github.com/") {
-			m, err := ParseImport(output.Transform)
-			if err != nil {
-				return nil, fmt.Errorf("parse a module path: %w", err)
-			}
-			output.TransformModule = m
-			moduleArchives[m.Archive.String()] = m.Archive
-		}
-	}
-	cfg.ModuleArchives = moduleArchives
-	return cfg, nil
-}
-
 type Config struct {
 	ErrorLevel      errlevel.Level            `json:"error_level,omitempty"`
 	ShownErrorLevel errlevel.Level            `json:"shown_error_level,omitempty"`
@@ -119,12 +38,26 @@ type Config struct {
 	IgnoredPatterns []string                  `json:"ignore_patterns,omitempty"`
 }
 
+type RawOutput struct {
+	ID string `json:"id"`
+	// text/template, html/template, jsonnet
+	Renderer string `json:"renderer"`
+	// path to a template file
+	Template *RawModule `json:"template"`
+	// parameter
+	Config map[string]any `json:"config"`
+	// Transform parameter
+	Transform       string  `json:"transform"`
+	TemplateModule  *Module `json:"-"`
+	TransformModule *Module `json:"-"`
+}
+
 type Output struct {
 	ID string `json:"id"`
 	// text/template, html/template, jsonnet
 	Renderer string `json:"renderer"`
 	// path to a template file
-	Template string `json:"template"`
+	Template *Module `json:"template"`
 	// parameter
 	Config map[string]any `json:"config"`
 	// Transform parameter
@@ -142,10 +75,10 @@ type Target struct {
 }
 
 type RawTarget struct {
-	ID        string       `json:"id,omitempty"`
-	LintGlobs []*LintGlob  `json:"lint_files"`
-	Modules   []*RawModule `json:"modules"`
-	DataFiles []string     `json:"data_files"`
+	ID        string           `json:"id,omitempty"`
+	LintGlobs []*LintGlob      `json:"lint_files"`
+	Modules   []*RawModuleGlob `json:"modules"`
+	DataFiles []string         `json:"data_files"`
 }
 
 type LintGlob struct {
@@ -154,7 +87,7 @@ type LintGlob struct {
 }
 
 func (lg *LintGlob) UnmarshalJSON(b []byte) error {
-	rm := &RawModule{}
+	rm := &RawModuleGlob{}
 	if err := json.Unmarshal(b, rm); err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -163,52 +96,38 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (lg *LintGlob) ToModule() *ModuleGlob {
+func (lg *LintGlob) ToModule(cfgDir string) *ModuleGlob {
 	p := strings.TrimPrefix(lg.Glob, "!")
+	a := filepath.FromSlash(p)
+	if !filepath.IsAbs(a) {
+		a = filepath.Join(cfgDir, a)
+	}
 	return &ModuleGlob{
-		ID:        p,
-		SlashPath: p,
-		Config:    lg.Config,
-		Excluded:  p != lg.Glob,
+		Path: &domain.Path{
+			Raw: p,
+			Abs: a,
+		},
+		Config:   lg.Config,
+		Excluded: p != lg.Glob,
 	}
-}
-
-func (rt *RawTarget) Parse() (*Target, error) {
-	lintFiles := make([]*ModuleGlob, len(rt.LintGlobs))
-	for i, lintGlob := range rt.LintGlobs {
-		lintFiles[i] = lintGlob.ToModule()
-	}
-	target := &Target{
-		ID:        rt.ID,
-		LintFiles: lintFiles,
-		Modules:   make([]*ModuleGlob, len(rt.Modules)),
-		DataFiles: rt.DataFiles,
-	}
-	archives := make(map[string]*ModuleArchive, len(rt.Modules))
-	for i, m := range rt.Modules {
-		a, err := m.Parse()
-		if err != nil {
-			return nil, err
-		}
-		target.Modules[i] = a
-		archives[a.Archive.String()] = a.Archive
-	}
-	target.ModuleArchives = archives
-	return target, nil
 }
 
 type RawModule struct {
-	Glob   string         `json:"path"`
+	Path   string         `json:"path"`
 	Config map[string]any `json:"config"`
 }
 
-func (rm *RawModule) Parse() (*ModuleGlob, error) {
-	m, err := ParseModuleLine(rm.Glob)
-	if err != nil {
-		return nil, fmt.Errorf("parse a module path: %w", err)
+func (rm *RawModule) ToModule() *Module {
+	return &Module{
+		ID:        rm.Path,
+		SlashPath: rm.Path,
+		Config:    rm.Config,
 	}
-	m.Config = rm.Config
-	return m, nil
+}
+
+type RawModuleGlob struct {
+	Glob   string         `json:"path"`
+	Config map[string]any `json:"config"`
 }
 
 type LintFile struct {
@@ -217,7 +136,7 @@ type LintFile struct {
 	Config map[string]any `json:"config,omitempty"`
 }
 
-func (rm *RawModule) UnmarshalJSON(b []byte) error {
+func (rm *RawModuleGlob) UnmarshalJSON(b []byte) error {
 	var a any
 	if err := json.Unmarshal(b, &a); err != nil {
 		return fmt.Errorf("unmarshal as JSON: %w", err)
