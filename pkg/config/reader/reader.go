@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	gojsonnet "github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/spf13/afero"
@@ -12,10 +13,10 @@ import (
 
 type Reader struct {
 	fs       afero.Fs
-	importer *jsonnet.ModuleImporter
+	importer gojsonnet.Importer
 }
 
-func New(fs afero.Fs, importer *jsonnet.ModuleImporter) *Reader {
+func New(fs afero.Fs, importer gojsonnet.Importer) *Reader {
 	return &Reader{
 		fs:       fs,
 		importer: importer,

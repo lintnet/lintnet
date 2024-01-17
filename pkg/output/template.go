@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	gojsonnet "github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/render"
@@ -18,10 +19,10 @@ type templateOutputter struct {
 	output   *config.Output
 	template render.Template
 	node     jsonnet.Node
-	importer *jsonnet.ModuleImporter
+	importer gojsonnet.Importer
 }
 
-func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output, importer *jsonnet.ModuleImporter) (*templateOutputter, error) {
+func newTemplateOutputter(stdout io.Writer, fs afero.Fs, renderer render.TemplateRenderer, output *config.Output, importer gojsonnet.Importer) (*templateOutputter, error) {
 	if output.Template == "" {
 		return nil, errors.New("template is required")
 	}

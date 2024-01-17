@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	gojsonnet "github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/spf13/afero"
@@ -15,11 +16,11 @@ type jsonnetOutputter struct {
 	output    *config.Output
 	transform jsonnet.Node
 	node      jsonnet.Node
-	importer  *jsonnet.ModuleImporter
+	importer  gojsonnet.Importer
 	config    map[string]any
 }
 
-func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, importer *jsonnet.ModuleImporter) (*jsonnetOutputter, error) {
+func newJsonnetOutputter(fs afero.Fs, stdout io.Writer, output *config.Output, importer gojsonnet.Importer) (*jsonnetOutputter, error) {
 	node, err := jsonnet.ReadToNode(fs, output.Template)
 	if err != nil {
 		return nil, fmt.Errorf("read a template as Jsonnet: %w", err)
