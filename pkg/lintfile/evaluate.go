@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 
+	gojsonnet "github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 )
 
 type Evaluator struct {
-	importer *jsonnet.ModuleImporter
+	importer gojsonnet.Importer
 }
 
-func NewEvaluator(importer *jsonnet.ModuleImporter) *Evaluator {
+func NewEvaluator(importer gojsonnet.Importer) *Evaluator {
 	return &Evaluator{
 		importer: importer,
 	}

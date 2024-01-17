@@ -1,14 +1,15 @@
 package lint
 
 import (
+	"context"
 	"io"
 
+	gojsonnet "github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/config/reader"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/encoding"
 	"github.com/lintnet/lintnet/pkg/filefind"
-	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/lint"
 	"github.com/lintnet/lintnet/pkg/lintfile"
 	"github.com/lintnet/lintnet/pkg/module"
@@ -20,14 +21,26 @@ import (
 type Controller struct {
 	fs              afero.Fs
 	stdout          io.Writer
-	moduleInstaller *module.Installer
-	importer        *jsonnet.ModuleImporter
+	moduleInstaller ModuleInstaller
+	importer        gojsonnet.Importer
 	param           *ParamController
 	dataFileParser  lint.DataFileParser
 	linter          Linter
 	fileFinder      FileFinder
-	configReader    *reader.Reader
-	outputGetter    *output.Getter
+	configReader    ConfigReader
+	outputGetter    OutputGetter
+}
+
+type OutputGetter interface {
+	Get(outputs []*config.Output, param *output.ParamGet, cfgDir string) (output.Outputter, error)
+}
+
+type ConfigReader interface {
+	Read(p string, cfg *config.RawConfig) error
+}
+
+type ModuleInstaller interface {
+	Installs(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, modules map[string]*config.ModuleArchive) error
 }
 
 type Linter interface {
@@ -42,7 +55,7 @@ type ParamController struct {
 	Version string
 }
 
-func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, moduleInstaller *module.Installer, importer *jsonnet.ModuleImporter) *Controller {
+func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, moduleInstaller ModuleInstaller, importer gojsonnet.Importer) *Controller {
 	dp := encoding.NewDataFileParser(fs)
 	return &Controller{
 		param:           param,

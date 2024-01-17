@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	gojsonnet "github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
-	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/render"
 	"github.com/spf13/afero"
 )
@@ -16,10 +16,10 @@ import (
 type Getter struct {
 	stdout   io.Writer
 	fs       afero.Fs
-	importer *jsonnet.ModuleImporter
+	importer gojsonnet.Importer
 }
 
-func NewGetter(stdout io.Writer, fs afero.Fs, importer *jsonnet.ModuleImporter) *Getter {
+func NewGetter(stdout io.Writer, fs afero.Fs, importer gojsonnet.Importer) *Getter {
 	return &Getter{
 		stdout:   stdout,
 		fs:       fs,
