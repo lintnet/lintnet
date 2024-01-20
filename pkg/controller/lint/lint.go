@@ -112,7 +112,8 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		}).Debug("filtered targets by given files")
 	}
 
-	if err := filefilter.FilterTargetsByDataRootDir(logE, filterParam, targets); err != nil {
+	targets, err = filefilter.FilterTargetsByDataRootDir(logE, filterParam, targets)
+	if err != nil {
 		return fmt.Errorf("filter targets by data root directory: %w", err)
 	}
 
