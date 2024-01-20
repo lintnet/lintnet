@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/controller/lint"
@@ -97,6 +98,7 @@ func (lc *lintCommand) action(c *cli.Context) error {
 	}, modInstaller)
 	param := &lint.ParamController{
 		Version: lc.version,
+		Env:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 	}
 	ctrl := lint.NewController(param, fs, os.Stdout, modInstaller, importer)
 	pwd, err := os.Getwd()

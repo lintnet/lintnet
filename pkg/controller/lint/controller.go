@@ -43,6 +43,12 @@ type ModuleInstaller interface {
 	Installs(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, modules map[string]*config.ModuleArchive) error
 }
 
+type MockModuleInstaller struct{}
+
+func (m *MockModuleInstaller) Installs(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, modules map[string]*config.ModuleArchive) error { //nolint:revive
+	return nil
+}
+
 type Linter interface {
 	Lint(targets []*filefind.Target) ([]*domain.Result, error)
 }
@@ -53,6 +59,7 @@ type FileFinder interface {
 
 type ParamController struct {
 	Version string
+	Env     string
 }
 
 func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, moduleInstaller ModuleInstaller, importer gojsonnet.Importer) *Controller {
