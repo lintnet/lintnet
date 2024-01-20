@@ -4,12 +4,12 @@ import (
 	_ "embed"
 	"io"
 
+	"github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/config/reader"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/encoding"
 	"github.com/lintnet/lintnet/pkg/filefind"
-	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/lintnet/lintnet/pkg/lint"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -77,7 +77,7 @@ func (tr *TestResult) Any() any {
 type Controller struct {
 	fs             afero.Fs
 	stdout         io.Writer
-	importer       *jsonnet.ModuleImporter
+	importer       jsonnet.Importer
 	param          *ParamController
 	dataFileParser lint.DataFileParser
 	fileFinder     FileFinder
@@ -92,7 +92,7 @@ type ParamController struct {
 	Version string
 }
 
-func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, importer *jsonnet.ModuleImporter) *Controller {
+func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, importer jsonnet.Importer) *Controller {
 	dp := encoding.NewDataFileParser(fs)
 	return &Controller{
 		param:          param,
