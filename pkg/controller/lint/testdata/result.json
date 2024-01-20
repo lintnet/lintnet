@@ -1,0 +1,11 @@
+{
+    "lintnet_version": "v0.3.0",
+    "env": "darwin/arm64",
+    "errors": [
+        {
+            "name": "description is required",
+            "lint_file": "hello.jsonnet",
+            "data_file": "foo.json"
+        }
+    ]
+}
