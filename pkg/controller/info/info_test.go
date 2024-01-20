@@ -12,7 +12,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/testutil"
 )
 
-func TestController_Info(t *testing.T) {
+func TestController_Info(t *testing.T) { //nolint:funlen,gocognit,cyclop
 	t.Parallel()
 	data := []struct {
 		name   string
