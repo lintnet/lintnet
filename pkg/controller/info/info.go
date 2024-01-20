@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -86,7 +85,7 @@ func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:
 	info := &Info{
 		Version:     c.param.Version,
 		Commit:      c.param.Commit,
-		Runtime:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+		Runtime:     c.param.Env,
 		ConfigFile:  param.ConfigFilePath,
 		RootDir:     param.RootDir,
 		DataRootDir: param.DataRootDir,
