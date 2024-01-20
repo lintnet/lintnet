@@ -69,7 +69,8 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 
 	filterParam := param.FilterParam()
 
-	if err := filefilter.FilterTargetsByDataRootDir(logE, filterParam, targets); err != nil {
+	targets, err = filefilter.FilterTargetsByDataRootDir(logE, filterParam, targets)
+	if err != nil {
 		return fmt.Errorf("filter targets by data root directory: %w", err)
 	}
 

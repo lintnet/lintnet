@@ -84,16 +84,18 @@ func filterTarget(target *filefind.Target, filePaths []string) *filefind.Target 
 	return newTarget
 }
 
-func FilterTargetsByDataRootDir(logE *logrus.Entry, param *Param, targets []*filefind.Target) error {
+func FilterTargetsByDataRootDir(logE *logrus.Entry, param *Param, targets []*filefind.Target) ([]*filefind.Target, error) {
+	arr := make([]*filefind.Target, 0, len(targets))
 	for _, target := range targets {
-		if err := filterTargetByDataRootDir(logE, param, target); err != nil {
-			return err
+		filterTargetByDataRootDir(logE, param, target)
+		if len(target.DataFiles) != 0 {
+			arr = append(arr, target)
 		}
 	}
-	return nil
+	return arr, nil
 }
 
-func filterTargetByDataRootDir(logE *logrus.Entry, param *Param, target *filefind.Target) error {
+func filterTargetByDataRootDir(logE *logrus.Entry, param *Param, target *filefind.Target) {
 	arr := make([]*domain.Path, 0, len(target.DataFiles))
 	for _, dataFile := range target.DataFiles {
 		if filterFileByDataRootDir(logE, param, dataFile.Abs) {
@@ -103,7 +105,6 @@ func filterTargetByDataRootDir(logE *logrus.Entry, param *Param, target *filefin
 		}
 	}
 	target.DataFiles = arr
-	return nil
 }
 
 func filterFileByDataRootDir(logE *logrus.Entry, param *Param, dataFile string) bool {
