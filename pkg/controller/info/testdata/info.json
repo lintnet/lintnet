@@ -1,0 +1,9 @@
+{
+  "vesrion": "0.3.0-4",
+  "commit": "a17e309c9d93daa83b546df47ed49c5a56b5250b",
+  "runtime": "darwin/arm64",
+  "config_file": "lintnet.jsonnet",
+  "root_dir": "/home/foo/.local/share/lintnet",
+  "data_root_dir": "/home/foo/workspace",
+  "env": {}
+}
