@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/controller/info"
@@ -75,6 +76,7 @@ func (lc *infoCommand) action(c *cli.Context) error {
 	param := &info.ParamController{
 		Version: lc.version,
 		Commit:  lc.commit,
+		Env:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 	}
 	ctrl := info.NewController(param, fs, os.Stdout)
 	pwd, err := os.Getwd()
