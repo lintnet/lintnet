@@ -37,6 +37,7 @@ func TestController_Lint(t *testing.T) { //nolint:funlen,gocognit,cyclop
 			},
 			paramC: &lint.ParamController{
 				Version: "v0.3.0",
+				Env:     "darwin/arm64",
 			},
 			files: map[string]string{
 				"lintnet.jsonnet":                   "testdata/lintnet.jsonnet",

@@ -59,6 +59,7 @@ type FileFinder interface {
 
 type ParamController struct {
 	Version string
+	Env     string
 }
 
 func NewController(param *ParamController, fs afero.Fs, stdout io.Writer, moduleInstaller ModuleInstaller, importer gojsonnet.Importer) *Controller {
