@@ -168,6 +168,7 @@ type RawTarget struct {
 }
 
 type LintGlob struct {
+	// Glob is either an absolute path or a relative path from configuration file path
 	Glob   string         `json:"path"`
 	Config map[string]any `json:"config"`
 }
@@ -185,7 +186,6 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 func (lg *LintGlob) ToModule() *ModuleGlob {
 	p := strings.TrimPrefix(lg.Glob, "!")
 	return &ModuleGlob{
-		ID:        p,
 		SlashPath: p,
 		Config:    lg.Config,
 		Excluded:  p != lg.Glob,
