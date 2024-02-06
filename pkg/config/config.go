@@ -41,36 +41,55 @@ func (rc *RawConfig) GetTarget(targetID string) (*RawTarget, error) {
 	return nil, errors.New("target isn't found")
 }
 
-func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop,funlen
-	cfg := &Config{
-		ErrorLevel:      errlevel.Error,
-		ShownErrorLevel: errlevel.Info,
-		Targets:         make([]*Target, len(rc.Targets)),
-		Outputs:         rc.Outputs,
-		IgnoredPatterns: getIgnoredPatterns(rc.IgnoredDirs),
+func (c *Config) setErrorLevel(errLevel string) error {
+	if errLevel == "" {
+		c.ErrorLevel = errlevel.Error
+		return nil
 	}
+	level, err := errlevel.New(errLevel)
+	if err != nil {
+		return fmt.Errorf("parse the error level: %w", err)
+	}
+	c.ErrorLevel = level
+	return nil
+}
 
-	if cfg.IgnoredPatterns == nil {
-		cfg.IgnoredPatterns = []string{
+func (c *Config) setShownErrorLevel(errLevel string) error {
+	if errLevel == "" {
+		c.ShownErrorLevel = errlevel.Info
+		return nil
+	}
+	level, err := errlevel.New(errLevel)
+	if err != nil {
+		return fmt.Errorf("parse the error level: %w", err)
+	}
+	c.ShownErrorLevel = level
+	return nil
+}
+
+func (c *Config) setIgnoredPatterns(dirs []string) {
+	c.IgnoredPatterns = getIgnoredPatterns(dirs)
+	if c.IgnoredPatterns == nil {
+		c.IgnoredPatterns = []string{
 			"node_modules",
 			".git",
 		}
 	}
+}
 
-	if rc.ErrorLevel != "" {
-		level, err := errlevel.New(rc.ErrorLevel)
-		if err != nil {
-			return nil, fmt.Errorf("parse the error level: %w", err)
-		}
-		cfg.ErrorLevel = level
+func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
+	cfg := &Config{
+		Targets: make([]*Target, len(rc.Targets)),
+		Outputs: rc.Outputs,
+	}
+	cfg.setIgnoredPatterns(rc.IgnoredDirs)
+
+	if err := cfg.setErrorLevel(rc.ErrorLevel); err != nil {
+		return nil, err
 	}
 
-	if rc.ShownErrorLevel != "" {
-		level, err := errlevel.New(rc.ShownErrorLevel)
-		if err != nil {
-			return nil, fmt.Errorf("parse the error level: %w", err)
-		}
-		cfg.ShownErrorLevel = level
+	if err := cfg.setShownErrorLevel(rc.ShownErrorLevel); err != nil {
+		return nil, err
 	}
 
 	if cfg.ShownErrorLevel > cfg.ErrorLevel {
