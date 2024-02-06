@@ -35,7 +35,6 @@ func TestFinder_Find(t *testing.T) { //nolint:funlen
 					{
 						LintFiles: []*config.ModuleGlob{
 							{
-								ID:        "*.jsonnet",
 								SlashPath: "*.jsonnet",
 							},
 						},

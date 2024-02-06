@@ -9,14 +9,12 @@ import (
 )
 
 type Module struct {
-	ID        string
 	Archive   *ModuleArchive
 	SlashPath string
 	Config    map[string]interface{}
 }
 
 type ModuleGlob struct {
-	ID        string                 `json:"id,omitempty"`
 	SlashPath string                 `json:"slash_path,omitempty"`
 	Archive   *ModuleArchive         `json:"archive,omitempty"`
 	Config    map[string]interface{} `json:"config,omitempty"`
@@ -69,7 +67,6 @@ func ParseImport(line string) (*Module, error) {
 		return nil, err
 	}
 	return &Module{
-		ID:        mg.ID,
 		Archive:   mg.Archive,
 		SlashPath: mg.SlashPath,
 	}, nil
@@ -103,7 +100,6 @@ func ParseModuleLine(line string) (*ModuleGlob, error) {
 		return nil, err
 	}
 	return &ModuleGlob{
-		ID:        line,
 		SlashPath: strings.Join(append(elems[:4], ref, path), "/"),
 		Archive: &ModuleArchive{
 			Type:      "github_archive",

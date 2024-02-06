@@ -116,11 +116,9 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 					{
 						LintFiles: []*config.ModuleGlob{
 							{
-								ID:        "yoo/*.jsonnet",
 								SlashPath: "yoo/*.jsonnet",
 							},
 							{
-								ID:        "zoo/*.jsonnet",
 								SlashPath: "zoo/*.jsonnet",
 								Config: map[string]any{
 									"limit": 10,
@@ -134,7 +132,6 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 						},
 						Modules: []*config.ModuleGlob{
 							{
-								ID:        "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 								SlashPath: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/foo/*.jsonnet",
 								Archive: &config.ModuleArchive{
 									Type:      "github_archive",
@@ -149,7 +146,6 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 								},
 							},
 							{
-								ID:        "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 								SlashPath: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/0ed62adf055a4fbd7ef7ebe304f01794508ed325/bar/*.jsonnet",
 								Archive: &config.ModuleArchive{
 									Type:      "github_archive",
