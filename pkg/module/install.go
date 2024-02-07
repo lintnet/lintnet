@@ -19,6 +19,8 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+var errSubDirMustBeOne = errors.New("the number of sub directories must be one")
+
 type ParamInstall struct {
 	BaseDir string
 }
@@ -123,7 +125,7 @@ func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *Par
 		return fmt.Errorf("read a directory: %w", err)
 	}
 	if len(dirs) != 1 {
-		return fmt.Errorf("the number of sub directories must be one")
+		return errSubDirMustBeOne
 	}
 	if err := osfile.Copy(mi.fs, filepath.Join(unarchiveDest, dirs[0].Name()), dest); err != nil {
 		return fmt.Errorf("copy a module from a teporal directory: %w", err)
