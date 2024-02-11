@@ -1,12 +1,65 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
 )
+
+type RawModule struct {
+	Glob   string         `json:"path"`
+	Config map[string]any `json:"config"`
+}
+
+func (rm *RawModule) Parse() (*ModuleGlob, error) {
+	m, err := ParseModuleLine(rm.Glob)
+	if err != nil {
+		return nil, fmt.Errorf("parse a module path: %w", err)
+	}
+	m.Config = rm.Config
+	p := filepath.Clean(m.SlashPath)
+	if strings.HasPrefix(p, "..") {
+		return nil, fmt.Errorf("'..' is forbidden: %w", err)
+	}
+	m.SlashPath = p
+	return m, nil
+}
+
+func (rm *RawModule) UnmarshalJSON(b []byte) error {
+	var a any
+	if err := json.Unmarshal(b, &a); err != nil {
+		return fmt.Errorf("unmarshal as JSON: %w", err)
+	}
+	switch c := a.(type) {
+	case string:
+		rm.Glob = c
+		return nil
+	case map[string]any:
+		p, ok := c["path"]
+		if !ok {
+			return errors.New("path is required")
+		}
+		a, ok := p.(string)
+		if !ok {
+			return errors.New("path must be a string")
+		}
+		rm.Glob = a
+
+		param, ok := c["param"]
+		if ok {
+			a, ok := param.(map[string]any)
+			if !ok {
+				return errors.New("param must be a map[string]any")
+			}
+			rm.Config = a
+		}
+		return nil
+	}
+	return errors.New("module must be either string or map[string]any")
+}
 
 type Module struct {
 	Archive   *ModuleArchive
