@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/lintnet/lintnet/pkg/errlevel"
@@ -185,10 +186,12 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 
 func (lg *LintGlob) ToModule() *ModuleGlob {
 	p := strings.TrimPrefix(lg.Glob, "!")
+	excluded := p != lg.Glob
+	p = filepath.Clean(p)
 	return &ModuleGlob{
 		SlashPath: p,
 		Config:    lg.Config,
-		Excluded:  p != lg.Glob,
+		Excluded:  excluded,
 	}
 }
 
@@ -197,11 +200,15 @@ func (rt *RawTarget) Parse() (*Target, error) {
 	for i, lintGlob := range rt.LintGlobs {
 		lintFiles[i] = lintGlob.ToModule()
 	}
+	dataFiles := make([]string, len(rt.DataFiles))
+	for i, dataFile := range rt.DataFiles {
+		dataFiles[i] = filepath.Clean(dataFile)
+	}
 	target := &Target{
 		ID:        rt.ID,
 		LintFiles: lintFiles,
 		Modules:   make([]*ModuleGlob, len(rt.Modules)),
-		DataFiles: rt.DataFiles,
+		DataFiles: dataFiles,
 	}
 	archives := make(map[string]*ModuleArchive, len(rt.Modules))
 	for i, m := range rt.Modules {
@@ -227,6 +234,11 @@ func (rm *RawModule) Parse() (*ModuleGlob, error) {
 		return nil, fmt.Errorf("parse a module path: %w", err)
 	}
 	m.Config = rm.Config
+	p := filepath.Clean(m.SlashPath)
+	if strings.HasPrefix(p, "..") {
+		return nil, fmt.Errorf("'..' is forbidden: %w", err)
+	}
+	m.SlashPath = p
 	return m, nil
 }
 
