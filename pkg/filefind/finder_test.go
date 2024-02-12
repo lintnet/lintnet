@@ -33,13 +33,15 @@ func TestFinder_Find(t *testing.T) { //nolint:funlen
 			cfg: &config.Config{
 				Targets: []*config.Target{
 					{
-						LintFiles: []*config.ModuleGlob{
+						LintFiles: []*config.LintGlob{
 							{
-								SlashPath: "*.jsonnet",
+								Glob: "*.jsonnet",
 							},
 						},
-						DataFiles: []string{
-							"*.json",
+						DataFiles: []*config.DataFile{
+							{
+								Path: "*.json",
+							},
 						},
 					},
 				},

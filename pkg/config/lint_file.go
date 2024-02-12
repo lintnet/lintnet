@@ -14,8 +14,9 @@ type LintFile struct {
 
 type LintGlob struct {
 	// Glob is either an absolute path or a relative path from configuration file path
-	Glob   string         `json:"path"`
-	Config map[string]any `json:"config"`
+	Glob     string         `json:"path"`
+	Config   map[string]any `json:"config"`
+	Excluded bool           `json:"-"`
 }
 
 func (lg *LintGlob) UnmarshalJSON(b []byte) error {
@@ -28,13 +29,8 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (lg *LintGlob) ToModule() *ModuleGlob {
+func (lg *LintGlob) Clean() {
 	p := strings.TrimPrefix(lg.Glob, "!")
-	excluded := p != lg.Glob
-	p = filepath.Clean(p)
-	return &ModuleGlob{
-		SlashPath: p,
-		Config:    lg.Config,
-		Excluded:  excluded,
-	}
+	lg.Excluded = p != lg.Glob
+	lg.Glob = filepath.Clean(p)
 }
