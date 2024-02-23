@@ -1,5 +1,16 @@
 package config
 
+type Outputs []*Output
+
+func (os Outputs) Output(id string) *Output {
+	for _, o := range os {
+		if o.ID == id {
+			return o
+		}
+	}
+	return nil
+}
+
 type Output struct {
 	ID string `json:"id"`
 	// text/template, html/template, jsonnet

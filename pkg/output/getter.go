@@ -27,15 +27,6 @@ func NewGetter(stdout io.Writer, fs afero.Fs, importer gojsonnet.Importer) *Gett
 	}
 }
 
-func getOutput(outputs []*config.Output, outputID string) (*config.Output, error) {
-	for _, output := range outputs {
-		if output.ID == outputID {
-			return output, nil
-		}
-	}
-	return nil, errors.New("unknown output id")
-}
-
 type Outputter interface {
 	Output(result *Output) error
 }
@@ -84,15 +75,15 @@ func setTemplate(output *config.Output, param *ParamGet, cfgDir string) error {
 	return nil
 }
 
-func (g *Getter) Get(outputs []*config.Output, param *ParamGet, cfgDir string) (Outputter, error) {
+func (g *Getter) Get(outputs config.Outputs, param *ParamGet, cfgDir string) (Outputter, error) {
 	if param.Output == "" {
 		return &jsonOutputter{
 			stdout: g.stdout,
 		}, nil
 	}
-	output, err := getOutput(outputs, param.Output)
-	if err != nil {
-		return nil, err
+	output := outputs.Output(param.Output)
+	if output == nil {
+		return nil, errors.New("unknown output id")
 	}
 
 	if output.Template != "" {
