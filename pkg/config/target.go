@@ -1,13 +1,11 @@
 package config
 
-import "path/filepath"
-
 type Target struct {
 	ID             string                    `json:"id,omitempty"`
-	LintFiles      []*ModuleGlob             `json:"lint_files,omitempty"`
+	LintFiles      []*LintGlob               `json:"lint_files,omitempty"`
 	Modules        []*ModuleGlob             `json:"modules,omitempty"`
 	ModuleArchives map[string]*ModuleArchive `json:"module_archives,omitempty"`
-	DataFiles      []string                  `json:"data_files,omitempty"`
+	DataFiles      []*DataFile               `json:"data_files,omitempty"`
 }
 
 type RawTarget struct {
@@ -18,17 +16,16 @@ type RawTarget struct {
 }
 
 func (rt *RawTarget) Parse() (*Target, error) {
-	lintFiles := make([]*ModuleGlob, len(rt.LintGlobs))
-	for i, lintGlob := range rt.LintGlobs {
-		lintFiles[i] = lintGlob.ToModule()
+	for _, lintGlob := range rt.LintGlobs {
+		lintGlob.Clean()
 	}
-	dataFiles := make([]string, len(rt.DataFiles))
+	dataFiles := make([]*DataFile, len(rt.DataFiles))
 	for i, dataFile := range rt.DataFiles {
-		dataFiles[i] = filepath.Clean(dataFile)
+		dataFiles[i] = NewDataFile(dataFile)
 	}
 	target := &Target{
 		ID:        rt.ID,
-		LintFiles: lintFiles,
+		LintFiles: rt.LintGlobs,
 		Modules:   make([]*ModuleGlob, len(rt.Modules)),
 		DataFiles: dataFiles,
 	}

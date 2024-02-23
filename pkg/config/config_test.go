@@ -114,21 +114,28 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 				},
 				Targets: []*config.Target{
 					{
-						LintFiles: []*config.ModuleGlob{
+						LintFiles: []*config.LintGlob{
 							{
-								SlashPath: "yoo/*.jsonnet",
+								Glob: "yoo/*.jsonnet",
 							},
 							{
-								SlashPath: "zoo/*.jsonnet",
+								Glob: "zoo/*.jsonnet",
 								Config: map[string]any{
 									"limit": 10,
 								},
 							},
 						},
-						DataFiles: []string{
-							".github/workflows/*.yml",
-							".github/workflows/*.yaml",
-							"!.github/workflows/excluded.yaml",
+						DataFiles: []*config.DataFile{
+							{
+								Path: ".github/workflows/*.yml",
+							},
+							{
+								Path: ".github/workflows/*.yaml",
+							},
+							{
+								Path:     ".github/workflows/excluded.yaml",
+								Excluded: true,
+							},
 						},
 						Modules: []*config.ModuleGlob{
 							{
