@@ -67,13 +67,6 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 		return fmt.Errorf("find files: %w", err)
 	}
 
-	filterParam := param.FilterParam()
-
-	targets, err = filefilter.FilterTargetsByDataRootDir(logE, filterParam, targets)
-	if err != nil {
-		return fmt.Errorf("filter targets by data root directory: %w", err)
-	}
-
 	pairs := c.filterTargetsWithTest(logE, targets)
 	failedResults := make([]*FailedResult, 0, len(pairs))
 	for _, pair := range pairs {

@@ -2,11 +2,9 @@ package filefilter
 
 import (
 	"path/filepath"
-	"strings"
 
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefind"
-	"github.com/sirupsen/logrus"
 )
 
 type Param struct {
@@ -82,47 +80,4 @@ func filterTarget(target *filefind.Target, filePaths []string) *filefind.Target 
 		newTarget.LintFiles = target.LintFiles
 	}
 	return newTarget
-}
-
-func FilterTargetsByDataRootDir(logE *logrus.Entry, param *Param, targets []*filefind.Target) ([]*filefind.Target, error) {
-	arr := make([]*filefind.Target, 0, len(targets))
-	for _, target := range targets {
-		filterTargetByDataRootDir(logE, param, target)
-		if len(target.DataFiles) != 0 {
-			arr = append(arr, target)
-		}
-	}
-	return arr, nil
-}
-
-func filterTargetByDataRootDir(logE *logrus.Entry, param *Param, target *filefind.Target) {
-	arr := make([]*domain.Path, 0, len(target.DataFiles))
-	for _, dataFile := range target.DataFiles {
-		if filterFileByDataRootDir(logE, param, dataFile.Abs) {
-			arr = append(arr, dataFile)
-		} else {
-			logE.WithField("data_file", dataFile).Warn("this data file is ignored because this is out of the data root directory")
-		}
-	}
-	target.DataFiles = arr
-}
-
-func filterFileByDataRootDir(logE *logrus.Entry, param *Param, dataFile string) bool {
-	p := dataFile
-	if a, err := filepath.Rel(param.DataRootDir, p); err != nil {
-		logE.WithError(err).Warn("get a relative path")
-	} else if !strings.HasPrefix(a, "..") {
-		return true
-	}
-	for _, c := range param.FilePaths {
-		b, err := filepath.Rel(c, dataFile)
-		if err != nil {
-			logE.WithError(err).Warn("get a relative path")
-			continue
-		}
-		if b == "." {
-			return true
-		}
-	}
-	return false
 }

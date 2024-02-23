@@ -105,10 +105,6 @@ func (lc *lintCommand) action(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	dataRootDir := c.String("data-root-dir")
-	if dataRootDir == "" {
-		dataRootDir = pwd
-	}
 	return ctrl.Lint(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
 		FilePaths:       c.Args().Slice(),
 		ErrorLevel:      c.String("error-level"),
@@ -118,7 +114,7 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		OutputSuccess:   c.Bool("output-success"),
 		Output:          c.String("output"),
 		RootDir:         rootDir,
-		DataRootDir:     dataRootDir,
+		DataRootDir:     pwd,
 		PWD:             pwd,
 	})
 }

@@ -35,11 +35,6 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 		Compiled: compiledDate,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "data-root-dir",
-				Usage:   "The root directory where lintnet is allowed to read data files. The default value is the current directory",
-				EnvVars: []string{"LINTNET_DATA_ROOT_DIR"},
-			},
-			&cli.StringFlag{
 				Name:    "log-level",
 				Usage:   "log level",
 				EnvVars: []string{"LINTNET_LOG_LEVEL"},
