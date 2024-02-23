@@ -32,7 +32,6 @@ func TestController_Info(t *testing.T) { //nolint:funlen,gocognit,cyclop
 			},
 			param: &info.ParamInfo{
 				RootDir:        "/home/foo/.local/share/lintnet",
-				DataRootDir:    "/home/foo/workspace",
 				ConfigFilePath: "",
 				PWD:            "/home/foo/workspace",
 			},

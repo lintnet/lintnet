@@ -87,7 +87,6 @@ func (lc *infoCommand) action(c *cli.Context) error {
 		ConfigFilePath: c.String("config"),
 		RootDir:        rootDir,
 		PWD:            pwd,
-		DataRootDir:    pwd,
 		ModuleRootDir:  c.Bool("module-root-dir"),
 		MaskUser:       c.Bool("mask-user"),
 	})
