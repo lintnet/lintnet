@@ -72,15 +72,11 @@ func (tc *testCommand) action(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	dataRootDir := c.String("data-root-dir")
-	if dataRootDir == "" {
-		dataRootDir = pwd
-	}
 	return ctrl.Test(c.Context, logE, &testcmd.ParamTest{ //nolint:wrapcheck
 		ConfigFilePath: c.String("config"),
 		TargetID:       c.String("target"),
 		RootDir:        rootDir,
-		DataRootDir:    dataRootDir,
+		DataRootDir:    pwd,
 		PWD:            pwd,
 	})
 }

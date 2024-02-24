@@ -22,13 +22,12 @@ type ParamInfo struct {
 }
 
 type Info struct {
-	Version     string            `json:"vesrion,omitempty"`
-	Commit      string            `json:"commit,omitempty"`
-	Runtime     string            `json:"runtime"`
-	ConfigFile  string            `json:"config_file,omitempty"`
-	RootDir     string            `json:"root_dir"`
-	DataRootDir string            `json:"data_root_dir"`
-	Env         map[string]string `json:"env"`
+	Version    string            `json:"vesrion,omitempty"`
+	Commit     string            `json:"commit,omitempty"`
+	Runtime    string            `json:"runtime"`
+	ConfigFile string            `json:"config_file,omitempty"`
+	RootDir    string            `json:"root_dir"`
+	Env        map[string]string `json:"env"`
 }
 
 func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:cyclop,funlen
@@ -83,18 +82,16 @@ func (c *Controller) Info(_ context.Context, param *ParamInfo) error { //nolint:
 		}
 	}
 	info := &Info{
-		Version:     c.param.Version,
-		Commit:      c.param.Commit,
-		Runtime:     c.param.Env,
-		ConfigFile:  param.ConfigFilePath,
-		RootDir:     param.RootDir,
-		DataRootDir: param.DataRootDir,
-		Env:         m,
+		Version:    c.param.Version,
+		Commit:     c.param.Commit,
+		Runtime:    c.param.Env,
+		ConfigFile: param.ConfigFilePath,
+		RootDir:    param.RootDir,
+		Env:        m,
 	}
 	if param.MaskUser {
 		info.ConfigFile = maskUser(info.ConfigFile, userName)
 		info.RootDir = maskUser(info.RootDir, userName)
-		info.DataRootDir = maskUser(info.DataRootDir, userName)
 	}
 	encoder := json.NewEncoder(c.stdout)
 	encoder.SetIndent("", "  ")

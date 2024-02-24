@@ -4,6 +4,5 @@
   "runtime": "darwin/arm64",
   "config_file": "lintnet.jsonnet",
   "root_dir": "/home/foo/.local/share/lintnet",
-  "data_root_dir": "/home/foo/workspace",
   "env": {}
 }

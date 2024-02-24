@@ -26,7 +26,7 @@ type Config struct {
 	ErrorLevel      errlevel.Level            `json:"error_level,omitempty"`
 	ShownErrorLevel errlevel.Level            `json:"shown_error_level,omitempty"`
 	Targets         []*Target                 `json:"targets,omitempty"`
-	Outputs         []*Output                 `json:"outputs,omitempty"`
+	Outputs         Outputs                   `json:"outputs,omitempty"`
 	ModuleArchives  map[string]*ModuleArchive `json:"module_archives,omitempty"`
 	IgnoredPatterns []string                  `json:"ignore_patterns,omitempty"`
 }
@@ -73,7 +73,7 @@ type RawConfig struct {
 	ShownErrorLevel string       `json:"shown_error_level,omitempty"`
 	IgnoredDirs     []string     `json:"ignored_dirs,omitempty"`
 	Targets         []*RawTarget `json:"targets"`
-	Outputs         []*Output    `json:"outputs,omitempty"`
+	Outputs         Outputs      `json:"outputs,omitempty"`
 }
 
 func (rc *RawConfig) GetTarget(targetID string) (*RawTarget, error) {

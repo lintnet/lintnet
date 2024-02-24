@@ -32,7 +32,7 @@ type Controller struct {
 }
 
 type OutputGetter interface {
-	Get(outputs []*config.Output, param *output.ParamGet, cfgDir string) (output.Outputter, error)
+	Get(outputs config.Outputs, param *output.ParamGet, cfgDir string) (output.Outputter, error)
 }
 
 type ConfigReader interface {
