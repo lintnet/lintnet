@@ -14,6 +14,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/filefilter"
 	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
+	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -68,9 +69,10 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 	}
 
 	pairs := c.filterTargetsWithTest(logE, targets)
+	logE.WithField("pairs", log.JSON(pairs)).Debug("pairs")
 	failedResults := make([]*FailedResult, 0, len(pairs))
 	for _, pair := range pairs {
-		if results := c.tests(pair); len(results) > 0 {
+		if results := c.tests(pair, param.DataRootDir); len(results) > 0 {
 			failedResults = append(failedResults, results...)
 		}
 	}
@@ -83,7 +85,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 	return nil
 }
 
-func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
+func (c *Controller) test(pair *TestPair, td *TestData, dataRootDir string) *FailedResult { //nolint:cyclop,revive,unparam
 	if td.DataFile != "" {
 		p := &domain.Path{
 			Raw: td.DataFile,
@@ -138,7 +140,7 @@ func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint
 	return nil
 }
 
-func (c *Controller) tests(pair *TestPair) []*FailedResult {
+func (c *Controller) tests(pair *TestPair, dataRootDir string) []*FailedResult {
 	testData := []*TestData{}
 	if err := jsonnet.Read(c.fs, pair.TestFilePath, "{}", c.importer, &testData); err != nil {
 		return []*FailedResult{
@@ -151,7 +153,7 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	}
 	results := make([]*FailedResult, 0, len(testData))
 	for _, td := range testData {
-		if result := c.test(pair, td); result != nil {
+		if result := c.test(pair, td, dataRootDir); result != nil {
 			result.Name = td.Name
 			result.LintFilePath = pair.LintFilePath
 			result.TestFilePath = pair.TestFilePath
