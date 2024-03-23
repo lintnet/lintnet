@@ -37,7 +37,6 @@ func TestModule_FilePath(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			s := d.mod.FilePath()
@@ -73,7 +72,6 @@ func TestParseModuleLine(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			mod, err := config.ParseModuleLine(d.line)

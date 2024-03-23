@@ -41,7 +41,6 @@ func TestRawModule_UnmarshalJSON(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			m := &config.RawModule{}
@@ -190,7 +189,6 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			cfg, err := d.rawCfg.Parse()
