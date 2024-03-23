@@ -50,7 +50,6 @@ func TestController_Lint(t *testing.T) { //nolint:funlen,gocognit,cyclop
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.ReadFs(d.files, d.dirs...)

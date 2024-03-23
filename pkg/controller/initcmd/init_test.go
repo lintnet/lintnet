@@ -28,7 +28,6 @@ func TestController_Init(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.ReadFs(d.files, d.dirs...)
