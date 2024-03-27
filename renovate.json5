@@ -1,7 +1,7 @@
 {
   extends: [
     "config:best-practices",
-    "github>aquaproj/aqua-renovate-config#2.2.0",
+    "github>aquaproj/aqua-renovate-config#2.2.1",
     "github>aquaproj/aqua-renovate-config:file#2.2.1(aqua/imports/.*\\.ya?ml)",
     "github>lintnet/renovate-config#0.1.1",
     "github>suzuki-shunsuke/renovate-config#2.3.0",
