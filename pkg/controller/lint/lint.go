@@ -38,9 +38,8 @@ func (p *ParamLint) FilterParam() *filefilter.Param {
 
 func (p *ParamLint) OutputterParam() *output.ParamGet {
 	return &output.ParamGet{
-		RootDir:     p.RootDir,
-		DataRootDir: p.DataRootDir,
-		Output:      p.Output,
+		RootDir: p.RootDir,
+		Output:  p.Output,
 	}
 }
 
@@ -70,6 +69,8 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	if !filepath.IsAbs(cfgDir) {
 		cfgDir = filepath.Join(param.PWD, cfgDir)
 	}
+	cfgDir = filepath.Clean(cfgDir)
+
 	outputter, err := c.outputGetter.Get(cfg.Outputs, param.OutputterParam(), cfgDir)
 	if err != nil {
 		return fmt.Errorf("get an outputter: %w", err)
