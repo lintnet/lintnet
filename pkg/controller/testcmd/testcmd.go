@@ -20,7 +20,6 @@ import (
 
 type ParamTest struct {
 	RootDir        string
-	DataRootDir    string
 	ConfigFilePath string
 	TargetID       string
 	PWD            string
@@ -28,9 +27,8 @@ type ParamTest struct {
 
 func (p *ParamTest) FilterParam() *filefilter.Param {
 	return &filefilter.Param{
-		DataRootDir: p.DataRootDir,
-		TargetID:    p.TargetID,
-		PWD:         p.PWD,
+		TargetID: p.TargetID,
+		PWD:      p.PWD,
 	}
 }
 

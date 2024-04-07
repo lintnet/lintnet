@@ -76,7 +76,6 @@ func (tc *testCommand) action(c *cli.Context) error {
 		ConfigFilePath: c.String("config"),
 		TargetID:       c.String("target"),
 		RootDir:        rootDir,
-		DataRootDir:    pwd,
 		PWD:            pwd,
 	})
 }

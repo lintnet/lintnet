@@ -29,7 +29,6 @@ func TestController_Test(t *testing.T) { //nolint:funlen
 			},
 			param: &testcmd.ParamTest{
 				RootDir:        "/home/foo/.local/share/lintnet",
-				DataRootDir:    "/home/foo/workspace",
 				ConfigFilePath: "",
 				PWD:            "/home/foo/workspace",
 			},
