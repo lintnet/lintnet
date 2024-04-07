@@ -35,28 +35,26 @@ type ParamGet struct {
 }
 
 // setTransform set output.Transform.
-func setTransform(output *config.Output, param *ParamGet, cfgDir string) error {
+func setTransform(output *config.Output, param *ParamGet, cfgDir string) {
 	if output.TransformModule != nil {
 		output.Transform = filepath.Join(param.RootDir, output.TransformModule.FilePath())
-		return nil
+		return
 	}
 	output.Transform = filepath.FromSlash(output.Transform)
 	if !filepath.IsAbs(output.Transform) {
 		output.Transform = filepath.Join(cfgDir, output.Transform)
 	}
-	return nil
 }
 
-func setTemplate(output *config.Output, param *ParamGet, cfgDir string) error {
+func setTemplate(output *config.Output, param *ParamGet, cfgDir string) {
 	if output.TemplateModule != nil {
 		output.Template = filepath.Join(param.RootDir, output.TemplateModule.FilePath())
-		return nil
+		return
 	}
 	output.Template = filepath.FromSlash(output.Template)
 	if !filepath.IsAbs(output.Template) {
 		output.Template = filepath.Join(cfgDir, output.Template)
 	}
-	return nil
 }
 
 func (g *Getter) Get(outputs config.Outputs, param *ParamGet, cfgDir string) (Outputter, error) {
@@ -71,15 +69,11 @@ func (g *Getter) Get(outputs config.Outputs, param *ParamGet, cfgDir string) (Ou
 	}
 
 	if output.Template != "" {
-		if err := setTemplate(output, param, cfgDir); err != nil {
-			return nil, err
-		}
+		setTemplate(output, param, cfgDir)
 	}
 
 	if output.Transform != "" {
-		if err := setTransform(output, param, cfgDir); err != nil {
-			return nil, err
-		}
+		setTransform(output, param, cfgDir)
 	}
 
 	switch output.Renderer {
