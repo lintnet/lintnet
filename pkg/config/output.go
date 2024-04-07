@@ -19,8 +19,16 @@ type Output struct {
 	Template string `json:"template"`
 	// parameter
 	Config map[string]any `json:"config"`
-	// Transform parameter
-	Transform       string  `json:"transform"`
+	// Transform is a transformation file path.
+	// A transformation file transforms lint results before the results are outputted.
+	// A tranformation file must be a Jsonnet.
+	// A file path must be an absolute path, a relative path from the configuration file, or a module path.
+	// e.g.
+	// transform.jsonnnet
+	// /home/foo/.lintent/transform.jsonnnet
+	// github_archive/github.com/lintnet/modules/transform.jsonnet@32ca3be646ec5b5861aab72fed30cd71f6eba9bf:v0.1.2
+	Transform string `json:"transform"`
+
 	TemplateModule  *Module `json:"-"`
 	TransformModule *Module `json:"-"`
 }

@@ -2,10 +2,8 @@ package output
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"path/filepath"
-	"strings"
 
 	gojsonnet "github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
@@ -32,47 +30,31 @@ type Outputter interface {
 }
 
 type ParamGet struct {
-	RootDir     string
-	DataRootDir string
-	Output      string
+	RootDir string
+	Output  string
 }
 
-func setTransform(output *config.Output, param *ParamGet, cfgDir string) error {
+// setTransform set output.Transform.
+func setTransform(output *config.Output, param *ParamGet, cfgDir string) {
 	if output.TransformModule != nil {
 		output.Transform = filepath.Join(param.RootDir, output.TransformModule.FilePath())
-		return nil
+		return
 	}
 	output.Transform = filepath.FromSlash(output.Transform)
 	if !filepath.IsAbs(output.Transform) {
 		output.Transform = filepath.Join(cfgDir, output.Transform)
 	}
-	a, err := filepath.Rel(param.DataRootDir, output.Transform)
-	if err != nil {
-		return fmt.Errorf("get a relative path to transform: %w", err)
-	}
-	if strings.HasPrefix(a, "..") {
-		return errors.New("this transform is unavailable because the transform is out of data root directory")
-	}
-	return nil
 }
 
-func setTemplate(output *config.Output, param *ParamGet, cfgDir string) error {
+func setTemplate(output *config.Output, param *ParamGet, cfgDir string) {
 	if output.TemplateModule != nil {
 		output.Template = filepath.Join(param.RootDir, output.TemplateModule.FilePath())
-		return nil
+		return
 	}
 	output.Template = filepath.FromSlash(output.Template)
 	if !filepath.IsAbs(output.Template) {
 		output.Template = filepath.Join(cfgDir, output.Template)
 	}
-	a, err := filepath.Rel(param.DataRootDir, output.Template)
-	if err != nil {
-		return fmt.Errorf("get a relative path to template: %w", err)
-	}
-	if strings.HasPrefix(a, "..") {
-		return errors.New("this template is unavailable because the template is out of data root directory")
-	}
-	return nil
 }
 
 func (g *Getter) Get(outputs config.Outputs, param *ParamGet, cfgDir string) (Outputter, error) {
@@ -87,15 +69,11 @@ func (g *Getter) Get(outputs config.Outputs, param *ParamGet, cfgDir string) (Ou
 	}
 
 	if output.Template != "" {
-		if err := setTemplate(output, param, cfgDir); err != nil {
-			return nil, err
-		}
+		setTemplate(output, param, cfgDir)
 	}
 
 	if output.Transform != "" {
-		if err := setTransform(output, param, cfgDir); err != nil {
-			return nil, err
-		}
+		setTransform(output, param, cfgDir)
 	}
 
 	switch output.Renderer {
