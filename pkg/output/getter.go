@@ -26,6 +26,8 @@ func NewGetter(stdout io.Writer, fs afero.Fs, importer gojsonnet.Importer) *Gett
 }
 
 type Outputter interface {
+	// Outputter outputs the result.
+	// Outputter compromises of transformer and renderer.
 	Output(result *Output) error
 }
 
@@ -57,6 +59,7 @@ func setTemplate(output *config.Output, param *ParamGet, cfgDir string) {
 	}
 }
 
+// Get returns an outputter.
 func (g *Getter) Get(outputs config.Outputs, param *ParamGet, cfgDir string) (Outputter, error) {
 	if param.Output == "" {
 		return &jsonOutputter{
