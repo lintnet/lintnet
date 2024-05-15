@@ -7,7 +7,7 @@ require (
 	github.com/adrg/xdg v0.4.0
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-github/v61 v61.0.0
+	github.com/google/go-github/v62 v62.0.0
 	github.com/google/go-jsonnet v0.20.0
 	github.com/lintnet/go-jsonnet-native-functions v0.2.1
 	github.com/mattn/go-colorable v0.1.13
@@ -18,8 +18,8 @@ require (
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/tmccombs/hcl2json v0.6.3
 	github.com/urfave/cli/v2 v2.27.2
-	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
+	golang.org/x/oauth2 v0.20.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -47,9 +47,9 @@ require (
 	github.com/zclconf/go-cty v1.14.4 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.20.0 // indirect
+	golang.org/x/tools v0.21.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
