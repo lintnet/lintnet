@@ -1,11 +1,25 @@
 package config
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Outputs []*Output
 
 func (os Outputs) Output(id string) *Output {
 	for _, o := range os {
 		if o.ID == id {
 			return o
+		}
+	}
+	return nil
+}
+
+func (os Outputs) Preprocess(modules map[string]*ModuleArchive) error {
+	for _, output := range os {
+		if err := output.Preprocess(modules); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -31,4 +45,24 @@ type Output struct {
 
 	TemplateModule  *Module `json:"-"`
 	TransformModule *Module `json:"-"`
+}
+
+func (o *Output) Preprocess(modules map[string]*ModuleArchive) error {
+	if strings.HasPrefix(o.Template, "github_archive/github.com/") {
+		m, err := ParseImport(o.Template)
+		if err != nil {
+			return fmt.Errorf("parse a module path: %w", err)
+		}
+		o.TemplateModule = m
+		modules[m.Archive.String()] = m.Archive
+	}
+	if strings.HasPrefix(o.Transform, "github_archive/github.com/") {
+		m, err := ParseImport(o.Transform)
+		if err != nil {
+			return fmt.Errorf("parse a module path: %w", err)
+		}
+		o.TransformModule = m
+		modules[m.Archive.String()] = m.Archive
+	}
+	return nil
 }

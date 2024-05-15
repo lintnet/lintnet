@@ -3,11 +3,13 @@ package config
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/lintnet/lintnet/pkg/errlevel"
 )
 
+// getIgnoredPatterns returns ignored patterns.
+// If ignoredDirs is nil, it returns default ignored patterns.
+// An ignored pattern is "**/<ignored dir>/**", which is a patten of doublestar.
 func getIgnoredPatterns(ignoredDirs []string) []string {
 	if ignoredDirs == nil {
 		ignoredDirs = []string{
@@ -57,6 +59,7 @@ func (c *Config) setShownErrorLevel(errLevel string) error {
 	return nil
 }
 
+// setIgnoredPatterns sets ignored patterns.
 func (c *Config) setIgnoredPatterns(dirs []string) {
 	c.IgnoredPatterns = getIgnoredPatterns(dirs)
 	if c.IgnoredPatterns == nil {
@@ -85,7 +88,8 @@ func (rc *RawConfig) GetTarget(targetID string) (*RawTarget, error) {
 	return nil, errors.New("target isn't found")
 }
 
-func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
+// Parse processes a raw configuration.
+func (rc *RawConfig) Parse() (*Config, error) {
 	cfg := &Config{
 		Targets: make([]*Target, len(rc.Targets)),
 		Outputs: rc.Outputs,
@@ -101,9 +105,13 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
 	}
 
 	if cfg.ShownErrorLevel > cfg.ErrorLevel {
+		// ShownErrorLevel should be lower than or equal to ErrorLevel.
+		// If ShownErrorLevel is higher than ErrorLevel, it sets ShownErrorLevel to ErrorLevel.
 		cfg.ShownErrorLevel = cfg.ErrorLevel
 	}
 
+	// moduleArchives is a map of modules.
+	// Extract modules from configuration to install them.
 	moduleArchives := map[string]*ModuleArchive{}
 	for i, rt := range rc.Targets {
 		target, err := rt.Parse()
@@ -115,23 +123,8 @@ func (rc *RawConfig) Parse() (*Config, error) { //nolint:cyclop
 			moduleArchives[k] = ma
 		}
 	}
-	for _, output := range rc.Outputs {
-		if strings.HasPrefix(output.Template, "github_archive/github.com/") {
-			m, err := ParseImport(output.Template)
-			if err != nil {
-				return nil, fmt.Errorf("parse a module path: %w", err)
-			}
-			output.TemplateModule = m
-			moduleArchives[m.Archive.String()] = m.Archive
-		}
-		if strings.HasPrefix(output.Transform, "github_archive/github.com/") {
-			m, err := ParseImport(output.Transform)
-			if err != nil {
-				return nil, fmt.Errorf("parse a module path: %w", err)
-			}
-			output.TransformModule = m
-			moduleArchives[m.Archive.String()] = m.Archive
-		}
+	if err := rc.Outputs.Preprocess(moduleArchives); err != nil {
+		return nil, err
 	}
 	cfg.ModuleArchives = moduleArchives
 	return cfg, nil

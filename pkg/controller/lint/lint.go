@@ -43,16 +43,19 @@ func (p *ParamLint) OutputterParam() *output.ParamGet {
 	}
 }
 
+// Lint lints files.
 func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
 	logE.WithFields(logrus.Fields{
 		"param": log.JSON(param),
 	}).Debug("parameter")
+	// Find and read a configuration file.
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
 	if param.TargetID != "" {
+		// If a target id is specified, gets a target from the configuration file by the target id.
 		target, err := rawCfg.GetTarget(param.TargetID)
 		if err != nil {
 			return fmt.Errorf("get a target from configuration file by target id: %w", err)
@@ -60,17 +63,20 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		rawCfg.Targets = []*config.RawTarget{target}
 	}
 
+	// Parse the configuration file.
 	cfg, err := rawCfg.Parse()
 	if err != nil {
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}
 
+	// Get a directory of the configuration file.
 	cfgDir := filepath.Dir(rawCfg.FilePath)
 	if !filepath.IsAbs(cfgDir) {
 		cfgDir = filepath.Join(param.PWD, cfgDir)
 	}
 	cfgDir = filepath.Clean(cfgDir)
 
+	// Get an outputter.
 	outputter, err := c.outputGetter.Get(cfg.Outputs, param.OutputterParam(), cfgDir)
 	if err != nil {
 		return fmt.Errorf("get an outputter: %w", err)
@@ -88,12 +94,14 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 
 	modRootDir := filepath.Join(param.RootDir, "modules")
 
+	// Install modules.
 	if err := c.moduleInstaller.Installs(ctx, logE, &module.ParamInstall{
 		BaseDir: modRootDir,
 	}, cfg.ModuleArchives); err != nil {
 		return fmt.Errorf("install modules: %w", err)
 	}
 
+	// Find targets, which are pairs of lint files and data files.
 	targets, err := c.fileFinder.Find(logE, cfg, modRootDir, cfgDir)
 	if err != nil {
 		return fmt.Errorf("find files: %w", err)
@@ -106,6 +114,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	filterParam := param.FilterParam()
 
 	if len(param.FilePaths) > 0 {
+		// If files are specified, filters targets by the files.
 		targets = filefilter.FilterTargetsByFilePaths(filterParam, targets)
 		logE.WithFields(logrus.Fields{
 			"filter_param": log.JSON(filterParam),
@@ -118,6 +127,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		"targets":      log.JSON(targets),
 	}).Debug("filtered targets by data root directory")
 
+	// Lint targets.
 	results, err := c.linter.Lint(targets)
 	if err != nil {
 		return fmt.Errorf("lint targets: %w", err)
@@ -128,6 +138,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		"targets": log.JSON(targets),
 	}).Debug("linted")
 
+	// Output results.
 	return c.Output(logE, errLevel, shownErrLevel, results, []Outputter{outputter}, param.OutputSuccess)
 }
 
