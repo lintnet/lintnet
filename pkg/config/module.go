@@ -134,7 +134,7 @@ func ParseModuleLine(line string) (*ModuleGlob, error) {
 		line = strings.TrimSpace(l)
 	}
 	elems := strings.Split(line, "/")
-	if len(elems) < 5 { //nolint:gomnd
+	if len(elems) < 5 { //nolint:mnd
 		return nil, errors.New("line is invalid")
 	}
 	if elems[0] != "github_archive" {

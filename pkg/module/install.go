@@ -76,7 +76,7 @@ func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *Par
 	// Download Module
 	u, _, err := mi.gh.GetArchiveLink(ctx, mod.RepoOwner, mod.RepoName, github.Tarball, &github.RepositoryContentGetOptions{
 		Ref: mod.Ref,
-	}, 5) //nolint:gomnd
+	}, 5) //nolint:mnd
 	if err != nil {
 		return fmt.Errorf("get an archive link by GitHub API: %w", logerr.WithFields(err, logrus.Fields{
 			"moduel_repo_owner": mod.RepoOwner,
@@ -92,7 +92,7 @@ func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *Par
 	if err != nil {
 		return fmt.Errorf("send a HTTP request: %w", err)
 	}
-	if resp.StatusCode >= 300 { //nolint:gomnd
+	if resp.StatusCode >= 300 { //nolint:mnd
 		return errors.New("HTTP status code >= 300")
 	}
 	defer resp.Body.Close()
