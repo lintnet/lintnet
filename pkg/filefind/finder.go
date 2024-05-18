@@ -115,13 +115,9 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 			if strings.HasSuffix(d.Name(), "_test.jsonnet") {
 				return nil
 			}
-			a, err := filepath.Rel(rootDir, path)
+			moduleID, err := getModuleID(rootDir, path, m.Archive.Tag)
 			if err != nil {
 				return err
-			}
-			moduleID := filepath.ToSlash(a)
-			if m.Archive.Tag != "" {
-				moduleID += ":" + m.Archive.Tag
 			}
 			matches[path] = append(matches[path], &config.LintFile{
 				ID:     moduleID,
@@ -160,13 +156,9 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 			if strings.HasSuffix(d.Name(), "_test.jsonnet") {
 				return nil
 			}
-			a, err := filepath.Rel(rootDir, path)
+			moduleID, err := getModuleID(rootDir, path, m.Archive.Tag)
 			if err != nil {
 				return err
-			}
-			moduleID := filepath.ToSlash(a)
-			if m.Archive.Tag != "" {
-				moduleID += ":" + m.Archive.Tag
 			}
 			matches[path] = append(matches[path], &config.LintFile{
 				ID:     moduleID,
@@ -185,6 +177,18 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 		matchFiles[k] = v
 	}
 	return nil
+}
+
+func getModuleID(rootDir, p, tag string) (string, error) {
+	a, err := filepath.Rel(rootDir, p)
+	if err != nil {
+		return "", fmt.Errorf("get a relative path from the root directory to a module file: %w", err)
+	}
+	moduleID := filepath.ToSlash(a)
+	if tag != "" {
+		moduleID += ":" + tag
+	}
+	return moduleID, nil
 }
 
 func (f *FileFinder) findFilesFromLintFile(logE *logrus.Entry, m *config.LintGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop

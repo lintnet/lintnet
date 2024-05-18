@@ -49,7 +49,7 @@ func (rm *RawModule) UnmarshalJSON(b []byte) error {
 		Files  []*LintGlobFile `json:"files"`
 	}{}
 	if err := json.Unmarshal(b, &a); err != nil {
-		return err
+		return fmt.Errorf("unmarshal a module as JSON: %w", err)
 	}
 	rm.Glob = a.Path
 	rm.Config = a.Config
