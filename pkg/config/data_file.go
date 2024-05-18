@@ -2,7 +2,6 @@ package config
 
 import (
 	"path/filepath"
-	"strings"
 )
 
 type DataFile struct {
@@ -11,9 +10,9 @@ type DataFile struct {
 }
 
 func NewDataFile(s string) *DataFile {
-	a := strings.TrimPrefix(s, "!")
+	a, excluded := parseNegationOperator(s)
 	return &DataFile{
 		Path:     filepath.Clean(a),
-		Excluded: a != s,
+		Excluded: excluded,
 	}
 }

@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
 )
 
 type RawModule struct {
-	Glob   string         `json:"path"`
-	Config map[string]any `json:"config"`
+	Glob   string          `json:"path"`
+	Files  []*LintGlobFile `json:"files,omitempty"`
+	Config map[string]any  `json:"config"`
 }
 
 func (rm *RawModule) Parse() (*ModuleGlob, error) {
@@ -20,11 +22,17 @@ func (rm *RawModule) Parse() (*ModuleGlob, error) {
 		return nil, fmt.Errorf("parse a module path: %w", err)
 	}
 	m.Config = rm.Config
-	p := filepath.Clean(m.SlashPath)
+	p := path.Clean(m.SlashPath)
 	if strings.HasPrefix(p, "..") {
 		return nil, fmt.Errorf("'..' is forbidden: %w", err)
 	}
 	m.SlashPath = p
+	for _, f := range rm.Files {
+		f.Clean()
+		if strings.HasPrefix(f.Path, "..") {
+			return nil, fmt.Errorf("'..' is forbidden: %w", err)
+		}
+	}
 	return m, nil
 }
 
@@ -71,6 +79,7 @@ type ModuleGlob struct {
 	SlashPath string                 `json:"slash_path,omitempty"`
 	Archive   *ModuleArchive         `json:"archive,omitempty"`
 	Config    map[string]interface{} `json:"config,omitempty"`
+	Files     []*LintGlobFile        `json:"files,omitempty"`
 	Excluded  bool                   `json:"excluded,omitempty"`
 }
 
@@ -127,41 +136,96 @@ func ParseImport(line string) (*Module, error) {
 
 func ParseModuleLine(line string) (*ModuleGlob, error) {
 	// <type>/github.com/<repo owner>/<repo name>/<path>@<commit hash>[:<tag>]
-	line = strings.TrimSpace(line)
-	excluded := false
-	if l := strings.TrimPrefix(line, "!"); l != line {
-		excluded = true
-		line = strings.TrimSpace(l)
-	}
+	line, excluded := parseNegationOperator(strings.TrimSpace(line))
 	elems := strings.Split(line, "/")
-	if len(elems) < 5 { //nolint:mnd
+	if len(elems) < 3 { //nolint:mnd
 		return nil, errors.New("line is invalid")
 	}
-	if elems[0] != "github_archive" {
+	moduleType, host, repoOwner, repoName := elems[0], elems[1], elems[2], elems[3]
+	if moduleType != "github_archive" {
 		return nil, errors.New("unsupported module type")
 	}
-	if elems[1] != "github.com" {
+	if host != "github.com" {
 		return nil, errors.New("module host must be 'github.com'")
+	}
+	if len(elems) == 4 { //nolint:mnd
+		// <type>/github.com/<repo owner>/<repo name>@<commit hash>[:<tag>]
+		repoName, refAndTag, ok := strings.Cut(repoName, "@")
+		if !ok {
+			return nil, errors.New("ref is required")
+		}
+		ref, tag, err := parseRefAndTag(refAndTag)
+		if err != nil {
+			return nil, err
+		}
+		return &ModuleGlob{
+			SlashPath: strings.Join(append(elems[:3], repoName, ref), "/"),
+			Archive: &ModuleArchive{
+				Type:      moduleType,
+				Host:      host,
+				RepoOwner: repoOwner,
+				RepoName:  repoName,
+				Ref:       ref,
+				Tag:       tag,
+			},
+			Excluded: excluded,
+		}, nil
 	}
 	pathAndRefAndTag := strings.Join(elems[4:], "/")
 	path, refAndTag, ok := strings.Cut(pathAndRefAndTag, "@")
 	if !ok {
 		return nil, errors.New("ref is required")
 	}
-	ref, tag, _ := strings.Cut(refAndTag, ":")
-	if err := validateRef(ref); err != nil {
+	ref, tag, err := parseRefAndTag(refAndTag)
+	if err != nil {
 		return nil, err
 	}
 	return &ModuleGlob{
 		SlashPath: strings.Join(append(elems[:4], ref, path), "/"),
 		Archive: &ModuleArchive{
-			Type:      "github_archive",
-			Host:      "github.com",
-			RepoOwner: elems[2],
-			RepoName:  elems[3],
+			Type:      moduleType,
+			Host:      host,
+			RepoOwner: repoOwner,
+			RepoName:  repoName,
 			Ref:       ref,
 			Tag:       tag,
 		},
 		Excluded: excluded,
 	}, nil
+}
+
+func parseRefAndTag(refAndTag string) (string, string, error) {
+	ref, tag, _ := strings.Cut(refAndTag, ":")
+	return ref, tag, validateRef(ref)
+}
+
+type LintGlobFile struct {
+	Path     string         `json:"path"`
+	Config   map[string]any `json:"config,omitempty"`
+	Excluded bool           `json:"-"`
+}
+
+func (lg *LintGlobFile) UnmarshalJSON(b []byte) error {
+	var p string
+	if err := json.Unmarshal(b, &p); err == nil {
+		lg.Path = p
+		return nil
+	}
+	rm := struct {
+		Path   string         `json:"path"`
+		Config map[string]any `json:"config,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(b, &rm); err != nil {
+		return err //nolint:wrapcheck
+	}
+	lg.Config = rm.Config
+	lg.Path = rm.Path
+	return nil
+}
+
+func (lg *LintGlobFile) Clean() {
+	p, excluded := parseNegationOperator(lg.Path)
+	lg.Excluded = excluded
+	lg.Path = path.Clean(p)
 }
