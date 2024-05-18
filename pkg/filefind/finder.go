@@ -86,7 +86,7 @@ func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootD
 	}, nil
 }
 
-func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop,funlen
+func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop,funlen,gocognit
 	if m.Excluded {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 		for file := range matchFiles {
