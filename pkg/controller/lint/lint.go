@@ -54,6 +54,10 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
+	logE.WithFields(logrus.Fields{
+		"config": log.JSON(rawCfg),
+	}).Debug("read config")
+
 	if param.TargetID != "" {
 		// If a target id is specified, gets a target from the configuration file by the target id.
 		target, err := rawCfg.GetTarget(param.TargetID)
@@ -68,6 +72,11 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	if err != nil {
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}
+
+	logE.WithFields(logrus.Fields{
+		"config":     log.JSON(cfg),
+		"raw_config": log.JSON(rawCfg),
+	}).Debug("parse config")
 
 	// Get a directory of the configuration file.
 	cfgDir := filepath.Dir(rawCfg.FilePath)
@@ -121,11 +130,6 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 			"targets":      log.JSON(targets),
 		}).Debug("filtered targets by given files")
 	}
-
-	logE.WithFields(logrus.Fields{
-		"filter_param": log.JSON(filterParam),
-		"targets":      log.JSON(targets),
-	}).Debug("filtered targets by data root directory")
 
 	// Lint targets.
 	results, err := c.linter.Lint(targets)

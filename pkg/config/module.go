@@ -33,40 +33,28 @@ func (rm *RawModule) Parse() (*ModuleGlob, error) {
 			return nil, fmt.Errorf("'..' is forbidden: %w", err)
 		}
 	}
+	m.Files = rm.Files
 	return m, nil
 }
 
 func (rm *RawModule) UnmarshalJSON(b []byte) error {
-	var a any
+	var s string
+	if err := json.Unmarshal(b, &s); err == nil {
+		rm.Glob = s
+		return nil
+	}
+	a := struct {
+		Path   string          `json:"path"`
+		Config map[string]any  `json:"config"`
+		Files  []*LintGlobFile `json:"files"`
+	}{}
 	if err := json.Unmarshal(b, &a); err != nil {
-		return fmt.Errorf("unmarshal as JSON: %w", err)
+		return err
 	}
-	switch c := a.(type) {
-	case string:
-		rm.Glob = c
-		return nil
-	case map[string]any:
-		p, ok := c["path"]
-		if !ok {
-			return errors.New("path is required")
-		}
-		a, ok := p.(string)
-		if !ok {
-			return errors.New("path must be a string")
-		}
-		rm.Glob = a
-
-		param, ok := c["param"]
-		if ok {
-			a, ok := param.(map[string]any)
-			if !ok {
-				return errors.New("param must be a map[string]any")
-			}
-			rm.Config = a
-		}
-		return nil
-	}
-	return errors.New("module must be either string or map[string]any")
+	rm.Glob = a.Path
+	rm.Config = a.Config
+	rm.Files = a.Files
+	return nil
 }
 
 type Module struct {
