@@ -85,8 +85,8 @@ func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootD
 	}, nil
 }
 
-func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop
-	if m.Excluded {
+func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop,funlen,gocognit
+	if len(m.Files) == 0 && m.Excluded {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 		for file := range matchFiles {
 			matched, err := doublestar.Match(pattern, file)
@@ -99,41 +99,96 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 		}
 		return nil
 	}
-	matches := map[string]struct{}{}
-	if err := doublestar.GlobWalk(afero.NewIOFS(f.fs), filepath.Join(rootDir, filepath.FromSlash(m.SlashPath)), func(path string, d fs.DirEntry) error {
-		if err := ignorePath(path, ignorePatterns); err != nil {
-			return err
-		}
-		if d.IsDir() {
+	matches := map[string][]*config.LintFile{}
+	pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
+	if len(m.Files) == 0 {
+		logE.WithFields(logrus.Fields{
+			"pattern": pattern,
+		}).Debug("search module files")
+		if err := doublestar.GlobWalk(afero.NewIOFS(f.fs), pattern, func(path string, d fs.DirEntry) error {
+			if err := ignorePath(path, ignorePatterns); err != nil {
+				return err
+			}
+			if d.IsDir() {
+				return nil
+			}
+			if strings.HasSuffix(d.Name(), "_test.jsonnet") {
+				return nil
+			}
+			moduleID, err := getModuleID(rootDir, path, m.Archive.Tag)
+			if err != nil {
+				return err
+			}
+			matches[path] = append(matches[path], &config.LintFile{
+				ID:     moduleID,
+				Config: m.Config,
+				Path:   path,
+			})
 			return nil
+		}, doublestar.WithNoFollow()); err != nil {
+			return fmt.Errorf("search files: %w", err)
 		}
-		if strings.HasSuffix(d.Name(), "_test.jsonnet") {
+	}
+	for _, file := range m.Files {
+		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath), filepath.FromSlash(file.Path))
+		if file.Excluded {
+			for matchFile := range matchFiles {
+				matched, err := doublestar.Match(pattern, matchFile)
+				if err != nil {
+					return fmt.Errorf("check file match: %w", err)
+				}
+				if matched {
+					delete(matchFiles, matchFile)
+				}
+			}
+			continue
+		}
+		logE.WithFields(logrus.Fields{
+			"pattern": pattern,
+		}).Debug("search module files")
+		if err := doublestar.GlobWalk(afero.NewIOFS(f.fs), pattern, func(path string, d fs.DirEntry) error {
+			if err := ignorePath(path, ignorePatterns); err != nil {
+				return err
+			}
+			if d.IsDir() {
+				return nil
+			}
+			if strings.HasSuffix(d.Name(), "_test.jsonnet") {
+				return nil
+			}
+			moduleID, err := getModuleID(rootDir, path, m.Archive.Tag)
+			if err != nil {
+				return err
+			}
+			matches[path] = append(matches[path], &config.LintFile{
+				ID:     moduleID,
+				Config: file.Config,
+				Path:   path,
+			})
 			return nil
+		}, doublestar.WithNoFollow()); err != nil {
+			return fmt.Errorf("search files: %w", err)
 		}
-		matches[path] = struct{}{}
-		return nil
-	}, doublestar.WithNoFollow()); err != nil {
-		return fmt.Errorf("search files: %w", err)
 	}
 	if len(matches) == 0 {
 		logE.WithField("pattern", m.SlashPath).Debug("no file matches")
 	}
-	for file := range matches {
-		relPath, err := filepath.Rel(rootDir, file)
-		if err != nil {
-			return fmt.Errorf("get a relative path from the root directory to a module: %w", err)
-		}
-		id := filepath.ToSlash(relPath)
-		if m.Archive != nil && m.Archive.Tag != "" {
-			id = fmt.Sprintf("%s:%s", id, m.Archive.Tag)
-		}
-		matchFiles[file] = append(matchFiles[file], &config.LintFile{
-			ID:     id,
-			Path:   file,
-			Config: m.Config,
-		})
+	for k, v := range matches {
+		matchFiles[k] = v
 	}
 	return nil
+}
+
+func getModuleID(rootDir, p, tag string) (string, error) {
+	a, err := filepath.Rel(rootDir, p)
+	if err != nil {
+		return "", fmt.Errorf("get a relative path from the root directory to a module file: %w", err)
+	}
+	moduleID := filepath.ToSlash(a)
+	if tag != "" {
+		moduleID += ":" + tag
+	}
+	return moduleID, nil
 }
 
 func (f *FileFinder) findFilesFromLintFile(logE *logrus.Entry, m *config.LintGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop

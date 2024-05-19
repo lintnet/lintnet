@@ -25,10 +25,10 @@ func TestRawModule_UnmarshalJSON(t *testing.T) {
 			},
 		},
 		{
-			name: "string",
+			name: "object",
 			s: `{
 				"path": "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/ghalint/job_secrets/main.jsonnet@696511bac987973002692e733735650f86b9c59e:v0.1.3",
-				"param": {
+				"config": {
 					"excludes": ["foo"]
 				}
 				}`,

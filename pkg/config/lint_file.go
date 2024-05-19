@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"path/filepath"
+	"path"
 	"strings"
 )
 
@@ -15,7 +15,7 @@ type LintFile struct {
 type LintGlob struct {
 	// Glob is either an absolute path or a relative path from configuration file path
 	Glob     string         `json:"path"`
-	Config   map[string]any `json:"config"`
+	Config   map[string]any `json:"config,omitempty"`
 	Excluded bool           `json:"-"`
 }
 
@@ -30,7 +30,12 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 }
 
 func (lg *LintGlob) Clean() {
-	p := strings.TrimPrefix(lg.Glob, "!")
-	lg.Excluded = p != lg.Glob
-	lg.Glob = filepath.Clean(p)
+	p, excluded := parseNegationOperator(lg.Glob)
+	lg.Excluded = excluded
+	lg.Glob = path.Clean(p)
+}
+
+func parseNegationOperator(p string) (string, bool) {
+	a := strings.TrimPrefix(p, "!")
+	return strings.TrimSpace(a), a != p
 }
