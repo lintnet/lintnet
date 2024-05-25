@@ -1,6 +1,6 @@
 # lintnet
 
-Powerful, Secure, Shareable linter powered by [Jsonnet](https://jsonnet.org/)
+General purpose linter powered by [Jsonnet](https://jsonnet.org/).
 
 <p align="center" width="100%">
   <picture>
@@ -17,11 +17,10 @@ Please don't use this tool yet.
 ## Features
 
 - [Support various configuration file formats](https://lintnet.github.io/docs/supported-data-format)
-- Powerful. You can lint configuration files flexibly by Jsonnet. And lintnet extends Jsonnet by native functions
-- Secure. Jsonnet can't access filesystem and network so it's secure compared with common programming languages such as JavaScript
-- Shareable. lintnet provides Module system that you can share lint rules between other projects. You can develop lint rules as both OSS and in-house libraries
-- Cross Platform. lintnet works on Linux, macOS, Windows / amd64, arm64
-- Easy to install. lintnet is a single binary written in [Go](https://go.dev/), so you only need to install an execurable file into `$PATH`. lintnet has no dependency that you need to install.
+- Powerful. You can lint files flexibly by Jsonnet. And lintnet extends Jsonnet by native functions
+- Secure. Jsonnet restricts access to filesystem and network so it's secure compared with common programming languages such as Python
+- Shareable. lintnet supports sharing lint rules as Modules. You can utilize third party lint rules, reuse your lint rules in multiple projects, and distribute lint rules as OSS and in-house libraries
+- Easy to install. lintnet is a single binary written in [Go](https://go.dev/), so you only need to install an execurable file into `$PATH`. lintnet has no dependency that you need to install
 
 ## Document
 
