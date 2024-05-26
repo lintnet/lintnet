@@ -23,6 +23,7 @@ type ParamTest struct {
 	ConfigFilePath string
 	TargetID       string
 	PWD            string
+	FilePaths      []string
 }
 
 func (p *ParamTest) FilterParam() *filefilter.Param {
@@ -32,23 +33,10 @@ func (p *ParamTest) FilterParam() *filefilter.Param {
 	}
 }
 
-func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTest) error { //nolint:cyclop
-	rawCfg := &config.RawConfig{}
-	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
-		return fmt.Errorf("read a configuration file: %w", err)
-	}
-
-	if param.TargetID != "" {
-		target, err := rawCfg.GetTarget(param.TargetID)
-		if err != nil {
-			return fmt.Errorf("get a target from configuration file by target id: %w", err)
-		}
-		rawCfg.Targets = []*config.RawTarget{target}
-	}
-
-	cfg, err := rawCfg.Parse()
+func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTest) error {
+	pairs, err := c.listPairs(logE, param)
 	if err != nil {
-		return fmt.Errorf("parse a configuration file: %w", err)
+		return err
 	}
 
 	testResultTemplate, err := template.New("_").Parse(string(testResultTemplateByte))
@@ -56,16 +44,6 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 		return fmt.Errorf("parse the template of test result: %w", err)
 	}
 
-	cfgDir := filepath.Dir(rawCfg.FilePath)
-
-	modRootDir := filepath.Join(param.RootDir, "modules")
-
-	targets, err := c.fileFinder.Find(logE, cfg, modRootDir, cfgDir)
-	if err != nil {
-		return fmt.Errorf("find files: %w", err)
-	}
-
-	pairs := c.filterTargetsWithTest(logE, targets)
 	failedResults := make([]*FailedResult, 0, len(pairs))
 	for _, pair := range pairs {
 		if results := c.tests(pair); len(results) > 0 {
@@ -79,6 +57,66 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 		return fmt.Errorf("render the result: %w", err)
 	}
 	return nil
+}
+
+func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPair, error) { //nolint:cyclop
+	if param.FilePaths != nil {
+		pairs := make([]*TestPair, 0, len(param.FilePaths))
+		for _, p := range param.FilePaths {
+			switch {
+			case strings.HasSuffix(p, "_test.jsonnet"):
+				pairs = append(pairs, &TestPair{
+					LintFilePath: strings.TrimSuffix(p, "_test.jsonnet") + ".jsonnet",
+					TestFilePath: p,
+				})
+			case strings.HasSuffix(p, ".jsonnet"):
+				tp := strings.TrimSuffix(p, ".jsonnet") + "_test.jsonnet"
+				if f, err := afero.Exists(c.fs, tp); err != nil {
+					return nil, fmt.Errorf("check if a file exists: %w", err)
+				} else if !f {
+					continue
+				}
+				pairs = append(pairs, &TestPair{
+					LintFilePath: p,
+					TestFilePath: tp,
+				})
+			default:
+				continue
+			}
+		}
+		return pairs, nil
+	}
+
+	rawCfg := &config.RawConfig{}
+	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
+		return nil, fmt.Errorf("read a configuration file: %w", err)
+	}
+
+	if param.TargetID != "" {
+		target, err := rawCfg.GetTarget(param.TargetID)
+		if err != nil {
+			return nil, fmt.Errorf("get a target from configuration file by target id: %w", err)
+		}
+		rawCfg.Targets = []*config.RawTarget{target}
+	}
+
+	cfg, err := rawCfg.Parse()
+	if err != nil {
+		return nil, fmt.Errorf("parse a configuration file: %w", err)
+	}
+
+	cfgDir := filepath.Dir(rawCfg.FilePath)
+
+	modRootDir := filepath.Join(param.RootDir, "modules")
+
+	var targets []*filefind.Target
+	ts, err := c.fileFinder.Find(logE, cfg, modRootDir, cfgDir)
+	if err != nil {
+		return nil, fmt.Errorf("find files: %w", err)
+	}
+	targets = ts
+
+	return c.filterTargetsWithTest(logE, targets), nil
 }
 
 func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
