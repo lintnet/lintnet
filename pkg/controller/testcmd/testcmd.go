@@ -60,7 +60,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 }
 
 func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPair, error) { //nolint:cyclop
-	if param.FilePaths != nil {
+	if len(param.FilePaths) != 0 {
 		pairs := make([]*TestPair, 0, len(param.FilePaths))
 		for _, p := range param.FilePaths {
 			switch {
