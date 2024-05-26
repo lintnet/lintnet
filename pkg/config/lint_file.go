@@ -14,9 +14,10 @@ type LintFile struct {
 
 type LintGlob struct {
 	// Glob is either an absolute path or a relative path from configuration file path
-	Glob     string         `json:"path"`
-	Config   map[string]any `json:"config,omitempty"`
-	Excluded bool           `json:"-"`
+	Glob     string          `json:"path"`
+	Files    []*LintGlobFile `json:"files,omitempty"`
+	Config   map[string]any  `json:"config,omitempty"`
+	Excluded bool            `json:"-"`
 }
 
 func (lg *LintGlob) UnmarshalJSON(b []byte) error {
@@ -26,6 +27,7 @@ func (lg *LintGlob) UnmarshalJSON(b []byte) error {
 	}
 	lg.Config = rm.Config
 	lg.Glob = rm.Glob
+	lg.Files = rm.Files
 	return nil
 }
 

@@ -1,5 +1,7 @@
 package config
 
+import "strings"
+
 type Target struct {
 	ID             string                    `json:"id,omitempty"`
 	LintFiles      []*LintGlob               `json:"lint_files,omitempty"`
@@ -11,14 +13,34 @@ type Target struct {
 type RawTarget struct {
 	ID        string       `json:"id,omitempty"`
 	LintGlobs []*LintGlob  `json:"lint_files"`
-	Modules   []*RawModule `json:"modules"`
+	Modules   []*RawModule `json:"-"`
 	DataFiles []string     `json:"data_files"`
 }
 
 func (rt *RawTarget) Parse() (*Target, error) {
+	modules := make([]*RawModule, 0, len(rt.LintGlobs))
+	lintGlobs := make([]*LintGlob, 0, len(rt.LintGlobs))
 	for _, lintGlob := range rt.LintGlobs {
-		lintGlob.Clean()
+		switch {
+		case strings.HasPrefix(lintGlob.Glob, "!module:"):
+			modules = append(modules, &RawModule{
+				Glob:   "!" + strings.TrimPrefix(lintGlob.Glob, "!module:"),
+				Files:  lintGlob.Files,
+				Config: lintGlob.Config,
+			})
+		case strings.HasPrefix(lintGlob.Glob, "module:"):
+			modules = append(modules, &RawModule{
+				Glob:   strings.TrimPrefix(lintGlob.Glob, "module:"),
+				Files:  lintGlob.Files,
+				Config: lintGlob.Config,
+			})
+		default:
+			lintGlob.Clean()
+			lintGlobs = append(lintGlobs, lintGlob)
+		}
 	}
+	rt.LintGlobs = lintGlobs
+	rt.Modules = modules
 	dataFiles := make([]*DataFile, len(rt.DataFiles))
 	for i, dataFile := range rt.DataFiles {
 		dataFiles[i] = NewDataFile(dataFile)
