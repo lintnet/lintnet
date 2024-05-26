@@ -84,16 +84,14 @@ func TestRawConfig_Parse(t *testing.T) { //nolint:funlen
 									"limit": 10,
 								},
 							},
-						},
-						Modules: []*config.RawModule{
 							{
-								Glob: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+								Glob: "module:github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/foo/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 								Config: map[string]any{
 									"excluded": []string{"test"},
 								},
 							},
 							{
-								Glob: "github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
+								Glob: "module:github_archive/github.com/suzuki-shunsuke/example-lintnet-modules/bar/*.jsonnet@0ed62adf055a4fbd7ef7ebe304f01794508ed325:v0.1.3",
 							},
 						},
 						DataFiles: []string{
