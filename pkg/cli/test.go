@@ -73,6 +73,7 @@ func (tc *testCommand) action(c *cli.Context) error {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 	return ctrl.Test(c.Context, logE, &testcmd.ParamTest{ //nolint:wrapcheck
+		FilePaths:      c.Args().Slice(),
 		ConfigFilePath: c.String("config"),
 		TargetID:       c.String("target"),
 		RootDir:        rootDir,
