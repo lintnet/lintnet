@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/suzuki-shunsuke/go-convmap/convmap"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,6 +25,13 @@ func (d *yamlUnmarshaler) Unmarshal(b []byte) (any, error) {
 		if err != nil {
 			return nil, fmt.Errorf("decode YAML: %w", err)
 		}
-		arr = append(arr, value)
+
+		// https://github.com/lintnet/lintnet/issues/437
+		v, err := convmap.Convert(value, nil)
+		if err != nil {
+			return nil, fmt.Errorf("convert map keys to string: %w", err)
+		}
+
+		arr = append(arr, v)
 	}
 }

@@ -15,6 +15,7 @@ require (
 	github.com/otiai10/copy v1.14.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.11.0
+	github.com/suzuki-shunsuke/go-convmap v0.2.0
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/tmccombs/hcl2json v0.6.3
 	github.com/urfave/cli/v2 v2.27.2
