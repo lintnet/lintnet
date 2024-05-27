@@ -86,8 +86,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
-github.com/suzuki-shunsuke/go-convmap v0.2.0 h1:ODc0BuEOQVsdqh70dnoZeMMeHUWuijAXfC71gPYoQrg=
-github.com/suzuki-shunsuke/go-convmap v0.2.0/go.mod h1:S0yDqBPFU0lmlHhoMKNSSHDRt87tUyI+KY/fBuXNn14=
+github.com/suzuki-shunsuke/go-convmap v0.2.1 h1:g94CxI6ENYluXZhdEH+1WVGhMAE8nLvAmWLUCwBw6W0=
+github.com/suzuki-shunsuke/go-convmap v0.2.1/go.mod h1:3XfGRbtyNBMGfXAxhROSRki6/UIlUX31Qt6DvdI6lUs=
 github.com/suzuki-shunsuke/logrus-error v0.1.4 h1:nWo98uba1fANHdZ9Y5pJ2RKs/PpVjrLzRp5m+mRb9KE=
 github.com/suzuki-shunsuke/logrus-error v0.1.4/go.mod h1:WsVvvw6SKSt08/fB2qbnsKIMJA4K1MYCUprqsBJbMiM=
 github.com/tmccombs/hcl2json v0.6.3 h1:yfZO7FYuWxSBAkxN1Dw+O9bjnK12vdwCDtSJDzw7haw=
