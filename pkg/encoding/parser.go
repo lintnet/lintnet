@@ -34,6 +34,7 @@ func (dp *DataFileParser) Parse(filePath *domain.Path) (*domain.TopLevelArgment,
 	if err != nil {
 		return nil, fmt.Errorf("decode a file: %w", err)
 	}
+
 	return &domain.TopLevelArgment{
 		Data: &domain.Data{
 			Text:     string(b),
