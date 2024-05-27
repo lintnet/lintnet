@@ -37,7 +37,7 @@ func (ip *ModuleImporter) Import(importedFrom, importedPath string) (jsonnet.Con
 	if err == nil {
 		return contents, foundAt, nil
 	}
-	if !strings.HasPrefix(importedPath, "github.com/") {
+	if !strings.HasPrefix(importedPath, "github_archive/github.com/") {
 		return contents, foundAt, err //nolint:wrapcheck
 	}
 	mod, err := config.ParseImport(importedPath)
