@@ -70,6 +70,9 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 				logE:    r.LogE,
 				version: r.LDFlags.Version,
 			}).command(),
+			(&newCommand{
+				logE: r.LogE,
+			}).command(),
 		},
 	}
 
