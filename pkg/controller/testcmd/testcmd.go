@@ -3,6 +3,7 @@ package testcmd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -56,7 +57,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 	if err := testResultTemplate.Execute(c.stdout, failedResults); err != nil {
 		return fmt.Errorf("render the result: %w", err)
 	}
-	return nil
+	return errors.New("test failed")
 }
 
 func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPair, error) { //nolint:cyclop
