@@ -3,6 +3,7 @@ package jsonnet
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
@@ -20,25 +21,29 @@ func ValidateJSONSchema(name string) *jsonnet.NativeFunction {
 			}
 			sch, err := jsonschema.Compile(schemaS)
 			if err != nil {
-				return "compile a JSON Schema: " + err.Error(), nil
+				return "compile a JSON Schema: " + err.Error(), nil //nolint:nilerr
 			}
 
 			if err := sch.Validate(s[1]); err != nil {
-				ve := &jsonschema.ValidationError{}
-				if errors.Is(err, ve) {
-					var a any
-					b, err := json.Marshal(ve.DetailedOutput())
-					if err != nil {
-						return nil, err
-					}
-					if err := json.Unmarshal(b, &a); err != nil {
-						return nil, err
-					}
-					return a, nil
-				}
-				return err.Error(), nil
+				return handleJSONSchemaError(err)
 			}
 			return nil, nil
 		},
 	}
+}
+
+func handleJSONSchemaError(err error) (any, error) {
+	ve := &jsonschema.ValidationError{}
+	if errors.As(err, &ve) {
+		var a any
+		b, err := json.Marshal(ve.DetailedOutput())
+		if err != nil {
+			return nil, fmt.Errorf("marshal a DetailedOutput as JSON: %w", err)
+		}
+		if err := json.Unmarshal(b, &a); err != nil {
+			return nil, fmt.Errorf("unmarshal DetailedOutput as JSON: %w", err)
+		}
+		return a, nil
+	}
+	return err.Error(), nil
 }
