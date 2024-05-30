@@ -15,11 +15,11 @@ func ValidateJSONSchema(name string) *jsonnet.NativeFunction {
 		Name:   name,
 		Params: ast.Identifiers{"schema", "v"},
 		Func: func(s []any) (any, error) {
-			schemaS, ok := s[0].(string)
-			if !ok {
-				return "the first argument must be a string", nil
+			schema, err := json.Marshal(s[0])
+			if err != nil {
+				return "marshal a JSON Schema as JSON: " + err.Error(), nil
 			}
-			sch, err := jsonschema.Compile(schemaS)
+			sch, err := jsonschema.CompileString("", string(schema))
 			if err != nil {
 				return "compile a JSON Schema: " + err.Error(), nil //nolint:nilerr
 			}
