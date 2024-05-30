@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (f *FileFinder) findDataFiles(dataBasePath string, files []*config.DataFile, cfgDir string, ignorePatterns []string) ([][]*domain.Path, error) {
+func (f *FileFinder) findDataFiles(dataBasePath string, files []*config.DataFile, cfgDir string, ignorePatterns []string) ([][]*domain.Path, error) { //nolint:cyclop
 	if dataBasePath == "" {
 		dataFiles, err := f.findFilesFromPaths(files, cfgDir, ignorePatterns)
 		if err != nil {
@@ -38,6 +38,15 @@ func (f *FileFinder) findDataFiles(dataBasePath string, files []*config.DataFile
 		dataFiles, err := f.findFilesFromPaths(files, rootPath, ignorePatterns)
 		if err != nil {
 			return nil, err
+		}
+		base, err := filepath.Rel(cfgDir, rootPath)
+		if err != nil {
+			return nil, fmt.Errorf("get a relative path from configuration file: %w", err)
+		}
+		for _, dataFile := range dataFiles {
+			if !filepath.IsAbs(dataFile.Raw) {
+				dataFile.Raw = filepath.Join(base, dataFile.Raw)
+			}
 		}
 		paths = append(paths, dataFiles)
 	}
