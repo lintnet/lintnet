@@ -3,7 +3,6 @@ package jsonnet
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
@@ -38,10 +37,10 @@ func handleJSONSchemaError(err error) (any, error) {
 		var a any
 		b, err := json.Marshal(ve.DetailedOutput())
 		if err != nil {
-			return nil, fmt.Errorf("marshal a DetailedOutput as JSON: %w", err)
+			return "marshal a DetailedOutput as JSON: " + err.Error(), nil //nolint:nilerr
 		}
 		if err := json.Unmarshal(b, &a); err != nil {
-			return nil, fmt.Errorf("unmarshal DetailedOutput as JSON: %w", err)
+			return "unmarshal DetailedOutput as JSON: " + err.Error(), nil //nolint:nilerr
 		}
 		return a, nil
 	}
