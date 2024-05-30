@@ -9,11 +9,6 @@ General purpose linter powered by [Jsonnet](https://jsonnet.org/).
   </picture>
 </p>
 
-## :warning: This project is still under development
-
-This tool doesn't work and API is unstable yet.
-Please don't use this tool yet.
-
 ## Features
 
 - [Support various configuration file formats](https://lintnet.github.io/docs/supported-data-format)
