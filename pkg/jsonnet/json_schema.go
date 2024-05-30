@@ -17,7 +17,7 @@ func ValidateJSONSchema(name string) *jsonnet.NativeFunction {
 		Func: func(s []any) (any, error) {
 			schema, err := json.Marshal(s[0])
 			if err != nil {
-				return "marshal a JSON Schema as JSON: " + err.Error(), nil
+				return "marshal a JSON Schema as JSON: " + err.Error(), nil //nolint:nilerr
 			}
 			sch, err := jsonschema.CompileString("", string(schema))
 			if err != nil {
