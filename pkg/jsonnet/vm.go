@@ -13,6 +13,7 @@ func SetNativeFunctions(vm *jsonnet.VM) {
 	vm.NativeFunction(strings.TrimSpace("strings.TrimSpace"))
 	vm.NativeFunction(regexp.MatchString("regexp.MatchString"))
 	vm.NativeFunction(filepath.Base("filepath.Base"))
+	vm.NativeFunction(ValidateJSONSchema("jsonschema.Validate"))
 }
 
 func MakeVM() *jsonnet.VM {
