@@ -9,7 +9,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v62 v62.0.0
 	github.com/google/go-jsonnet v0.20.0
-	github.com/lintnet/go-jsonnet-native-functions v0.2.1
+	github.com/lintnet/go-jsonnet-native-functions v0.3.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/otiai10/copy v1.14.0
