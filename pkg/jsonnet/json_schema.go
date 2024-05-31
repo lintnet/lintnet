@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
+	"github.com/lintnet/go-jsonnet-native-functions/util"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
@@ -16,11 +17,11 @@ func ValidateJSONSchema(name string) *jsonnet.NativeFunction {
 		Func: func(s []any) (any, error) {
 			schema, err := json.Marshal(s[0])
 			if err != nil {
-				return "marshal a JSON Schema as JSON: " + err.Error(), nil //nolint:nilerr
+				return util.NewError("marshal a JSON Schema as JSON: " + err.Error()), nil //nolint:nilerr
 			}
 			sch, err := jsonschema.CompileString("", string(schema))
 			if err != nil {
-				return "compile a JSON Schema: " + err.Error(), nil //nolint:nilerr
+				return util.NewError("compile a JSON Schema: " + err.Error()), nil //nolint:nilerr
 			}
 
 			if err := sch.Validate(s[1]); err != nil {
@@ -37,12 +38,12 @@ func handleJSONSchemaError(err error) (any, error) {
 		var a any
 		b, err := json.Marshal(ve.DetailedOutput())
 		if err != nil {
-			return "marshal a DetailedOutput as JSON: " + err.Error(), nil //nolint:nilerr
+			return util.NewError("marshal a DetailedOutput as JSON: " + err.Error()), nil //nolint:nilerr
 		}
 		if err := json.Unmarshal(b, &a); err != nil {
-			return "unmarshal DetailedOutput as JSON: " + err.Error(), nil //nolint:nilerr
+			return util.NewError("unmarshal a DetailedOutput as JSON: " + err.Error()), nil //nolint:nilerr
 		}
 		return a, nil
 	}
-	return err.Error(), nil
+	return util.NewError(err.Error()), nil
 }
