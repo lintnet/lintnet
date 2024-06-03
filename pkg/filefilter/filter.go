@@ -51,7 +51,7 @@ func filterTargets(targets []*filefind.Target, filePaths []string) []*filefind.T
 	return newTargets
 }
 
-func filterTarget(target *filefind.Target, filePaths []string) *filefind.Target {
+func filterTarget(target *filefind.Target, filePaths []string) *filefind.Target { //nolint:cyclop
 	newTarget := &filefind.Target{}
 	for _, lintFile := range target.LintFiles {
 		for _, filePath := range filePaths {
