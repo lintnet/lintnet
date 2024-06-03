@@ -2,6 +2,7 @@ package filefilter
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefind"
@@ -58,6 +59,14 @@ func filterTarget(target *filefind.Target, filePaths []string) *filefind.Target 
 				newTarget.LintFiles = append(newTarget.LintFiles, lintFile)
 				break
 			}
+
+			// If filePath is a directory, lint files in the filePath is included in the target.
+			rel, err := filepath.Rel(filePath, lintFile.Path)
+			if err != nil || strings.HasPrefix(rel, "..") {
+				continue
+			}
+			newTarget.LintFiles = append(newTarget.LintFiles, lintFile)
+			break
 		}
 	}
 	lintChanged := false
