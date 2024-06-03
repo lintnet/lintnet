@@ -2,6 +2,7 @@ package filefilter
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefind"
@@ -54,7 +55,7 @@ func filterTarget(target *filefind.Target, filePaths []string) *filefind.Target 
 	newTarget := &filefind.Target{}
 	for _, lintFile := range target.LintFiles {
 		for _, filePath := range filePaths {
-			if lintFile.Path == filePath {
+			if checkIfLintFileChanged(lintFile.Path, filePath) {
 				newTarget.LintFiles = append(newTarget.LintFiles, lintFile)
 				break
 			}
@@ -68,11 +69,12 @@ func filterTarget(target *filefind.Target, filePaths []string) *filefind.Target 
 	dataChanged := false
 	for _, dataFile := range target.DataFiles {
 		for _, filePath := range filePaths {
-			if dataFile.Abs == filePath {
+			if checkIfDataFileChanged(dataFile.Abs, filePath) {
 				dataChanged = true
 				if !lintChanged {
 					newTarget.DataFiles = append(newTarget.DataFiles, dataFile)
 				}
+				break
 			}
 		}
 	}
@@ -80,4 +82,22 @@ func filterTarget(target *filefind.Target, filePaths []string) *filefind.Target 
 		newTarget.LintFiles = target.LintFiles
 	}
 	return newTarget
+}
+
+func checkIfDataFileChanged(dataFilePath, filePath string) bool {
+	if dataFilePath == filePath {
+		return true
+	}
+	// If filePath is a directory, data files in the filePath is included in the target.
+	rel, err := filepath.Rel(filePath, dataFilePath)
+	return err == nil && !strings.HasPrefix(rel, "..")
+}
+
+func checkIfLintFileChanged(lintFilePath, filePath string) bool {
+	if lintFilePath == filePath {
+		return true
+	}
+	// If filePath is a directory, lint files in the filePath is included in the target.
+	rel, err := filepath.Rel(filePath, lintFilePath)
+	return err == nil && !strings.HasPrefix(rel, "..")
 }
