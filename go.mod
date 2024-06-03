@@ -9,7 +9,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v62 v62.0.0
 	github.com/google/go-jsonnet v0.20.0
-	github.com/lintnet/go-jsonnet-native-functions v0.4.0
+	github.com/lintnet/go-jsonnet-native-functions v0.4.1
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/otiai10/copy v1.14.0
@@ -24,6 +24,8 @@ require (
 	golang.org/x/oauth2 v0.20.0
 	gopkg.in/yaml.v3 v3.0.1
 )
+
+replace github.com/google/go-jsonnet v0.20.0 => github.com/lintnet/go-jsonnet v0.20.2
 
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
@@ -47,6 +49,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
