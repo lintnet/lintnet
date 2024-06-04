@@ -85,7 +85,7 @@ type Controller struct {
 }
 
 type FileFinder interface {
-	Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*filefind.Target, error)
+	FindLintFiles(logE *logrus.Entry, cfg *config.Config, cfgDir string) ([]*config.LintFile, error)
 }
 
 type ParamController struct {
