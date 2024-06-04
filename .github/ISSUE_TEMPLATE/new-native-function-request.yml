@@ -1,4 +1,5 @@
 name: New Native Function Request
+title: "New Native Function Request: <function name>"
 description: If you want to request a new native function.
 labels:
   - enhancement
