@@ -68,6 +68,9 @@ func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPai
 
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
+		if param.ConfigFilePath == "" && errors.Is(err, fs.ErrNotExist) {
+			return c.listPairsWithFilePaths([]string{"."})
+		}
 		return nil, fmt.Errorf("read a configuration file: %w", err)
 	}
 
