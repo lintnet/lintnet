@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
 	"github.com/lintnet/go-jsonnet-native-functions/util"
-	"github.com/santhosh-tekuri/jsonschema/v5"
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 func ValidateJSONSchema(name string) *jsonnet.NativeFunction {
