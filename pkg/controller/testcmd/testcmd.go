@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 	"text/template"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/google/go-cmp/cmp"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefilter"
-	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -60,32 +61,9 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 	return errors.New("test failed")
 }
 
-func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPair, error) { //nolint:cyclop
+func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPair, error) {
 	if len(param.FilePaths) != 0 {
-		pairs := make([]*TestPair, 0, len(param.FilePaths))
-		for _, p := range param.FilePaths {
-			switch {
-			case strings.HasSuffix(p, "_test.jsonnet"):
-				pairs = append(pairs, &TestPair{
-					LintFilePath: strings.TrimSuffix(p, "_test.jsonnet") + ".jsonnet",
-					TestFilePath: p,
-				})
-			case strings.HasSuffix(p, ".jsonnet"):
-				tp := strings.TrimSuffix(p, ".jsonnet") + "_test.jsonnet"
-				if f, err := afero.Exists(c.fs, tp); err != nil {
-					return nil, fmt.Errorf("check if a file exists: %w", err)
-				} else if !f {
-					continue
-				}
-				pairs = append(pairs, &TestPair{
-					LintFilePath: p,
-					TestFilePath: tp,
-				})
-			default:
-				continue
-			}
-		}
-		return pairs, nil
+		return c.listPairsWithFilePaths(param.FilePaths)
 	}
 
 	rawCfg := &config.RawConfig{}
@@ -108,16 +86,83 @@ func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPai
 
 	cfgDir := filepath.Dir(rawCfg.FilePath)
 
-	modRootDir := filepath.Join(param.RootDir, "modules")
-
-	var targets []*filefind.Target
-	ts, err := c.fileFinder.Find(logE, cfg, modRootDir, cfgDir)
+	lintFiles, err := c.fileFinder.FindLintFiles(logE, cfg, cfgDir)
 	if err != nil {
 		return nil, fmt.Errorf("find files: %w", err)
 	}
-	targets = ts
 
-	return c.filterTargetsWithTest(logE, targets), nil
+	return c.filterTargetsWithTest(logE, lintFiles), nil
+}
+
+func getTestFilePath(lintFilePath string) string {
+	return lintFilePath[:len(lintFilePath)-len(".jsonnet")] + "_test.jsonnet"
+}
+
+func getLintFilePath(testFilePath string) string {
+	return testFilePath[:len(testFilePath)-len("_test.jsonnet")] + ".jsonnet"
+}
+
+func (c *Controller) listPairsWithFilePath(filePath string) ([]*TestPair, error) { //nolint:cyclop
+	switch {
+	case strings.HasSuffix(filePath, "_test.jsonnet"):
+		lintFile := getLintFilePath(filePath)
+		return []*TestPair{
+			{
+				LintFilePath: lintFile,
+				TestFilePath: filePath,
+			},
+		}, nil
+	case strings.HasSuffix(filePath, ".jsonnet"):
+		tp := getTestFilePath(filePath)
+		if f, err := afero.Exists(c.fs, tp); err != nil {
+			return nil, fmt.Errorf("check if a file exists: %w", err)
+		} else if !f {
+			return nil, nil
+		}
+		return []*TestPair{
+			{
+				LintFilePath: filePath,
+				TestFilePath: tp,
+			},
+		}, nil
+	default:
+		if b, err := afero.IsDir(c.fs, filePath); err != nil {
+			return nil, fmt.Errorf("check if a path is a directory: %w", err)
+		} else if !b {
+			return nil, nil
+		}
+		pairs := []*TestPair{}
+		if err := doublestar.GlobWalk(afero.NewIOFS(c.fs), filePath+"/**/*_test.jsonnet", func(testFile string, _ fs.DirEntry) error {
+			lintFile := getLintFilePath(testFile)
+			a, err := afero.Exists(c.fs, lintFile)
+			if err != nil {
+				return fmt.Errorf("check if a lint file exists: %w", err)
+			}
+			if !a {
+				return nil
+			}
+			pairs = append(pairs, &TestPair{
+				LintFilePath: lintFile,
+				TestFilePath: testFile,
+			})
+			return nil
+		}, doublestar.WithNoFollow()); err != nil {
+			return nil, fmt.Errorf("search files: %w", err)
+		}
+		return pairs, nil
+	}
+}
+
+func (c *Controller) listPairsWithFilePaths(filePaths []string) ([]*TestPair, error) {
+	pairs := make([]*TestPair, 0, len(filePaths))
+	for _, p := range filePaths {
+		ps, err := c.listPairsWithFilePath(p)
+		if err != nil {
+			return nil, err
+		}
+		pairs = append(pairs, ps...)
+	}
+	return pairs, nil
 }
 
 func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
@@ -199,30 +244,28 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	return results
 }
 
-func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, targets []*filefind.Target) []*TestPair {
+func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, lintFiles []*config.LintFile) []*TestPair {
 	pairs := []*TestPair{}
-	for _, target := range targets {
-		for _, lintFile := range target.LintFiles {
-			if lintFile.Path == "" {
-				continue
-			}
-			baseName := filepath.Base(lintFile.Path)
-			ext := filepath.Ext(baseName)
-			testFileName := fmt.Sprintf("%s_test%s", strings.TrimSuffix(baseName, filepath.Ext(baseName)), ext)
-			testFilePath := filepath.Join(filepath.Dir(lintFile.Path), testFileName)
-			f, err := afero.Exists(c.fs, testFilePath)
-			if err != nil {
-				logE.WithError(err).Warn("check if a test file exists")
-				continue
-			}
-			if !f {
-				continue
-			}
-			pairs = append(pairs, &TestPair{
-				LintFilePath: lintFile.Path,
-				TestFilePath: testFilePath,
-			})
+	for _, lintFile := range lintFiles {
+		if lintFile.Path == "" {
+			continue
 		}
+		baseName := filepath.Base(lintFile.Path)
+		ext := filepath.Ext(baseName)
+		testFileName := fmt.Sprintf("%s_test%s", strings.TrimSuffix(baseName, filepath.Ext(baseName)), ext)
+		testFilePath := filepath.Join(filepath.Dir(lintFile.Path), testFileName)
+		f, err := afero.Exists(c.fs, testFilePath)
+		if err != nil {
+			logE.WithError(err).Warn("check if a test file exists")
+			continue
+		}
+		if !f {
+			continue
+		}
+		pairs = append(pairs, &TestPair{
+			LintFilePath: lintFile.Path,
+			TestFilePath: testFilePath,
+		})
 	}
 	return pairs
 }
