@@ -24,11 +24,12 @@ body:
       required: true
 
   - type: textarea
-    id: reference
+    id: description
     attributes:
-      label: Reference URLs
+      label: Description
       description: |
-        Please note the reference URLs.
+        Please note the description and reference URLs.
+        You can omit the description if reference URLs describe the function well.
         If the function has the Go implementation, please tell us the link to Go Doc too.
     validations:
       required: true
