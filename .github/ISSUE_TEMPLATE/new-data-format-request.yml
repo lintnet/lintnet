@@ -1,0 +1,49 @@
+name: New Data Format Request
+title: "New Data Format Request: <format name>"
+description: If you want to request a new data format.
+labels:
+  - enhancement
+  - new-data-format
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## :warning: Before creating a new issue, please check
+
+        - Check if the data format has already been supported or requested
+          - https://lintnet.github.io/docs/supported-data-format/
+          - https://github.com/lintnet/lintnet/issues?q=is%3Aissue+is%3Aopen+label%3Anew-data-format
+        - Probably it's difficult to support data format that there is no parser written in Go
+
+  - type: input
+    id: data-format-name
+    attributes:
+      label: data format Name and file extension
+      description: e.g. `JSON5 (.json5)`
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Please note the description and reference URLs.
+        You can omit the description if reference URLs describe the data format well.
+        If there are parsers written in Go, please note links to them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is the data format needed?
+    validations:
+      required: false
+
+  - type: textarea
+    id: note
+    attributes:
+      label: Note
+    validations:
+      required: false
