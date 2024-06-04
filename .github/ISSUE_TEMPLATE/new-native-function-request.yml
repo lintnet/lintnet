@@ -1,0 +1,58 @@
+name: New Native Function Request
+description: If you want to request a new native function.
+labels:
+  - enhancement
+  - new-native-function
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## :warning: Before creating a new issue, please check
+
+        - Check if the function has already been supported or requested
+          - https://lintnet.github.io/docs/lint-rule/native-function/
+          - https://github.com/lintnet/lintnet/issues?q=is%3Aissue+is%3Aopen+label%3Anew-native-function
+        - [Check if Jsonnet supports the feature natively](https://jsonnet.org/ref/stdlib.html)
+        - Basically, we don't accept a function accessing filesystem (e.g. [os.WriteFile](https://pkg.go.dev/os#WriteFile)) and network (e.g. [net/http#Get](https://pkg.go.dev/net/http#Get)) and executing external functions (e.g. [os/exec/#Cmd.Run](https://pkg.go.dev/os/exec#Cmd.Run))
+
+  - type: input
+    id: function-name
+    attributes:
+      label: Native Function Name
+      description: e.g. `strings.Contains`
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference URLs
+      description: |
+        Please note the reference URLs.
+        If the function has the Go implementation, please tell us the link to Go Doc too.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference URLs
+      description: |
+        Please note the reference URLs.
+        If the function has the Go implementation, please tell us the link to Go Doc too.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is the function needed?
+    validations:
+      required: false
+
+  - type: textarea
+    id: note
+    attributes:
+      label: Note
+    validations:
+      required: false
