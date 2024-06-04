@@ -11,6 +11,14 @@
         additionalProperties: false,
         description: 'target',
         properties: {
+          id: {
+            type: 'string',
+            description: 'the target id. The id must be unique',
+          },
+          base_data_path: {
+            type: 'string',
+            description: 'base data path',
+          },
           data_files: {
             type: 'array',
             description: 'data files',
@@ -67,6 +75,35 @@
                     path: {
                       type: 'string',
                       description: 'file path to lint files. Glob is available',
+                    },
+                    files: {
+                      type: 'array',
+                      description: 'lint files',
+                      items: {
+                        description: 'lint files',
+                        anyOf: [
+                          {
+                            type: 'string',
+                            description: 'file path to lint files. Glob is available',
+                          },
+                          {
+                            type: 'object',
+                            required: [
+                              'path',
+                            ],
+                            properties: {
+                              path: {
+                                type: 'string',
+                                description: 'file path to lint files. Glob is available',
+                              },
+                              config: {
+                                type: 'object',
+                                description: 'configuration of the lint files',
+                              },
+                            },
+                          },
+                        ],
+                      },
                     },
                     config: {
                       type: 'object',
