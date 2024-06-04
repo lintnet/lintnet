@@ -34,16 +34,6 @@ body:
       required: true
 
   - type: textarea
-    id: reference
-    attributes:
-      label: Reference URLs
-      description: |
-        Please note the reference URLs.
-        If the function has the Go implementation, please tell us the link to Go Doc too.
-    validations:
-      required: true
-
-  - type: textarea
     id: why
     attributes:
       label: Why is the function needed?
