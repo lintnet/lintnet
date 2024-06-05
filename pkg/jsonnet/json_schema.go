@@ -15,13 +15,14 @@ func ValidateJSONSchema(name string) *jsonnet.NativeFunction {
 		Name:   name,
 		Params: ast.Identifiers{"schema", "v"},
 		Func: func(s []any) (any, error) {
-			schema, err := json.Marshal(s[0])
-			if err != nil {
-				return util.NewError("marshal a JSON Schema as JSON: " + err.Error()), nil //nolint:nilerr
+			c := jsonschema.NewCompiler()
+			if err := c.AddResource("<in memory>", s[0]); err != nil {
+				return util.NewError("add a resource as JSON Schema: " + err.Error()), nil //nolint:nilerr
 			}
-			sch, err := jsonschema.CompileString("", string(schema))
+
+			sch, err := c.Compile("<in memory>")
 			if err != nil {
-				return util.NewError("compile a JSON Schema: " + err.Error()), nil //nolint:nilerr
+				return util.NewError("compile JSON Schema: " + err.Error()), nil //nolint:nilerr
 			}
 
 			if err := sch.Validate(s[1]); err != nil {
