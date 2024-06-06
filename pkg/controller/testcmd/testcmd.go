@@ -234,6 +234,9 @@ func (c *Controller) readDatafile(pair *TestPair, td *TestData) error {
 	if td.Param != nil && td.Param.Data != nil && td.Param.Data.FilePath != "" {
 		data.Data.FilePath = td.Param.Data.FilePath
 	}
+	if td.FakeDataFile != "" {
+		data.Data.FilePath = td.FakeDataFile
+	}
 	if td.Param != nil {
 		data.Config = td.Param.Config
 	}
