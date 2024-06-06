@@ -26,20 +26,28 @@ func (tc *testCommand) command() *cli.Command {
 	return &cli.Command{
 		Name:      "test",
 		Usage:     "Test lint files",
-		UsageText: "lintnet test [command options]",
+		ArgsUsage: "[<lint file, test file, or directory> ...]",
 		Description: `Test lint files.
 
-$ lintnet test
+If you run "lintnet test" without any argument,
+lintnet searches lint files using a configuration file and tests all lint files having test files.
+Lint files without test files are ignored.
+You can test only specific files by specifying files as arguments.
+If you specify files explicitly, a configuration file is unnecessary.
+This means when you develop modules, you don't have to prepare a configuration file.
+If you specify directories, lint files in those directories and subdirectories are tested.
+For example, "lintnet test ." searches files matching the glob pattern "**/*.jsonnet",
+and "lintnet test foo" search files matching "foo/**/*.jsonnet".
+If a configuration file isn't specified and isn't found, "lintnet test" works as "lintnet test .".
 
-You can test only a specific target.
-
-$ lintnet test -target [target id]
+You can test only a specific target with -target option.
 `,
 		Action: tc.action,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "target",
 				Aliases: []string{"t"},
+				Usage:   "Target ID",
 			},
 		},
 	}
