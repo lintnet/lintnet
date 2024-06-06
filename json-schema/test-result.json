@@ -9,6 +9,39 @@
             "description": "data file path. This overrides param.data's text, value and param.data.text",
             "type": "string"
          },
+         "data_files": {
+            "items": {
+               "oneOf": [
+                  {
+                     "description": "data file path",
+                     "type": "string"
+                  },
+                  {
+                     "additionalProperties": false,
+                     "description": "data file path",
+                     "properties": {
+                        "fake_path": {
+                           "description": "Fake data file path. This is useful if a lint rule depends on data file path and you want to specify the different data file path from the actual file path",
+                           "type": "string"
+                        },
+                        "path": {
+                           "description": "data file path",
+                           "type": "string"
+                        }
+                     },
+                     "required": [
+                        "path"
+                     ],
+                     "type": "object"
+                  }
+               ]
+            },
+            "type": "array"
+         },
+         "fake_data_file": {
+            "description": "Fake data file path. This is useful if a lint rule depends on data file path and you want to specify the different data file path from the actual file path",
+            "type": "string"
+         },
          "name": {
             "description": "test name",
             "type": "string"
