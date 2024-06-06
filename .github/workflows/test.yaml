@@ -8,7 +8,6 @@ jobs:
     outputs:
       update-aqua-checksums: ${{steps.changes.outputs.update-aqua-checksums}}
       renovate-config-validator: ${{steps.changes.outputs.renovate-config-validator}}
-      ghalint: ${{steps.changes.outputs.ghalint}}
       go-mod-tidy: ${{steps.changes.outputs.go-mod-tidy}}
     runs-on: ubuntu-latest
     permissions: {}
@@ -27,11 +26,6 @@ jobs:
               - renovate.json5
               - .github/workflows/test.yaml
               - .github/workflows/wc-renovate-config-validator.yaml
-            ghalint:
-              - .github/workflows/*.yaml
-              - aqua/aqua.yaml
-              - aqua/imports/ghalint.yaml
-              - ghalint.yaml
             go-mod-tidy:
               - go.mod
               - go.sum
@@ -62,7 +56,6 @@ jobs:
     needs:
       - renovate-config-validator
       - update-aqua-checksums
-      - ghalint
       - test
       - integration-test
       - go-mod-tidy
@@ -83,12 +76,6 @@ jobs:
     secrets:
       gh_app_id: ${{secrets.APP_ID}}
       gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
-
-  ghalint:
-    needs: path-filter
-    if: needs.path-filter.outputs.ghalint == 'true'
-    uses: ./.github/workflows/wc-ghalint.yaml
-    permissions: {}
 
   test:
     uses: ./.github/workflows/wc-test.yaml
