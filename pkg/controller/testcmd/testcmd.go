@@ -94,7 +94,7 @@ func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPai
 		return nil, fmt.Errorf("find files: %w", err)
 	}
 
-	return c.filterTargetsWithTest(logE, lintFiles), nil
+	return c.filterLintFilesWithTest(logE, lintFiles), nil
 }
 
 func getTestFilePath(lintFilePath string) string {
@@ -168,7 +168,7 @@ func (c *Controller) listPairsWithFilePaths(filePaths []string) ([]*TestPair, er
 	return pairs, nil
 }
 
-func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
+func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop,funlen
 	if td.DataFile != "" {
 		p := &domain.Path{
 			Raw: td.DataFile,
@@ -188,9 +188,35 @@ func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint
 		}
 		td.Param = data
 	}
+
+	if len(td.DataFiles) != 0 {
+		combinedData := make([]*domain.Data, 0, len(td.DataFiles))
+		for i, dataFile := range td.DataFiles {
+			p := &domain.Path{
+				Raw: dataFile.Path,
+				Abs: filepath.Join(filepath.Dir(pair.TestFilePath), dataFile.Path),
+			}
+			data, err := c.dataFileParser.Parse(p)
+			if err != nil {
+				return &FailedResult{
+					Error: fmt.Errorf("read a data file: %w", err).Error(),
+				}
+			}
+			if dataFile.FakePath != "" {
+				data.Data.FilePath = dataFile.FakePath
+			}
+			if td.Param != nil {
+				data.Config = td.Param.Config
+			}
+			combinedData[i] = data.Data
+		}
+		td.Param.CombinedData = combinedData
+	}
+
 	if td.Param.Config == nil {
 		td.Param.Config = map[string]any{}
 	}
+
 	tlaB, err := json.Marshal(td.Param)
 	if err != nil {
 		return &FailedResult{
@@ -247,7 +273,7 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	return results
 }
 
-func (c *Controller) filterTargetsWithTest(logE *logrus.Entry, lintFiles []*config.LintFile) []*TestPair {
+func (c *Controller) filterLintFilesWithTest(logE *logrus.Entry, lintFiles []*config.LintFile) []*TestPair {
 	pairs := []*TestPair{}
 	for _, lintFile := range lintFiles {
 		if lintFile.Path == "" {
