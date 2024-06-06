@@ -2,6 +2,7 @@ package testcmd
 
 import (
 	_ "embed"
+	"encoding/json"
 	"io"
 
 	"github.com/google/go-jsonnet"
@@ -19,10 +20,34 @@ import (
 var testResultTemplateByte []byte
 
 type TestData struct {
-	Name     string                  `json:"name,omitempty"`
-	DataFile string                  `json:"data_file,omitempty"`
-	Param    *domain.TopLevelArgment `json:"param,omitempty"`
-	Result   []any                   `json:"result,omitempty"`
+	Name      string                  `json:"name,omitempty"`
+	DataFile  string                  `json:"data_file,omitempty"`
+	DataFiles []*DataFile             `json:"data_files,omitempty"`
+	Param     *domain.TopLevelArgment `json:"param,omitempty"`
+	Result    []any                   `json:"result,omitempty"`
+}
+
+type DataFile struct {
+	Path     string `json:"path,omitempty"`
+	FakePath string `json:"fake_path,omitempty"`
+}
+
+type dataFile DataFile
+
+func (d *DataFile) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err == nil {
+		d.Path = s
+		d.FakePath = s
+		return nil
+	}
+	a := &dataFile{}
+	if err := json.Unmarshal(b, a); err != nil {
+		return err //nolint:wrapcheck
+	}
+	d.Path = a.Path
+	d.FakePath = a.FakePath
+	return nil
 }
 
 type TestPair struct {
