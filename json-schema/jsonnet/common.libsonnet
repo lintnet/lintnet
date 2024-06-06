@@ -2,12 +2,6 @@ local lint_data = {
   type: 'object',
   description: 'data file',
   additionalProperties: false,
-  required: [
-    'file_path',
-    'text',
-    'value',
-    'file_type',
-  ],
   properties: {
     file_path: {
       type: 'string',
@@ -41,9 +35,6 @@ local lint_data = {
     type: 'object',
     additionalProperties: false,
     description: 'Top level arguments',
-    required: [
-      'config',
-    ],
     properties: {
       data: lint_data,
       combined_data: {

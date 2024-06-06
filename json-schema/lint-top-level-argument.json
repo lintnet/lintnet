@@ -34,12 +34,6 @@
                   "description": "data file content"
                }
             },
-            "required": [
-               "file_path",
-               "text",
-               "value",
-               "file_type"
-            ],
             "type": "object"
          },
          "type": "array"
@@ -78,17 +72,8 @@
                "description": "data file content"
             }
          },
-         "required": [
-            "file_path",
-            "text",
-            "value",
-            "file_type"
-         ],
          "type": "object"
       }
    },
-   "required": [
-      "config"
-   ],
    "type": "object"
 }
