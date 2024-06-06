@@ -18,6 +18,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/jsonnet"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type ParamTest struct {
@@ -168,52 +169,21 @@ func (c *Controller) listPairsWithFilePaths(filePaths []string) ([]*TestPair, er
 	return pairs, nil
 }
 
-func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop,funlen
+func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint:cyclop
 	if td.DataFile != "" {
-		p := &domain.Path{
-			Raw: td.DataFile,
-			Abs: filepath.Join(filepath.Dir(pair.TestFilePath), td.DataFile),
-		}
-		data, err := c.dataFileParser.Parse(p)
-		if err != nil {
+		if err := c.readDatafile(pair, td); err != nil {
 			return &FailedResult{
-				Error: fmt.Errorf("read a data file: %w", err).Error(),
+				Error: err.Error(),
 			}
 		}
-		if td.Param != nil && td.Param.Data != nil && td.Param.Data.FilePath != "" {
-			data.Data.FilePath = td.Param.Data.FilePath
-		}
-		if td.Param != nil {
-			data.Config = td.Param.Config
-		}
-		td.Param = data
 	}
 
 	if len(td.DataFiles) != 0 {
-		combinedData := make([]*domain.Data, len(td.DataFiles))
-		for i, dataFile := range td.DataFiles {
-			p := &domain.Path{
-				Raw: dataFile.Path,
-				Abs: filepath.Join(filepath.Dir(pair.TestFilePath), dataFile.Path),
+		if err := c.readDatafiles(pair, td); err != nil {
+			return &FailedResult{
+				Error: err.Error(),
 			}
-			data, err := c.dataFileParser.Parse(p)
-			if err != nil {
-				return &FailedResult{
-					Error: fmt.Errorf("read a data file: %w", err).Error(),
-				}
-			}
-			if dataFile.FakePath != "" {
-				data.Data.FilePath = dataFile.FakePath
-			}
-			if td.Param != nil {
-				data.Config = td.Param.Config
-			}
-			combinedData[i] = data.Data
 		}
-		if td.Param == nil {
-			td.Param = &domain.TopLevelArgment{}
-		}
-		td.Param.CombinedData = combinedData
 	}
 
 	if td.Param.Config == nil {
@@ -249,6 +219,53 @@ func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint
 			Diff:   diff,
 		}
 	}
+	return nil
+}
+
+func (c *Controller) readDatafile(pair *TestPair, td *TestData) error {
+	p := &domain.Path{
+		Raw: td.DataFile,
+		Abs: filepath.Join(filepath.Dir(pair.TestFilePath), td.DataFile),
+	}
+	data, err := c.dataFileParser.Parse(p)
+	if err != nil {
+		return fmt.Errorf("read a data file: %w", err)
+	}
+	if td.Param != nil && td.Param.Data != nil && td.Param.Data.FilePath != "" {
+		data.Data.FilePath = td.Param.Data.FilePath
+	}
+	if td.Param != nil {
+		data.Config = td.Param.Config
+	}
+	td.Param = data
+	return nil
+}
+
+func (c *Controller) readDatafiles(pair *TestPair, td *TestData) error {
+	combinedData := make([]*domain.Data, len(td.DataFiles))
+	for i, dataFile := range td.DataFiles {
+		p := &domain.Path{
+			Raw: dataFile.Path,
+			Abs: filepath.Join(filepath.Dir(pair.TestFilePath), dataFile.Path),
+		}
+		data, err := c.dataFileParser.Parse(p)
+		if err != nil {
+			return fmt.Errorf("read a data file: %w", logerr.WithFields(err, logrus.Fields{
+				"data_file": dataFile.Path,
+			}))
+		}
+		if dataFile.FakePath != "" {
+			data.Data.FilePath = dataFile.FakePath
+		}
+		if td.Param != nil {
+			data.Config = td.Param.Config
+		}
+		combinedData[i] = data.Data
+	}
+	if td.Param == nil {
+		td.Param = &domain.TopLevelArgment{}
+	}
+	td.Param.CombinedData = combinedData
 	return nil
 }
 
