@@ -60,6 +60,10 @@
             "additionalProperties": false,
             "description": "target",
             "properties": {
+               "base_data_path": {
+                  "description": "base data path",
+                  "type": "string"
+               },
                "data_files": {
                   "description": "data files",
                   "items": {
@@ -67,6 +71,10 @@
                      "type": "string"
                   },
                   "type": "array"
+               },
+               "id": {
+                  "description": "the target id. The id must be unique",
+                  "type": "string"
                },
                "lint_files": {
                   "description": "lint files",
@@ -110,6 +118,35 @@
                               "config": {
                                  "description": "configuration of the lint files",
                                  "type": "object"
+                              },
+                              "files": {
+                                 "description": "lint files",
+                                 "items": {
+                                    "anyOf": [
+                                       {
+                                          "description": "file path to lint files. Glob is available",
+                                          "type": "string"
+                                       },
+                                       {
+                                          "properties": {
+                                             "config": {
+                                                "description": "configuration of the lint files",
+                                                "type": "object"
+                                             },
+                                             "path": {
+                                                "description": "file path to lint files. Glob is available",
+                                                "type": "string"
+                                             }
+                                          },
+                                          "required": [
+                                             "path"
+                                          ],
+                                          "type": "object"
+                                       }
+                                    ],
+                                    "description": "lint files"
+                                 },
+                                 "type": "array"
                               },
                               "path": {
                                  "description": "file path to lint files. Glob is available",

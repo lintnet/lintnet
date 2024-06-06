@@ -22,6 +22,39 @@ local common = import 'common.libsonnet';
         type: 'string',
         description: "data file path. This overrides param.data's text, value and param.data.text",
       },
+      fake_data_file: {
+        type: 'string',
+        description: 'Fake data file path. This is useful if a lint rule depends on data file path and you want to specify the different data file path from the actual file path',
+      },
+      data_files: {
+        type: 'array',
+        items: {
+          oneOf: [
+            {
+              type: 'string',
+              description: 'data file path',
+            },
+            {
+              type: 'object',
+              additionalProperties: false,
+              description: 'data file path',
+              required: [
+                'path',
+              ],
+              properties: {
+                path: {
+                  type: 'string',
+                  description: 'data file path',
+                },
+                fake_path: {
+                  type: 'string',
+                  description: 'Fake data file path. This is useful if a lint rule depends on data file path and you want to specify the different data file path from the actual file path',
+                },
+              },
+            },
+          ],
+        },
+      },
       param: common.lint_tla,
       result: {
         type: 'array',
