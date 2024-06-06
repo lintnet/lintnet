@@ -190,7 +190,7 @@ func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint
 	}
 
 	if len(td.DataFiles) != 0 {
-		combinedData := make([]*domain.Data, 0, len(td.DataFiles))
+		combinedData := make([]*domain.Data, len(td.DataFiles))
 		for i, dataFile := range td.DataFiles {
 			p := &domain.Path{
 				Raw: dataFile.Path,
@@ -209,6 +209,9 @@ func (c *Controller) test(pair *TestPair, td *TestData) *FailedResult { //nolint
 				data.Config = td.Param.Config
 			}
 			combinedData[i] = data.Data
+		}
+		if td.Param == nil {
+			td.Param = &domain.TopLevelArgment{}
 		}
 		td.Param.CombinedData = combinedData
 	}
