@@ -25,6 +25,7 @@ type testCommand struct {
 func (tc *testCommand) command() *cli.Command {
 	return &cli.Command{
 		Name:      "test",
+		Aliases:   []string{"t"},
 		Usage:     "Test lint files",
 		ArgsUsage: "[<lint file, test file, or directory> ...]",
 		Description: `Test lint files.
