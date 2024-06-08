@@ -96,5 +96,6 @@ type Node struct {
 	Node    ast.Node
 	Config  map[string]any
 	Key     string
+	Link    string
 	Combine bool
 }

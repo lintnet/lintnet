@@ -87,6 +87,14 @@ type ModuleArchive struct {
 	Tag       string `json:"tag,omitempty"`
 }
 
+func (m *ModuleArchive) URL(rootDir, p string) (string, error) {
+	modPath, err := filepath.Rel(filepath.Join(rootDir, m.Type, m.Host, m.RepoOwner, m.RepoName, m.Ref), p)
+	if err != nil {
+		return "", fmt.Errorf("get relative path: %w", err)
+	}
+	return fmt.Sprintf("https://github.com/%s/%s/blob/%s/%s", m.RepoOwner, m.RepoName, m.Ref, modPath), nil
+}
+
 // String returns a human readable string.
 // This is different from file path.
 // This is used for log.

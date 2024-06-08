@@ -10,6 +10,7 @@ type LintFile struct {
 	ID     string         `json:"id,omitempty"`
 	Path   string         `json:"path,omitempty"`
 	Config map[string]any `json:"config,omitempty"`
+	Link   string         `json:"-"`
 }
 
 type LintGlob struct {

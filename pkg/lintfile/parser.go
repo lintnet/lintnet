@@ -30,6 +30,7 @@ func (p *Parser) Parse(lintFile *config.LintFile) (*domain.Node, error) {
 		Node:    node,
 		Key:     lintFile.ID,
 		Config:  lintFile.Config,
+		Link:    lintFile.Link,
 		Combine: strings.HasSuffix(lintFile.Path, "_combine.jsonnet"),
 	}, nil
 }
