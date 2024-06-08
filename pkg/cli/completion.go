@@ -7,7 +7,7 @@ import (
 )
 
 func (r *Runner) newCompletionCommand() *cli.Command {
-	// https://github.com/aquaproj/aqua/pull/859
+	// https://github.com/lintnetproj/lintnet/pull/859
 	// https://cli.urfave.org/v2/#bash-completion
 	return &cli.Command{
 		Name:  "completion",
@@ -19,19 +19,19 @@ e.g.
 
 .bash_profile
 
-if command -v aqua &> /dev/null; then
-	source <(aqua completion bash)
+if command -v lintnet &> /dev/null; then
+	source <(lintnet completion bash)
 fi
 
 .zprofile
 
-if command -v aqua &> /dev/null; then
-	source <(aqua completion zsh)
+if command -v lintnet &> /dev/null; then
+	source <(lintnet completion zsh)
 fi
 
 fish
 
-aqua completion fish > ~/.config/fish/completions/aqua.fish
+lintnet completion fish > ~/.config/fish/completions/lintnet.fish
 `,
 		Subcommands: []*cli.Command{
 			{
@@ -72,16 +72,16 @@ _cli_bash_autocomplete() {
   fi
 }
 
-complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete aqua`)
+complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete lintnet`)
 	return nil
 }
 
 func (r *Runner) zshCompletionAction(*cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/zsh_autocomplete
 	// https://github.com/urfave/cli/blob/947f9894eef4725a1c15ed75459907b52dde7616/autocomplete/zsh_autocomplete
-	fmt.Fprintln(r.Stdout, `#compdef aqua
+	fmt.Fprintln(r.Stdout, `#compdef lintnet
 
-_aqua() {
+_lintnet() {
   local -a opts
   local cur
   cur=${words[-1]}
@@ -98,10 +98,10 @@ _aqua() {
   fi
 }
 
-if [ "$funcstack[1]" = "_aqua" ]; then
-  _aqua "$@"
+if [ "$funcstack[1]" = "_lintnet" ]; then
+  _lintnet "$@"
 else
-  compdef _aqua aqua
+  compdef _lintnet lintnet
 fi`)
 	return nil
 }
