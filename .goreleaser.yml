@@ -78,6 +78,13 @@ brews:
     test: |
       system "#{bin}/lintnet --version"
 
+    # Additional install instructions so you don't need to override `install`.
+    #
+    # Template: allowed
+    # Since: v1.20
+    extra_install: |
+      generate_completions_from_executable(bin/"lintnet", "completion", shells: [:bash, :zsh, :fish])
+
 scoops:
   -
     description: |

@@ -73,6 +73,10 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 			(&newCommand{
 				logE: r.LogE,
 			}).command(),
+			(&completionCommand{
+				logE:   r.LogE,
+				stdout: r.Stdout,
+			}).command(),
 		},
 	}
 
