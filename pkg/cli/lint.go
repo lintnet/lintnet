@@ -26,6 +26,7 @@ type lintCommand struct {
 func (lc *lintCommand) command() *cli.Command {
 	return &cli.Command{
 		Name:      "lint",
+		Aliases:   []string{"l"},
 		Usage:     "Lint files",
 		UsageText: "lintnet lint [command options] [lint file paths and data file paths]",
 		Description: `Lint files
