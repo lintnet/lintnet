@@ -94,7 +94,46 @@ func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootD
 	return targets, nil
 }
 
-func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop,funlen,gocognit
+func (f *FileFinder) globModuleFiles(logE *logrus.Entry, rootDir, pattern string, m *config.ModuleGlob, file *config.LintGlobFile, matches map[string][]*config.LintFile, ignorePatterns []string) error {
+	logE.WithFields(logrus.Fields{
+		"pattern": pattern,
+	}).Debug("search module files")
+	if err := doublestar.GlobWalk(afero.NewIOFS(f.fs), pattern, func(path string, d fs.DirEntry) error {
+		if err := ignorePath(path, ignorePatterns); err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if strings.HasSuffix(d.Name(), "_test.jsonnet") {
+			return nil
+		}
+		link, err := m.Archive.URL(rootDir, path)
+		if err != nil {
+			return fmt.Errorf("get a module url: %w", err)
+		}
+		moduleID, err := getModuleID(rootDir, path, m.Archive.Tag)
+		if err != nil {
+			return err
+		}
+		lintFile := &config.LintFile{
+			ID:     moduleID,
+			Config: m.Config,
+			Path:   path,
+			Link:   link,
+		}
+		if file != nil && file.Config != nil {
+			lintFile.Config = file.Config
+		}
+		matches[path] = append(matches[path], lintFile)
+		return nil
+	}, doublestar.WithNoFollow()); err != nil {
+		return fmt.Errorf("search files: %w", err)
+	}
+	return nil
+}
+
+func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop,gocognit
 	if len(m.Files) == 0 && m.Excluded {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 		for file := range matchFiles {
@@ -111,36 +150,8 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 	matches := map[string][]*config.LintFile{}
 	pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 	if len(m.Files) == 0 {
-		logE.WithFields(logrus.Fields{
-			"pattern": pattern,
-		}).Debug("search module files")
-		if err := doublestar.GlobWalk(afero.NewIOFS(f.fs), pattern, func(path string, d fs.DirEntry) error {
-			if err := ignorePath(path, ignorePatterns); err != nil {
-				return err
-			}
-			if d.IsDir() {
-				return nil
-			}
-			if strings.HasSuffix(d.Name(), "_test.jsonnet") {
-				return nil
-			}
-			link, err := m.Archive.URL(rootDir, path)
-			if err != nil {
-				return fmt.Errorf("get a module url: %w", err)
-			}
-			moduleID, err := getModuleID(rootDir, path, m.Archive.Tag)
-			if err != nil {
-				return err
-			}
-			matches[path] = append(matches[path], &config.LintFile{
-				ID:     moduleID,
-				Config: m.Config,
-				Path:   path,
-				Link:   link,
-			})
-			return nil
-		}, doublestar.WithNoFollow()); err != nil {
-			return fmt.Errorf("search files: %w", err)
+		if err := f.globModuleFiles(logE, rootDir, pattern, m, nil, matches, ignorePatterns); err != nil {
+			return err
 		}
 	}
 	for _, file := range m.Files {
@@ -157,36 +168,8 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 			}
 			continue
 		}
-		logE.WithFields(logrus.Fields{
-			"pattern": pattern,
-		}).Debug("search module files")
-		if err := doublestar.GlobWalk(afero.NewIOFS(f.fs), pattern, func(path string, d fs.DirEntry) error {
-			if err := ignorePath(path, ignorePatterns); err != nil {
-				return err
-			}
-			if d.IsDir() {
-				return nil
-			}
-			if strings.HasSuffix(d.Name(), "_test.jsonnet") {
-				return nil
-			}
-			link, err := m.Archive.URL(rootDir, path)
-			if err != nil {
-				return fmt.Errorf("get a module url: %w", err)
-			}
-			moduleID, err := getModuleID(rootDir, path, m.Archive.Tag)
-			if err != nil {
-				return err
-			}
-			matches[path] = append(matches[path], &config.LintFile{
-				ID:     moduleID,
-				Config: file.Config,
-				Path:   path,
-				Link:   link,
-			})
-			return nil
-		}, doublestar.WithNoFollow()); err != nil {
-			return fmt.Errorf("search files: %w", err)
+		if err := f.globModuleFiles(logE, rootDir, pattern, m, file, matches, ignorePatterns); err != nil {
+			return err
 		}
 	}
 	if len(matches) == 0 {
