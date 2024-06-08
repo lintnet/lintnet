@@ -52,6 +52,14 @@ func (le *Evaluator) Evaluates(tla *domain.TopLevelArgment, lintFiles []*domain.
 			continue
 		}
 		rs, a, err := parseResult([]byte(s))
+
+		if lintFile.Link != "" {
+			// Append the module link to each result
+			for _, r := range rs {
+				appendLink(r, lintFile.Link)
+			}
+		}
+
 		results[i] = &domain.Result{
 			LintFile:  lintFile.Key,
 			RawResult: rs,
@@ -63,6 +71,18 @@ func (le *Evaluator) Evaluates(tla *domain.TopLevelArgment, lintFiles []*domain.
 		}
 	}
 	return results
+}
+
+func appendLink(r *domain.JsonnetResult, link string) {
+	for _, l := range r.Links {
+		if l.Link == link {
+			return
+		}
+	}
+	r.Links = append(r.Links, &domain.Link{
+		Title: "Module source",
+		Link:  link,
+	})
 }
 
 func parseResult(result []byte) ([]*domain.JsonnetResult, any, error) {

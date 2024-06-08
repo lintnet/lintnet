@@ -124,6 +124,10 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 			if strings.HasSuffix(d.Name(), "_test.jsonnet") {
 				return nil
 			}
+			link, err := m.Archive.URL(rootDir, path)
+			if err != nil {
+				return fmt.Errorf("get a module url: %w", err)
+			}
 			moduleID, err := getModuleID(rootDir, path, m.Archive.Tag)
 			if err != nil {
 				return err
@@ -132,6 +136,7 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 				ID:     moduleID,
 				Config: m.Config,
 				Path:   path,
+				Link:   link,
 			})
 			return nil
 		}, doublestar.WithNoFollow()); err != nil {
@@ -165,6 +170,10 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 			if strings.HasSuffix(d.Name(), "_test.jsonnet") {
 				return nil
 			}
+			link, err := m.Archive.URL(rootDir, path)
+			if err != nil {
+				return fmt.Errorf("get a module url: %w", err)
+			}
 			moduleID, err := getModuleID(rootDir, path, m.Archive.Tag)
 			if err != nil {
 				return err
@@ -173,6 +182,7 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 				ID:     moduleID,
 				Config: file.Config,
 				Path:   path,
+				Link:   link,
 			})
 			return nil
 		}, doublestar.WithNoFollow()); err != nil {
