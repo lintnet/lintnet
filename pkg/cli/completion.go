@@ -2,11 +2,18 @@ package cli
 
 import (
 	"fmt"
+	"io"
 
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
-func (r *Runner) newCompletionCommand() *cli.Command {
+type completionCommand struct {
+	logE   *logrus.Entry
+	stdout io.Writer
+}
+
+func (cc *completionCommand) command() *cli.Command {
 	// https://github.com/lintnet/lintnet/issues/507
 	// https://cli.urfave.org/v2/#bash-completion
 	return &cli.Command{
@@ -37,26 +44,26 @@ lintnet completion fish > ~/.config/fish/completions/lintnet.fish
 			{
 				Name:   "bash",
 				Usage:  "Output shell completion script for bash",
-				Action: r.bashCompletionAction,
+				Action: cc.bashCompletionAction,
 			},
 			{
 				Name:   "zsh",
 				Usage:  "Output shell completion script for zsh",
-				Action: r.zshCompletionAction,
+				Action: cc.zshCompletionAction,
 			},
 			{
 				Name:   "fish",
 				Usage:  "Output shell completion script for fish",
-				Action: r.fishCompletionAction,
+				Action: cc.fishCompletionAction,
 			},
 		},
 	}
 }
 
-func (r *Runner) bashCompletionAction(*cli.Context) error {
+func (cc *completionCommand) bashCompletionAction(*cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/bash_autocomplete
 	// https://github.com/urfave/cli/blob/c3f51bed6fffdf84227c5b59bd3f2e90683314df/autocomplete/bash_autocomplete#L5-L20
-	fmt.Fprintln(r.Stdout, `
+	fmt.Fprintln(cc.stdout, `
 _cli_bash_autocomplete() {
   if [[ "${COMP_WORDS[0]}" != "source" ]]; then
     local cur opts base
@@ -76,10 +83,10 @@ complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete lintnet`
 	return nil
 }
 
-func (r *Runner) zshCompletionAction(*cli.Context) error {
+func (cc *completionCommand) zshCompletionAction(*cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/zsh_autocomplete
 	// https://github.com/urfave/cli/blob/947f9894eef4725a1c15ed75459907b52dde7616/autocomplete/zsh_autocomplete
-	fmt.Fprintln(r.Stdout, `#compdef lintnet
+	fmt.Fprintln(cc.stdout, `#compdef lintnet
 
 _lintnet() {
   local -a opts
@@ -106,11 +113,11 @@ fi`)
 	return nil
 }
 
-func (r *Runner) fishCompletionAction(c *cli.Context) error {
+func (cc *completionCommand) fishCompletionAction(c *cli.Context) error {
 	s, err := c.App.ToFishCompletion()
 	if err != nil {
 		return fmt.Errorf("generate fish completion: %w", err)
 	}
-	fmt.Fprintln(r.Stdout, s)
+	fmt.Fprintln(cc.stdout, s)
 	return nil
 }
