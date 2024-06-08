@@ -7,7 +7,7 @@ import (
 )
 
 func (r *Runner) newCompletionCommand() *cli.Command {
-	// https://github.com/lintnetproj/lintnet/pull/859
+	// https://github.com/lintnet/lintnet/issues/507
 	// https://cli.urfave.org/v2/#bash-completion
 	return &cli.Command{
 		Name:  "completion",
