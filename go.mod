@@ -7,7 +7,7 @@ require (
 	github.com/adrg/xdg v0.5.0
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-github/v62 v62.0.0
+	github.com/google/go-github/v63 v63.0.0
 	github.com/google/go-jsonnet v0.20.0
 	github.com/lintnet/go-jsonnet-native-functions v0.4.1
 	github.com/mattn/go-colorable v0.1.13
