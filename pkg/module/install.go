@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/google/go-github/v62/github"
+	"github.com/google/go-github/v64/github"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/osfile"
 	"github.com/mholt/archiver/v3"
