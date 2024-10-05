@@ -12,7 +12,7 @@ type MockRepositoriesService struct {
 	URL *url.URL
 }
 
-func (m *MockRepositoriesService) GetArchiveLink(ctx context.Context, owner, repo string, archiveformat ArchiveFormat, opts *RepositoryContentGetOptions, maxRedirects int) (*url.URL, *Response, error) {
+func (m *MockRepositoriesService) GetArchiveLink(_ context.Context, _, _ string, _ ArchiveFormat, _ *RepositoryContentGetOptions, _ int) (*url.URL, *Response, error) {
 	if m.URL == nil {
 		return nil, nil, errGetTar
 	}
