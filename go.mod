@@ -19,7 +19,7 @@ require (
 	github.com/suzuki-shunsuke/go-convmap v0.2.1
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/tmccombs/hcl2json v0.6.4
-	github.com/urfave/cli/v2 v2.27.4
+	github.com/urfave/cli/v2 v2.27.5
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	golang.org/x/oauth2 v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -31,7 +31,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/andybalholm/brotli v1.0.1 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
