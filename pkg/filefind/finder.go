@@ -3,7 +3,9 @@ package filefind
 import (
 	"fmt"
 	"io/fs"
+	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -12,7 +14,6 @@ import (
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"golang.org/x/exp/maps"
 )
 
 type Target struct {
@@ -329,7 +330,7 @@ func (f *FileFinder) findFilesFromPaths(files []*config.DataFile, cfgDir string,
 			return nil, err
 		}
 	}
-	return maps.Values(matchFiles), nil
+	return slices.Collect(maps.Values(matchFiles)), nil
 }
 
 func ignorePath(path string, ignorePatterns []string) error {
