@@ -10,7 +10,7 @@ require (
 	github.com/google/go-github/v68 v68.0.0
 	github.com/google/go-jsonnet v0.20.0
 	github.com/lintnet/go-jsonnet-native-functions v0.4.1
-	github.com/mattn/go-colorable v0.1.13
+	github.com/mattn/go-colorable v0.1.14
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/otiai10/copy v1.14.1
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1
