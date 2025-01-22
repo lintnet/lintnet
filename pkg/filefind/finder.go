@@ -158,13 +158,21 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 	for _, file := range m.Files {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath), filepath.FromSlash(file.Path))
 		if file.Excluded {
-			for matchFile := range matchFiles {
+			logE.WithFields(logrus.Fields{
+				"pattern": pattern,
+				"files":   slices.Collect(maps.Keys(matches)),
+			}).Debug("check excluded files")
+			for matchFile := range matches {
 				matched, err := doublestar.Match(pattern, matchFile)
 				if err != nil {
 					return fmt.Errorf("check file match: %w", err)
 				}
 				if matched {
-					delete(matchFiles, matchFile)
+					delete(matches, matchFile)
+					logE.WithFields(logrus.Fields{
+						"pattern":       pattern,
+						"excluded_file": matchFile,
+					}).Debug("exclude a file")
 				}
 			}
 			continue

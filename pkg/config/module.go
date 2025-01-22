@@ -198,7 +198,7 @@ func parseRefAndTag(refAndTag string) (string, string, error) {
 type LintGlobFile struct {
 	Path     string         `json:"path"`
 	Config   map[string]any `json:"config,omitempty"`
-	Excluded bool           `json:"-"`
+	Excluded bool           `json:"excluded,omitempty"`
 }
 
 func (lg *LintGlobFile) UnmarshalJSON(b []byte) error {
