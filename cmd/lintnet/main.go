@@ -40,5 +40,4 @@ func core(logE *logrus.Entry) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	return runner.Run(ctx, os.Args...) //nolint:wrapcheck
-
 }
