@@ -22,7 +22,7 @@ type ParamInfo struct {
 }
 
 type Info struct {
-	Version    string            `json:"vesrion,omitempty"`
+	Version    string            `json:"version,omitempty"`
 	Commit     string            `json:"commit,omitempty"`
 	Runtime    string            `json:"runtime"`
 	ConfigFile string            `json:"config_file,omitempty"`
