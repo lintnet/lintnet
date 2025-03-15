@@ -15,7 +15,7 @@ require (
 	github.com/otiai10/copy v1.14.1
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/afero v1.13.0
+	github.com/spf13/afero v1.14.0
 	github.com/suzuki-shunsuke/go-convmap v0.2.1
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/tmccombs/hcl2json v0.6.5
