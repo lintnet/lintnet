@@ -18,7 +18,7 @@ require (
 	github.com/spf13/afero v1.14.0
 	github.com/suzuki-shunsuke/go-convmap v0.2.1
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
-	github.com/tmccombs/hcl2json v0.6.5
+	github.com/tmccombs/hcl2json v0.6.6
 	github.com/urfave/cli/v2 v2.27.6
 	golang.org/x/oauth2 v0.28.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -47,7 +47,7 @@ require (
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	github.com/zclconf/go-cty v1.15.1 // indirect
+	github.com/zclconf/go-cty v1.16.2 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
