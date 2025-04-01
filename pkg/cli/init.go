@@ -5,7 +5,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type initCommand struct {
