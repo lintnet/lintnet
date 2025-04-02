@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"context"
+
 	"github.com/lintnet/lintnet/pkg/controller/newcmd"
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/sirupsen/logrus"
@@ -28,14 +30,14 @@ If the argument is not given, the lint file is created as "main.jsonnet".
 	}
 }
 
-func (lc *newCommand) action(c *cli.Context) error {
+func (lc *newCommand) action(ctx context.Context, cmd *cli.Command) error {
 	ctrl := newcmd.NewController(afero.NewOsFs())
 	logE := lc.logE
-	log.SetLevel(c.String("log-level"), logE)
-	log.SetColor(c.String("log-color"), logE)
+	log.SetLevel(cmd.String("log-level"), logE)
+	log.SetColor(cmd.String("log-color"), logE)
 	fileName := "main.jsonnet"
-	if c.Args().Len() > 0 {
-		fileName = c.Args().First()
+	if cmd.Args().Len() > 0 {
+		fileName = cmd.Args().First()
 	}
-	return ctrl.New(c.Context, logE, fileName) //nolint:wrapcheck
+	return ctrl.New(ctx, logE, fileName) //nolint:wrapcheck
 }

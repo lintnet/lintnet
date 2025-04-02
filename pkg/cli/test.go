@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -54,11 +55,11 @@ You can test only a specific target with -target option.
 	}
 }
 
-func (tc *testCommand) action(c *cli.Context) error {
+func (tc *testCommand) action(ctx context.Context, cmd *cli.Command) error {
 	fs := afero.NewOsFs()
 	logE := tc.logE
-	log.SetLevel(c.String("log-level"), logE)
-	log.SetColor(c.String("log-color"), logE)
+	log.SetLevel(cmd.String("log-level"), logE)
+	log.SetColor(cmd.String("log-color"), logE)
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
 	if rootDir == "" {
 		dir, err := config.GetRootDir()
@@ -67,8 +68,8 @@ func (tc *testCommand) action(c *cli.Context) error {
 		}
 		rootDir = dir
 	}
-	modInstaller := module.NewInstaller(fs, github.New(c.Context), http.DefaultClient)
-	importer := jsonnet.NewImporter(c.Context, logE, &module.ParamInstall{
+	modInstaller := module.NewInstaller(fs, github.New(ctx), http.DefaultClient)
+	importer := jsonnet.NewImporter(ctx, logE, &module.ParamInstall{
 		BaseDir: rootDir,
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
@@ -81,10 +82,10 @@ func (tc *testCommand) action(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	return ctrl.Test(c.Context, logE, &testcmd.ParamTest{ //nolint:wrapcheck
-		FilePaths:      c.Args().Slice(),
-		ConfigFilePath: c.String("config"),
-		TargetID:       c.String("target"),
+	return ctrl.Test(ctx, logE, &testcmd.ParamTest{ //nolint:wrapcheck
+		FilePaths:      cmd.Args().Slice(),
+		ConfigFilePath: cmd.String("config"),
+		TargetID:       cmd.String("target"),
 		RootDir:        rootDir,
 		PWD:            pwd,
 	})

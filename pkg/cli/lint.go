@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -62,27 +63,27 @@ $ lintnet lint -output-success
 				Name:    "error-level",
 				Aliases: []string{"e"},
 				Usage:   "Set the error level",
-				EnvVars: []string{"LINTNET_ERROR_LEVEL"},
+				Sources: cli.EnvVars("LINTNET_ERROR_LEVEL"),
 			},
 			&cli.StringFlag{
 				Name:    "shown-error-level",
 				Usage:   "Set the shown error level",
-				EnvVars: []string{"LINTNET_SHOWN_ERROR_LEVEL"},
+				Sources: cli.EnvVars("LINTNET_SHOWN_ERROR_LEVEL"),
 			},
 			&cli.BoolFlag{
 				Name:    "output-success",
 				Usage:   "Output the result even if the lint succeeds",
-				EnvVars: []string{"LINTNET_OUTPUT_SUCCESS"},
+				Sources: cli.EnvVars("LINTNET_OUTPUT_SUCCESS"),
 			},
 		},
 	}
 }
 
-func (lc *lintCommand) action(c *cli.Context) error {
+func (lc *lintCommand) action(ctx context.Context, cmd *cli.Command) error {
 	fs := afero.NewOsFs()
 	logE := lc.logE
-	log.SetLevel(c.String("log-level"), logE)
-	log.SetColor(c.String("log-color"), logE)
+	log.SetLevel(cmd.String("log-level"), logE)
+	log.SetColor(cmd.String("log-color"), logE)
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
 	if rootDir == "" {
 		dir, err := config.GetRootDir()
@@ -91,8 +92,8 @@ func (lc *lintCommand) action(c *cli.Context) error {
 		}
 		rootDir = dir
 	}
-	modInstaller := module.NewInstaller(fs, github.New(c.Context), http.DefaultClient)
-	importer := jsonnet.NewImporter(c.Context, logE, &module.ParamInstall{
+	modInstaller := module.NewInstaller(fs, github.New(ctx), http.DefaultClient)
+	importer := jsonnet.NewImporter(ctx, logE, &module.ParamInstall{
 		BaseDir: rootDir,
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
@@ -106,14 +107,14 @@ func (lc *lintCommand) action(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	return ctrl.Lint(c.Context, logE, &lint.ParamLint{ //nolint:wrapcheck
-		FilePaths:       c.Args().Slice(),
-		ErrorLevel:      c.String("error-level"),
-		ShownErrorLevel: c.String("shown-error-level"),
-		ConfigFilePath:  c.String("config"),
-		TargetID:        c.String("target"),
-		OutputSuccess:   c.Bool("output-success"),
-		Output:          c.String("output"),
+	return ctrl.Lint(ctx, logE, &lint.ParamLint{ //nolint:wrapcheck
+		FilePaths:       cmd.Args().Slice(),
+		ErrorLevel:      cmd.String("error-level"),
+		ShownErrorLevel: cmd.String("shown-error-level"),
+		ConfigFilePath:  cmd.String("config"),
+		TargetID:        cmd.String("target"),
+		OutputSuccess:   cmd.Bool("output-success"),
+		Output:          cmd.String("output"),
 		RootDir:         rootDir,
 		DataRootDir:     pwd,
 		PWD:             pwd,

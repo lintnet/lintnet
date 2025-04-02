@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"context"
+
 	"github.com/urfave/cli/v3"
 )
 
@@ -14,7 +16,7 @@ func (vc *versionCommand) command() *cli.Command {
 	}
 }
 
-func (vc *versionCommand) action(c *cli.Context) error {
+func (vc *versionCommand) action(_ context.Context, c *cli.Command) error {
 	cli.ShowVersion(c)
 	return nil
 }
