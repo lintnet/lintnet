@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime"
@@ -10,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type infoCommand struct {
@@ -62,7 +63,7 @@ $ lintnet info -module-root-dir
 	}
 }
 
-func (lc *infoCommand) action(c *cli.Context) error {
+func (lc *infoCommand) action(ctx context.Context, c *cli.Command) error {
 	fs := afero.NewOsFs()
 	logE := lc.logE
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
@@ -83,7 +84,7 @@ func (lc *infoCommand) action(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	return ctrl.Info(c.Context, &info.ParamInfo{ //nolint:wrapcheck
+	return ctrl.Info(ctx, &info.ParamInfo{ //nolint:wrapcheck
 		ConfigFilePath: c.String("config"),
 		RootDir:        rootDir,
 		PWD:            pwd,
