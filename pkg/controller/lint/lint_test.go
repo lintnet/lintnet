@@ -2,7 +2,6 @@ package lint_test
 
 import (
 	"bytes"
-	"context"
 	_ "embed"
 	"encoding/json"
 	"os"
@@ -65,7 +64,7 @@ func TestController_Lint(t *testing.T) { //nolint:funlen,gocognit,cyclop
 				Data: data,
 			}
 			ctrl := lint.NewController(d.paramC, fs, stdout, &lint.MockModuleInstaller{}, importer)
-			ctx := context.Background()
+			ctx := t.Context()
 			logE := logrus.NewEntry(logrus.New())
 			var exp any
 			if d.exp != "" {

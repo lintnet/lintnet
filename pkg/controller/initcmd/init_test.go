@@ -1,7 +1,6 @@
 package initcmd_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/lintnet/lintnet/pkg/controller/initcmd"
@@ -35,7 +34,7 @@ func TestController_Init(t *testing.T) {
 				t.Fatal(err)
 			}
 			ctrl := initcmd.NewController(fs)
-			if err := ctrl.Init(context.Background(), logrus.NewEntry(logrus.New())); err != nil {
+			if err := ctrl.Init(t.Context(), logrus.NewEntry(logrus.New())); err != nil {
 				if d.isErr {
 					return
 				}

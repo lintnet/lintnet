@@ -2,7 +2,6 @@ package testcmd_test
 
 import (
 	"bytes"
-	"context"
 	"testing"
 
 	"github.com/google/go-jsonnet"
@@ -64,7 +63,7 @@ func TestController_Test(t *testing.T) { //nolint:funlen
 			ctrl := testcmd.NewController(d.paramC, fs, stdout, importer)
 			logger := logrus.New()
 			logger.SetLevel(logrus.DebugLevel)
-			if err := ctrl.Test(context.Background(), logrus.NewEntry(logger), d.param); err != nil {
+			if err := ctrl.Test(t.Context(), logrus.NewEntry(logger), d.param); err != nil {
 				if d.isErr {
 					return
 				}
