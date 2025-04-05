@@ -20,7 +20,7 @@ require (
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/tmccombs/hcl2json v0.6.7
 	github.com/urfave/cli/v3 v3.1.1
-	golang.org/x/oauth2 v0.28.0
+	golang.org/x/oauth2 v0.29.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
