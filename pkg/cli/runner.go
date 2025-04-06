@@ -5,6 +5,8 @@ import (
 	"io"
 
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/helpall"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/vcmd"
 	"github.com/urfave/cli/v3"
 )
 
@@ -23,7 +25,7 @@ type LDFlags struct {
 }
 
 func (r *Runner) Run(ctx context.Context, args ...string) error {
-	app := cli.Command{
+	return helpall.With(&cli.Command{ //nolint:wrapcheck
 		Name:    "lintnet",
 		Usage:   "Powerful, Secure, Shareable Linter Powered by Jsonnet. https://lintnet.github.io/",
 		Version: r.LDFlags.Version + " (" + r.LDFlags.Commit + ")",
@@ -47,7 +49,6 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 		},
 		EnableShellCompletion: true,
 		Commands: []*cli.Command{
-			(&versionCommand{}).command(),
 			(&lintCommand{
 				logE:    r.LogE,
 				version: r.LDFlags.Version,
@@ -71,8 +72,11 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 				logE:   r.LogE,
 				stdout: r.Stdout,
 			}).command(),
+			vcmd.New(&vcmd.Command{
+				Name:    "lintnet",
+				Version: r.LDFlags.Version,
+				SHA:     r.LDFlags.Commit,
+			}),
 		},
-	}
-
-	return app.Run(ctx, args) //nolint:wrapcheck
+	}, nil).Run(ctx, args)
 }

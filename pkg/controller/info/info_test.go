@@ -2,7 +2,6 @@ package info_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"os"
 	"testing"
@@ -50,7 +49,7 @@ func TestController_Info(t *testing.T) { //nolint:funlen,gocognit,cyclop
 				t.Fatal(err)
 			}
 			ctrl := info.NewController(d.paramC, fs, stdout)
-			if err := ctrl.Info(context.Background(), d.param); err != nil {
+			if err := ctrl.Info(t.Context(), d.param); err != nil {
 				if d.isErr {
 					return
 				}
