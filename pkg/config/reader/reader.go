@@ -23,10 +23,6 @@ func New(fs afero.Fs, importer gojsonnet.Importer) *Reader {
 	}
 }
 
-func (r *Reader) read(p string, cfg *config.RawConfig) error {
-	return jsonnet.Read(r.fs, p, "{}", r.importer, cfg) //nolint:wrapcheck
-}
-
 // Read finds and reads a configuration file.
 // A configuration file is a Jsonnet file.
 // p is a configuration file path.
@@ -57,4 +53,8 @@ func (r *Reader) Read(p string, cfg *config.RawConfig) error {
 		return nil
 	}
 	return fmt.Errorf("config file isn't found: %w", os.ErrNotExist)
+}
+
+func (r *Reader) read(p string, cfg *config.RawConfig) error {
+	return jsonnet.Read(r.fs, p, "{}", r.importer, cfg) //nolint:wrapcheck
 }
