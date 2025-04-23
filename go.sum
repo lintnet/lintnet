@@ -89,8 +89,6 @@ github.com/suzuki-shunsuke/go-convmap v0.2.1 h1:g94CxI6ENYluXZhdEH+1WVGhMAE8nLvA
 github.com/suzuki-shunsuke/go-convmap v0.2.1/go.mod h1:3XfGRbtyNBMGfXAxhROSRki6/UIlUX31Qt6DvdI6lUs=
 github.com/suzuki-shunsuke/logrus-error v0.1.4 h1:nWo98uba1fANHdZ9Y5pJ2RKs/PpVjrLzRp5m+mRb9KE=
 github.com/suzuki-shunsuke/logrus-error v0.1.4/go.mod h1:WsVvvw6SKSt08/fB2qbnsKIMJA4K1MYCUprqsBJbMiM=
-github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.2 h1:sgCdlcfyY/EE7K6bbL5fw1nhxnOv3ETEAQRJsBp1hq8=
-github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.2/go.mod h1:hnKvR1IZskaS3isZPuO1Ndw9++o+W66pL2kzBAGsglE=
 github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.3 h1:WlB8FC2BH3uVsDoPug7wIFdkb+aAlaKpp07H6x/GjFg=
 github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.3/go.mod h1:B/O/TfFHRZoSeFqZHgwIRf4aWhZiIU46A+UK4ThS2sQ=
 github.com/tmccombs/hcl2json v0.6.7 h1:RYKTs4kd/gzRsEiv7J3M2WQ7TYRYZVc+0H0pZdERkxA=
