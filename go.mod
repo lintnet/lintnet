@@ -18,7 +18,7 @@ require (
 	github.com/spf13/afero v1.14.0
 	github.com/suzuki-shunsuke/go-convmap v0.2.1
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
-	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.4
+	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.5
 	github.com/tmccombs/hcl2json v0.6.7
 	github.com/urfave/cli/v3 v3.3.3
 	golang.org/x/oauth2 v0.30.0
