@@ -83,3 +83,7 @@ scoops:
     repository:
       owner: lintnet
       name: scoop-bucket
+
+sboms:
+  - id: default
+    disable: false
