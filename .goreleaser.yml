@@ -22,7 +22,7 @@ builds:
       - arm64
 
 release:
-  prerelease: true
+  prerelease: "true"
   header: |
     [Pull Requests](https://github.com/lintnet/lintnet/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/lintnet/lintnet/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/lintnet/lintnet/compare/{{.PreviousTag}}...{{.Tag}}
 
@@ -43,7 +43,7 @@ signs:
       - github
       - ${artifact}
 
-brews:
+homebrew_casks:
   -
     # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
     # same kind. We will probably unify this in the next major version like it is done with scoop.
@@ -72,17 +72,7 @@ brews:
     # Default is false.
     skip_upload: true
 
-    # So you can `brew test` your formula.
-    # Default is empty.
-    test: |
-      system "#{bin}/lintnet --version"
 
-    # Additional install instructions so you don't need to override `install`.
-    #
-    # Template: allowed
-    # Since: v1.20
-    extra_install: |
-      generate_completions_from_executable(bin/"lintnet", "completion", shells: [:bash, :zsh, :fish])
 
 scoops:
   -
