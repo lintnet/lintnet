@@ -3,3 +3,4 @@ dist
 
 # ignore goland files
 .idea
+third_party_licenses
