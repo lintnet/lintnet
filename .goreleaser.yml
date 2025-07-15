@@ -87,3 +87,7 @@ scoops:
 sboms:
   - id: default
     disable: false
+
+sboms:
+  - id: default
+    disable: false
