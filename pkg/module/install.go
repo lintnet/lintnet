@@ -13,7 +13,6 @@ import (
 	"github.com/google/go-github/v73/github"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/osfile"
-	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -115,9 +114,8 @@ func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *Par
 	if _, err := io.Copy(tempFile, resp.Body); err != nil {
 		return fmt.Errorf("download a module on a temporal directory: %w", err)
 	}
-	tarGz := archiver.NewTarGz()
 	unarchiveDest := filepath.Join(tempDir, "unarchived_dir")
-	if err := tarGz.Unarchive(tempDest, unarchiveDest); err != nil {
+	if err := extractTarGz(mi.fs, tempDest, unarchiveDest); err != nil {
 		return fmt.Errorf("unarchive a tarball: %w", err)
 	}
 	dirs, err := os.ReadDir(unarchiveDest)

@@ -7,6 +7,10 @@ archives:
     format_overrides:
       - goos: windows
         formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+      - third_party_licenses/**/*
 
 builds:
   - binary: lintnet
@@ -22,7 +26,7 @@ builds:
       - arm64
 
 release:
-  prerelease: true
+  prerelease: "true"
   header: |
     [Pull Requests](https://github.com/lintnet/lintnet/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/lintnet/lintnet/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/lintnet/lintnet/compare/{{.PreviousTag}}...{{.Tag}}
 
@@ -43,7 +47,7 @@ signs:
       - github
       - ${artifact}
 
-brews:
+homebrew_casks:
   -
     # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
     # same kind. We will probably unify this in the next major version like it is done with scoop.
@@ -64,25 +68,7 @@ brews:
       Secure, Powerful, Reusable Configuration file linter powered by Jsonnet
     license: MIT
 
-    # Setting this will prevent goreleaser to actually try to commit the updated
-    # formula - instead, the formula file will be stored on the dist folder only,
-    # leaving the responsibility of publishing it to the user.
-    # If set to auto, the release will not be uploaded to the homebrew tap
-    # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
-    # Default is false.
     skip_upload: true
-
-    # So you can `brew test` your formula.
-    # Default is empty.
-    test: |
-      system "#{bin}/lintnet --version"
-
-    # Additional install instructions so you don't need to override `install`.
-    #
-    # Template: allowed
-    # Since: v1.20
-    extra_install: |
-      generate_completions_from_executable(bin/"lintnet", "completion", shells: [:bash, :zsh, :fish])
 
 scoops:
   -
@@ -93,3 +79,7 @@ scoops:
     repository:
       owner: lintnet
       name: scoop-bucket
+
+sboms:
+  - id: default
+    disable: false
