@@ -30,6 +30,9 @@ func extractTarGz(fs afero.Fs, src, dest string) error {
 	tr := tar.NewReader(gzr)
 	for {
 		if err := readTar(fs, dest, tr); err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
 			return err
 		}
 	}
@@ -37,9 +40,6 @@ func extractTarGz(fs afero.Fs, src, dest string) error {
 
 func readTar(fs afero.Fs, dest string, tr *tar.Reader) error {
 	hdr, err := tr.Next()
-	if errors.Is(err, io.EOF) {
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("get a new entry from a tar archive: %w", err)
 	}
