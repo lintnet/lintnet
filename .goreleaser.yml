@@ -30,49 +30,26 @@ release:
   header: |
     [Pull Requests](https://github.com/lintnet/lintnet/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/lintnet/lintnet/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/lintnet/lintnet/compare/{{.PreviousTag}}...{{.Tag}}
 
-signs:
-  - cmd: cosign
-    artifacts: checksum
-    signature: ${artifact}.sig
-    certificate: ${artifact}.pem
-    output: true
-    args:
-      - sign-blob
-      - "-y"
-      - --output-signature
-      - ${signature}
-      - --output-certificate
-      - ${certificate}
-      - --oidc-provider
-      - github
-      - ${artifact}
-
 homebrew_casks:
-  -
-    # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
-    # same kind. We will probably unify this in the next major version like it is done with scoop.
-
-    # GitHub/GitLab repository to push the formula to
-    repository:
+  - repository:
       owner: lintnet
       name: homebrew-lintnet
     # The project name and current git tag are used in the format string.
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-    # Your app's homepage.
-    # Default is empty.
     homepage: https://github.com/lintnet/lintnet
-
-    # Template of your app's description.
-    # Default is empty.
     description: |
       Secure, Powerful, Reusable Configuration file linter powered by Jsonnet
     license: MIT
-
     skip_upload: true
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/lintnet"]
+          end
 
 scoops:
-  -
-    description: |
+  - description: |
       Secure, Powerful, Reusable Configuration file linter powered by Jsonnet
     license: MIT
     skip_upload: true
