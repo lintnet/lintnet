@@ -55,4 +55,3 @@ lintnet judges file types by file extensions.
 If no parser is found, lintnet parse the file as a plain text file.
 The external variable `file_type` is `plain_text`.
 The external variable `input` is empty, but you can still lint the file with other external variables such as `file_path` and `file_text`.
-

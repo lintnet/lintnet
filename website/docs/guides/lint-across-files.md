@@ -17,4 +17,3 @@ Instead of `param.data`, `param.combined_data` are set.
 - Example
   - https://github.com/lintnet-modules/github-actions/blob/main/workflow_name_must_be_unique/main_combine.jsonnet
   - https://github.com/lintnet/examples/tree/main/lint-across-files
-
