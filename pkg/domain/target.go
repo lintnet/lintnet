@@ -23,7 +23,7 @@ type Data struct {
 	JSON     []byte `json:"-"`
 }
 
-type TopLevelArgment struct {
+type TopLevelArgument struct {
 	Data         *Data          `json:"data,omitempty"`
 	CombinedData []*Data        `json:"combined_data,omitempty"`
 	Config       map[string]any `json:"config"`

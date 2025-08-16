@@ -9,7 +9,7 @@ import (
 
 // getIgnoredPatterns returns ignored patterns.
 // If ignoredDirs is nil, it returns default ignored patterns.
-// An ignored pattern is "**/<ignored dir>/**", which is a patten of doublestar.
+// An ignored pattern is "**/<ignored dir>/**", which is a pattern of doublestar.
 func getIgnoredPatterns(ignoredDirs []string) []string {
 	if ignoredDirs == nil {
 		ignoredDirs = []string{

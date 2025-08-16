@@ -24,7 +24,7 @@ type TestData struct {
 	DataFile     string                  `json:"data_file,omitempty"`
 	FakeDataFile string                  `json:"fake_data_file,omitempty"`
 	DataFiles    []*DataFile             `json:"data_files,omitempty"`
-	Param        *domain.TopLevelArgment `json:"param,omitempty"`
+	Param        *domain.TopLevelArgument `json:"param,omitempty"`
 	Result       []any                   `json:"result,omitempty"`
 }
 

@@ -19,7 +19,7 @@ func NewEvaluator(importer gojsonnet.Importer) *Evaluator {
 	}
 }
 
-func (le *Evaluator) Evaluate(tla *domain.TopLevelArgment, lintFile jsonnet.Node) (string, error) {
+func (le *Evaluator) Evaluate(tla *domain.TopLevelArgument, lintFile jsonnet.Node) (string, error) {
 	if tla.Config == nil {
 		tla.Config = map[string]any{}
 	}
@@ -35,10 +35,10 @@ func (le *Evaluator) Evaluate(tla *domain.TopLevelArgment, lintFile jsonnet.Node
 	return result, nil
 }
 
-func (le *Evaluator) Evaluates(tla *domain.TopLevelArgment, lintFiles []*domain.Node) []*domain.Result {
+func (le *Evaluator) Evaluates(tla *domain.TopLevelArgument, lintFiles []*domain.Node) []*domain.Result {
 	results := make([]*domain.Result, len(lintFiles))
 	for i, lintFile := range lintFiles {
-		tla := &domain.TopLevelArgment{
+		tla := &domain.TopLevelArgument{
 			Data:         tla.Data,
 			CombinedData: tla.CombinedData,
 			Config:       lintFile.Config,
