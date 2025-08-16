@@ -4,7 +4,7 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-help=$(aqua help-all)
+help=$(lintnet help-all)
 
 echo "---
 sidebar_position: 500
