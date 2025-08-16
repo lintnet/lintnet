@@ -39,4 +39,3 @@ $ lintnet help lint
 ```console
 $ lintnet help test
 ```
-
