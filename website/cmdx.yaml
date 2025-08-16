@@ -15,4 +15,4 @@ tasks:
     usage: Update Usage
     script: |
       set -euo pipefail
-      bash scripts/generate-usage.sh > docs/guides/usage.md
+      bash scripts/generate-usage.sh

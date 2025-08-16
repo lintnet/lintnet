@@ -21,7 +21,7 @@ jobs:
           cache-dependency-path: website/package-lock.json
       - run: npm ci
         working-directory: website
-      - run: cmdx usage
+      - run: bash scripts/generate-usage.sh
         working-directory: website
 
       - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27 # v1.3.2
