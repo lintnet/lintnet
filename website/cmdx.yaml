@@ -1,0 +1,18 @@
+---
+# the configuration file of cmdx - task runner
+# https://github.com/suzuki-shunsuke/cmdx
+tasks:
+  - name: check-link
+    short: l
+    description: Check if links are broken
+    usage: Check if links are broken
+    script: |
+      set -euo pipefail
+      git ls-files | grep -E "\.md$" | xargs -n 10 lychee
+  - name: update-usage
+    short: usage
+    description: Update Usage
+    usage: Update Usage
+    script: |
+      set -euo pipefail
+      bash scripts/generate-usage.sh > docs/guides/usage.md
