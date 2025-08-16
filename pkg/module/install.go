@@ -78,9 +78,9 @@ func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *Par
 	}, 5) //nolint:mnd
 	if err != nil {
 		return fmt.Errorf("get an archive link by GitHub API: %w", logerr.WithFields(err, logrus.Fields{
-			"moduel_repo_owner": mod.RepoOwner,
-			"moduel_repo_name":  mod.RepoName,
-			"moduel_ref":        mod.Ref,
+			"module_repo_owner": mod.RepoOwner,
+			"module_repo_name":  mod.RepoName,
+			"module_ref":        mod.Ref,
 		}))
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)

@@ -26,7 +26,7 @@ func NewLinter(dataFileParser DataFileParser, lintFileParser LintFileParser, lin
 }
 
 type DataFileParser interface {
-	Parse(filePath *domain.Path) (*domain.TopLevelArgment, error)
+	Parse(filePath *domain.Path) (*domain.TopLevelArgument, error)
 }
 
 type LintFileParser interface { //nolint:revive
@@ -35,8 +35,8 @@ type LintFileParser interface { //nolint:revive
 }
 
 type LintFileEvaluator interface { //nolint:revive
-	Evaluate(tla *domain.TopLevelArgment, lintFile jsonnet.Node) (string, error)
-	Evaluates(tla *domain.TopLevelArgment, lintFiles []*domain.Node) []*domain.Result
+	Evaluate(tla *domain.TopLevelArgument, lintFile jsonnet.Node) (string, error)
+	Evaluates(tla *domain.TopLevelArgument, lintFiles []*domain.Node) []*domain.Result
 }
 
 func (l *Linter) Lint(targets []*filefind.Target) ([]*domain.Result, error) {
@@ -125,7 +125,7 @@ func (l *Linter) lintNonCombineFile(nonCombineFiles []*domain.Node, dataFile *do
 	return rs
 }
 
-func (l *Linter) getTLA(dataSet *domain.DataSet) (*domain.TopLevelArgment, error) {
+func (l *Linter) getTLA(dataSet *domain.DataSet) (*domain.TopLevelArgument, error) {
 	if dataSet.File != nil {
 		tla, err := l.dataFileParser.Parse(dataSet.File)
 		if err != nil {
@@ -144,11 +144,11 @@ func (l *Linter) getTLA(dataSet *domain.DataSet) (*domain.TopLevelArgment, error
 			}
 			combinedData[i] = data.Data
 		}
-		return &domain.TopLevelArgment{
+		return &domain.TopLevelArgument{
 			CombinedData: combinedData,
 		}, nil
 	}
-	return &domain.TopLevelArgment{}, nil
+	return &domain.TopLevelArgument{}, nil
 }
 
 func (l *Linter) lint(dataSet *domain.DataSet, lintFiles []*domain.Node) ([]*domain.Result, error) {

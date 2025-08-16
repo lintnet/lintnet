@@ -19,7 +19,7 @@ func NewDataFileParser(fs afero.Fs) *DataFileParser {
 	}
 }
 
-func (dp *DataFileParser) Parse(filePath *domain.Path) (*domain.TopLevelArgment, error) {
+func (dp *DataFileParser) Parse(filePath *domain.Path) (*domain.TopLevelArgument, error) {
 	unmarshaler, fileType, err := NewUnmarshaler(filePath.Abs)
 	if err != nil {
 		return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
@@ -35,7 +35,7 @@ func (dp *DataFileParser) Parse(filePath *domain.Path) (*domain.TopLevelArgment,
 		return nil, fmt.Errorf("decode a file: %w", err)
 	}
 
-	return &domain.TopLevelArgment{
+	return &domain.TopLevelArgument{
 		Data: &domain.Data{
 			Text:     string(b),
 			FilePath: filePath.Raw,

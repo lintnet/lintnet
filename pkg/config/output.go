@@ -35,7 +35,7 @@ type Output struct {
 	Config map[string]any `json:"config"`
 	// Transform is a transformation file path.
 	// A transformation file transforms lint results before the results are outputted.
-	// A tranformation file must be a Jsonnet.
+	// A transformation file must be a Jsonnet.
 	// A file path must be an absolute path, a relative path from the configuration file, or a module path.
 	// e.g.
 	// transform.jsonnnet

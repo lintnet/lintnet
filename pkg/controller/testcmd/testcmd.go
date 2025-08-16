@@ -266,7 +266,7 @@ func (c *Controller) readDatafiles(pair *TestPair, td *TestData) error {
 		combinedData[i] = data.Data
 	}
 	if td.Param == nil {
-		td.Param = &domain.TopLevelArgment{}
+		td.Param = &domain.TopLevelArgument{}
 	}
 	td.Param.CombinedData = combinedData
 	return nil
