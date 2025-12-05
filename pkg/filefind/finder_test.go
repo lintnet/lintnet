@@ -1,6 +1,7 @@
 package filefind_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -8,7 +9,6 @@ import (
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/testutil"
-	"github.com/sirupsen/logrus"
 )
 
 func TestFinder_Find(t *testing.T) { //nolint:funlen
@@ -74,7 +74,8 @@ func TestFinder_Find(t *testing.T) { //nolint:funlen
 				t.Fatal(err)
 			}
 			finder := filefind.NewFileFinder(fs)
-			targets, err := finder.Find(logrus.NewEntry(logrus.New()), d.cfg, d.rootDir, d.cfgDir)
+			logger := slog.New(slog.DiscardHandler)
+			targets, err := finder.Find(logger, d.cfg, d.rootDir, d.cfgDir)
 			if err != nil {
 				if d.isErr {
 					t.Fatal(err)

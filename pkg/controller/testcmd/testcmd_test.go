@@ -2,12 +2,12 @@ package testcmd_test
 
 import (
 	"bytes"
+	"log/slog"
 	"testing"
 
 	"github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/controller/testcmd"
 	"github.com/lintnet/lintnet/pkg/testutil"
-	"github.com/sirupsen/logrus"
 )
 
 func TestController_Test(t *testing.T) { //nolint:funlen
@@ -61,9 +61,8 @@ func TestController_Test(t *testing.T) { //nolint:funlen
 				Data: data,
 			}
 			ctrl := testcmd.NewController(d.paramC, fs, stdout, importer)
-			logger := logrus.New()
-			logger.SetLevel(logrus.DebugLevel)
-			if err := ctrl.Test(t.Context(), logrus.NewEntry(logger), d.param); err != nil {
+			logger := slog.New(slog.DiscardHandler)
+			if err := ctrl.Test(t.Context(), logger, d.param); err != nil {
 				if d.isErr {
 					return
 				}

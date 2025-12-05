@@ -3,19 +3,20 @@ package cli
 import (
 	"context"
 	"io"
+	"log/slog"
 
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/urfave-cli-v3-util/helpall"
 	"github.com/suzuki-shunsuke/urfave-cli-v3-util/vcmd"
 	"github.com/urfave/cli/v3"
 )
 
 type Runner struct {
-	Stdin   io.Reader
-	Stdout  io.Writer
-	Stderr  io.Writer
-	LDFlags *LDFlags
-	LogE    *logrus.Entry
+	Stdin       io.Reader
+	Stdout      io.Writer
+	Stderr      io.Writer
+	LDFlags     *LDFlags
+	Logger      *slog.Logger
+	LogLevelVar *slog.LevelVar
 }
 
 type LDFlags struct {
@@ -36,11 +37,6 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 				Sources: cli.EnvVars("LINTNET_LOG_LEVEL"),
 			},
 			&cli.StringFlag{
-				Name:    "log-color",
-				Usage:   "Log color. One of 'auto' (default), 'always', 'never'",
-				Sources: cli.EnvVars("LINTNET_LOG_COLOR"),
-			},
-			&cli.StringFlag{
 				Name:    "config",
 				Aliases: []string{"c"},
 				Usage:   "Configuration file path",
@@ -50,26 +46,29 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 		EnableShellCompletion: true,
 		Commands: []*cli.Command{
 			(&lintCommand{
-				logE:    r.LogE,
-				version: r.LDFlags.Version,
+				logger:      r.Logger,
+				logLevelVar: r.LogLevelVar,
+				version:     r.LDFlags.Version,
 			}).command(),
 			(&infoCommand{
-				logE:    r.LogE,
+				logger:  r.Logger,
 				version: r.LDFlags.Version,
 				commit:  r.LDFlags.Commit,
 			}).command(),
 			(&initCommand{
-				logE: r.LogE,
+				logger:      r.Logger,
+				logLevelVar: r.LogLevelVar,
 			}).command(),
 			(&testCommand{
-				logE:    r.LogE,
-				version: r.LDFlags.Version,
+				logger:      r.Logger,
+				logLevelVar: r.LogLevelVar,
+				version:     r.LDFlags.Version,
 			}).command(),
 			(&newCommand{
-				logE: r.LogE,
+				logger:      r.Logger,
+				logLevelVar: r.LogLevelVar,
 			}).command(),
 			(&completionCommand{
-				logE:   r.LogE,
 				stdout: r.Stdout,
 			}).command(),
 			vcmd.New(&vcmd.Command{
