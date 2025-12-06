@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
 	"runtime"
 
@@ -11,16 +10,16 @@ import (
 	"github.com/lintnet/lintnet/pkg/controller/info"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
+	"github.com/suzuki-shunsuke/slog-util/slogutil"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
 
 type infoCommand struct {
-	logger  *slog.Logger
 	version string
-	commit  string
 }
 
-func (lc *infoCommand) command() *cli.Command {
+func (lc *infoCommand) command(logger *slogutil.Logger) *cli.Command {
 	return &cli.Command{
 		Name:      "info",
 		Usage:     "Output the information regarding lintnet",
@@ -49,7 +48,7 @@ You can also get the root directory where modules are installed.
 
 $ lintnet info -module-root-dir
 `,
-		Action: lc.action,
+		Action: urfave.Action(lc.action, logger),
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:  "module-root-dir",
@@ -63,20 +62,18 @@ $ lintnet info -module-root-dir
 	}
 }
 
-func (lc *infoCommand) action(ctx context.Context, c *cli.Command) error {
+func (lc *infoCommand) action(ctx context.Context, c *cli.Command, logger *slogutil.Logger) error {
 	fs := afero.NewOsFs()
-	logger := lc.logger
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
 	if rootDir == "" {
 		dir, err := config.GetRootDir()
 		if err != nil {
-			slogerr.WithError(logger, err).Warn("get the root directory")
+			slogerr.WithError(logger.Logger, err).Warn("get the root directory")
 		}
 		rootDir = dir
 	}
 	param := &info.ParamController{
 		Version: lc.version,
-		Commit:  lc.commit,
 		Env:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 	}
 	ctrl := info.NewController(param, fs, os.Stdout)

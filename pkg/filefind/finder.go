@@ -123,7 +123,7 @@ func (f *FileFinder) globModuleFiles(logger *slog.Logger, rootDir, pattern strin
 	return nil
 }
 
-func (f *FileFinder) findFilesFromModule(logger *slog.Logger, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop,gocognit
+func (f *FileFinder) findFilesFromModule(logger *slog.Logger, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop
 	if len(m.Files) == 0 && m.Excluded {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 		for file := range matchFiles {
@@ -167,9 +167,7 @@ func (f *FileFinder) findFilesFromModule(logger *slog.Logger, m *config.ModuleGl
 	if len(matches) == 0 {
 		logger.Debug("no file matches", "pattern", m.SlashPath)
 	}
-	for k, v := range matches {
-		matchFiles[k] = v
-	}
+	maps.Copy(matchFiles, matches)
 	return nil
 }
 
