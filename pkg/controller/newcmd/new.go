@@ -5,11 +5,11 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 //go:embed lint.jsonnet
@@ -18,11 +18,9 @@ var lintTemplate []byte
 //go:embed test.jsonnet
 var testTemplate []byte
 
-func (c *Controller) New(_ context.Context, _ *logrus.Entry, fileName string) error {
+func (c *Controller) New(_ context.Context, _ *slog.Logger, fileName string) error {
 	if !strings.HasSuffix(fileName, ".jsonnet") {
-		return logerr.WithFields(errors.New("the file name must end with '.jsonnet'"), logrus.Fields{ //nolint:wrapcheck
-			"file_name": fileName,
-		})
+		return slogerr.With(errors.New("the file name must end with '.jsonnet'"), "file_name", fileName) //nolint:wrapcheck
 	}
 
 	if err := c.create(fileName, lintTemplate); err != nil {
@@ -39,9 +37,7 @@ func (c *Controller) New(_ context.Context, _ *logrus.Entry, fileName string) er
 
 func (c *Controller) create(fileName string, tpl []byte) error {
 	if f, err := afero.Exists(c.fs, fileName); err != nil {
-		return fmt.Errorf("check if the file exists: %w", logerr.WithFields(err, logrus.Fields{
-			"file_name": fileName,
-		}))
+		return fmt.Errorf("check if the file exists: %w", slogerr.With(err, "file_name", fileName))
 	} else if f {
 		return nil
 	}

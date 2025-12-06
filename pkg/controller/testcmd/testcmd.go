@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -16,9 +17,8 @@ import (
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefilter"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type ParamTest struct {
@@ -36,8 +36,8 @@ func (p *ParamTest) FilterParam() *filefilter.Param {
 	}
 }
 
-func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTest) error {
-	pairs, err := c.listPairs(logE, param)
+func (c *Controller) Test(_ context.Context, logger *slog.Logger, param *ParamTest) error {
+	pairs, err := c.listPairs(logger, param)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (c *Controller) Test(_ context.Context, logE *logrus.Entry, param *ParamTes
 	return errors.New("test failed")
 }
 
-func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPair, error) {
+func (c *Controller) listPairs(logger *slog.Logger, param *ParamTest) ([]*TestPair, error) {
 	if len(param.FilePaths) != 0 {
 		return c.listPairsWithFilePaths(param.FilePaths)
 	}
@@ -90,12 +90,12 @@ func (c *Controller) listPairs(logE *logrus.Entry, param *ParamTest) ([]*TestPai
 
 	cfgDir := filepath.Dir(rawCfg.FilePath)
 
-	lintFiles, err := c.fileFinder.FindLintFiles(logE, cfg, cfgDir)
+	lintFiles, err := c.fileFinder.FindLintFiles(logger, cfg, cfgDir)
 	if err != nil {
 		return nil, fmt.Errorf("find files: %w", err)
 	}
 
-	return c.filterLintFilesWithTest(logE, lintFiles), nil
+	return c.filterLintFilesWithTest(logger, lintFiles), nil
 }
 
 func getTestFilePath(lintFilePath string) string {
@@ -253,9 +253,7 @@ func (c *Controller) readDatafiles(pair *TestPair, td *TestData) error {
 		}
 		data, err := c.dataFileParser.Parse(p)
 		if err != nil {
-			return fmt.Errorf("read a data file: %w", logerr.WithFields(err, logrus.Fields{
-				"data_file": dataFile.Path,
-			}))
+			return fmt.Errorf("read a data file: %w", slogerr.With(err, "data_file", dataFile.Path))
 		}
 		if dataFile.FakePath != "" {
 			data.Data.FilePath = dataFile.FakePath
@@ -296,7 +294,7 @@ func (c *Controller) tests(pair *TestPair) []*FailedResult {
 	return results
 }
 
-func (c *Controller) filterLintFilesWithTest(logE *logrus.Entry, lintFiles []*config.LintFile) []*TestPair {
+func (c *Controller) filterLintFilesWithTest(logger *slog.Logger, lintFiles []*config.LintFile) []*TestPair {
 	pairs := []*TestPair{}
 	for _, lintFile := range lintFiles {
 		if lintFile.Path == "" {
@@ -308,7 +306,7 @@ func (c *Controller) filterLintFilesWithTest(logE *logrus.Entry, lintFiles []*co
 		testFilePath := filepath.Join(filepath.Dir(lintFile.Path), testFileName)
 		f, err := afero.Exists(c.fs, testFilePath)
 		if err != nil {
-			logE.WithError(err).Warn("check if a test file exists")
+			slogerr.WithError(logger, err).Warn("check if a test file exists")
 			continue
 		}
 		if !f {

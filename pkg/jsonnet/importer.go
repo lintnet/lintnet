@@ -3,29 +3,29 @@ package jsonnet
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/module"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type FileImporter = jsonnet.FileImporter
 
 type ModuleImporter struct {
 	ctx             context.Context //nolint:containedctx
-	logE            *logrus.Entry
+	logger          *slog.Logger
 	param           *module.ParamInstall
 	importer        jsonnet.Importer
 	moduleInstaller *module.Installer
 }
 
-func NewImporter(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, importer jsonnet.Importer, installer *module.Installer) *ModuleImporter {
+func NewImporter(ctx context.Context, logger *slog.Logger, param *module.ParamInstall, importer jsonnet.Importer, installer *module.Installer) *ModuleImporter {
 	return &ModuleImporter{
 		ctx:             ctx,
-		logE:            logE,
+		logger:          logger,
 		param:           param,
 		importer:        importer,
 		moduleInstaller: installer,
@@ -44,11 +44,11 @@ func (ip *ModuleImporter) Import(importedFrom, importedPath string) (jsonnet.Con
 	if err != nil {
 		return contents, foundAt, fmt.Errorf("parse a module import path: %w", err)
 	}
-	if err := ip.moduleInstaller.Install(ip.ctx, ip.logE, ip.param, mod.Archive); err != nil {
-		return contents, foundAt, fmt.Errorf("install a module: %w", logerr.WithFields(err, logrus.Fields{
-			"module_id": mod.Archive.String(),
-			"import":    importedPath,
-		}))
+	if err := ip.moduleInstaller.Install(ip.ctx, ip.logger, ip.param, mod.Archive); err != nil {
+		return contents, foundAt, fmt.Errorf("install a module: %w", slogerr.With(err,
+			"module_id", mod.Archive.String(),
+			"import", importedPath,
+		))
 	}
 	return ip.importer.Import(importedFrom, mod.SlashPath) //nolint:wrapcheck
 }

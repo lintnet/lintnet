@@ -3,6 +3,7 @@ package filefind
 import (
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"maps"
 	"path/filepath"
 	"slices"
@@ -12,7 +13,6 @@ import (
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/log"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -32,14 +32,14 @@ func NewFileFinder(fs afero.Fs) *FileFinder {
 	}
 }
 
-func (f *FileFinder) Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*Target, error) {
+func (f *FileFinder) Find(logger *slog.Logger, cfg *config.Config, rootDir, cfgDir string) ([]*Target, error) {
 	if len(cfg.Targets) == 0 {
 		return nil, nil
 	}
 
 	targets := make([]*Target, 0, len(cfg.Targets))
 	for _, target := range cfg.Targets {
-		ts, err := f.findTarget(logE, target, rootDir, cfgDir, cfg.IgnoredPatterns)
+		ts, err := f.findTarget(logger, target, rootDir, cfgDir, cfg.IgnoredPatterns)
 		if err != nil {
 			return nil, err
 		}
@@ -51,8 +51,8 @@ func (f *FileFinder) Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDi
 	return targets, nil
 }
 
-func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootDir, cfgDir string, ignorePatterns []string) ([]*Target, error) {
-	lintFiles, err := f.findFilesFromLintFiles(logE, target.LintFiles, cfgDir, ignorePatterns)
+func (f *FileFinder) findTarget(logger *slog.Logger, target *config.Target, rootDir, cfgDir string, ignorePatterns []string) ([]*Target, error) {
+	lintFiles, err := f.findFilesFromLintFiles(logger, target.LintFiles, cfgDir, ignorePatterns)
 	if err != nil {
 		return nil, err
 	}
@@ -61,29 +61,20 @@ func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootD
 			lintFile.Path = filepath.Join(cfgDir, lintFile.Path)
 		}
 	}
-	logE.WithFields(logrus.Fields{
-		"lint_globs": log.JSON(target.LintFiles),
-		"lint_files": log.JSON(lintFiles),
-	}).Debug("found lint files")
+	logger.Debug("found lint files", "lint_globs", log.JSON(target.LintFiles), "lint_files", log.JSON(lintFiles))
 
-	modules, err := f.findFilesFromModules(logE, target.Modules, rootDir, ignorePatterns)
+	modules, err := f.findFilesFromModules(logger, target.Modules, rootDir, ignorePatterns)
 	if err != nil {
 		return nil, err
 	}
-	logE.WithFields(logrus.Fields{
-		"module_globs": log.JSON(target.Modules),
-		"modules":      log.JSON(modules),
-	}).Debug("found modules")
+	logger.Debug("found modules", "module_globs", log.JSON(target.Modules), "modules", log.JSON(modules))
 	lintFiles = append(lintFiles, modules...)
 
 	dataFiles, err := f.findDataFiles(target.BaseDataPath, target.DataFiles, cfgDir, ignorePatterns)
 	if err != nil {
 		return nil, err
 	}
-	logE.WithFields(logrus.Fields{
-		"data_globs": log.JSON(target.DataFiles),
-		"data_files": log.JSON(dataFiles),
-	}).Debug("found data files")
+	logger.Debug("found data files", "data_globs", log.JSON(target.DataFiles), "data_files", log.JSON(dataFiles))
 
 	targets := make([]*Target, len(dataFiles))
 	for i, dataFile := range dataFiles {
@@ -95,10 +86,8 @@ func (f *FileFinder) findTarget(logE *logrus.Entry, target *config.Target, rootD
 	return targets, nil
 }
 
-func (f *FileFinder) globModuleFiles(logE *logrus.Entry, rootDir, pattern string, m *config.ModuleGlob, file *config.LintGlobFile, matches map[string][]*config.LintFile, ignorePatterns []string) error {
-	logE.WithFields(logrus.Fields{
-		"pattern": pattern,
-	}).Debug("search module files")
+func (f *FileFinder) globModuleFiles(logger *slog.Logger, rootDir, pattern string, m *config.ModuleGlob, file *config.LintGlobFile, matches map[string][]*config.LintFile, ignorePatterns []string) error {
+	logger.Debug("search module files", "pattern", pattern)
 	if err := doublestar.GlobWalk(afero.NewIOFS(f.fs), pattern, func(path string, d fs.DirEntry) error {
 		if err := ignorePath(path, ignorePatterns); err != nil {
 			return err
@@ -134,7 +123,7 @@ func (f *FileFinder) globModuleFiles(logE *logrus.Entry, rootDir, pattern string
 	return nil
 }
 
-func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop,gocognit
+func (f *FileFinder) findFilesFromModule(logger *slog.Logger, m *config.ModuleGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop,gocognit
 	if len(m.Files) == 0 && m.Excluded {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 		for file := range matchFiles {
@@ -151,17 +140,14 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 	matches := map[string][]*config.LintFile{}
 	pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath))
 	if len(m.Files) == 0 {
-		if err := f.globModuleFiles(logE, rootDir, pattern, m, nil, matches, ignorePatterns); err != nil {
+		if err := f.globModuleFiles(logger, rootDir, pattern, m, nil, matches, ignorePatterns); err != nil {
 			return err
 		}
 	}
 	for _, file := range m.Files {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.SlashPath), filepath.FromSlash(file.Path))
 		if file.Excluded {
-			logE.WithFields(logrus.Fields{
-				"pattern": pattern,
-				"files":   slices.Collect(maps.Keys(matches)),
-			}).Debug("check excluded files")
+			logger.Debug("check excluded files", "pattern", pattern, "files", slices.Collect(maps.Keys(matches)))
 			for matchFile := range matches {
 				matched, err := doublestar.Match(pattern, matchFile)
 				if err != nil {
@@ -169,20 +155,17 @@ func (f *FileFinder) findFilesFromModule(logE *logrus.Entry, m *config.ModuleGlo
 				}
 				if matched {
 					delete(matches, matchFile)
-					logE.WithFields(logrus.Fields{
-						"pattern":       pattern,
-						"excluded_file": matchFile,
-					}).Debug("exclude a file")
+					logger.Debug("exclude a file", "pattern", pattern, "excluded_file", matchFile)
 				}
 			}
 			continue
 		}
-		if err := f.globModuleFiles(logE, rootDir, pattern, m, file, matches, ignorePatterns); err != nil {
+		if err := f.globModuleFiles(logger, rootDir, pattern, m, file, matches, ignorePatterns); err != nil {
 			return err
 		}
 	}
 	if len(matches) == 0 {
-		logE.WithField("pattern", m.SlashPath).Debug("no file matches")
+		logger.Debug("no file matches", "pattern", m.SlashPath)
 	}
 	for k, v := range matches {
 		matchFiles[k] = v
@@ -202,7 +185,7 @@ func getModuleID(rootDir, p, tag string) (string, error) {
 	return moduleID, nil
 }
 
-func (f *FileFinder) findFilesFromLintFile(logE *logrus.Entry, m *config.LintGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop
+func (f *FileFinder) findFilesFromLintFile(logger *slog.Logger, m *config.LintGlob, rootDir string, matchFiles map[string][]*config.LintFile, ignorePatterns []string) error { //nolint:cyclop
 	if m.Excluded {
 		pattern := filepath.Join(rootDir, filepath.FromSlash(m.Glob))
 		for file := range matchFiles {
@@ -233,7 +216,7 @@ func (f *FileFinder) findFilesFromLintFile(logE *logrus.Entry, m *config.LintGlo
 		return fmt.Errorf("search files: %w", err)
 	}
 	if len(matches) == 0 {
-		logE.WithField("pattern", m.Glob).Debug("no file matches")
+		logger.Debug("no file matches", "pattern", m.Glob)
 	}
 	for file := range matches {
 		relPath, err := filepath.Rel(rootDir, file)
@@ -250,10 +233,10 @@ func (f *FileFinder) findFilesFromLintFile(logE *logrus.Entry, m *config.LintGlo
 	return nil
 }
 
-func (f *FileFinder) findFilesFromModules(logE *logrus.Entry, modules []*config.ModuleGlob, rootDir string, ignorePatterns []string) ([]*config.LintFile, error) {
+func (f *FileFinder) findFilesFromModules(logger *slog.Logger, modules []*config.ModuleGlob, rootDir string, ignorePatterns []string) ([]*config.LintFile, error) {
 	matchFiles := map[string][]*config.LintFile{}
 	for _, m := range modules {
-		if err := f.findFilesFromModule(logE, m, rootDir, matchFiles, ignorePatterns); err != nil {
+		if err := f.findFilesFromModule(logger, m, rootDir, matchFiles, ignorePatterns); err != nil {
 			return nil, err
 		}
 	}
@@ -264,10 +247,10 @@ func (f *FileFinder) findFilesFromModules(logE *logrus.Entry, modules []*config.
 	return arr, nil
 }
 
-func (f *FileFinder) findFilesFromLintFiles(logE *logrus.Entry, modules []*config.LintGlob, rootDir string, ignorePatterns []string) ([]*config.LintFile, error) {
+func (f *FileFinder) findFilesFromLintFiles(logger *slog.Logger, modules []*config.LintGlob, rootDir string, ignorePatterns []string) ([]*config.LintFile, error) {
 	matchFiles := map[string][]*config.LintFile{}
 	for _, m := range modules {
-		if err := f.findFilesFromLintFile(logE, m, rootDir, matchFiles, ignorePatterns); err != nil {
+		if err := f.findFilesFromLintFile(logger, m, rootDir, matchFiles, ignorePatterns); err != nil {
 			return nil, err
 		}
 	}

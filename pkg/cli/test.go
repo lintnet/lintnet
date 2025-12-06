@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -10,17 +11,17 @@ import (
 	"github.com/lintnet/lintnet/pkg/controller/testcmd"
 	"github.com/lintnet/lintnet/pkg/github"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
-	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
+	"github.com/suzuki-shunsuke/slog-util/slogutil"
 	"github.com/urfave/cli/v3"
 )
 
 type testCommand struct {
-	logE    *logrus.Entry
-	version string
+	logger      *slog.Logger
+	logLevelVar *slog.LevelVar
+	version     string
 }
 
 func (tc *testCommand) command() *cli.Command {
@@ -57,19 +58,20 @@ You can test only a specific target with -target option.
 
 func (tc *testCommand) action(ctx context.Context, cmd *cli.Command) error {
 	fs := afero.NewOsFs()
-	logE := tc.logE
-	log.SetLevel(cmd.String("log-level"), logE)
-	log.SetColor(cmd.String("log-color"), logE)
+	logger := tc.logger
+	if err := slogutil.SetLevel(tc.logLevelVar, cmd.String("log-level")); err != nil {
+		return fmt.Errorf("set log level: %w", err)
+	}
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
 	if rootDir == "" {
 		dir, err := config.GetRootDir()
 		if err != nil {
-			logerr.WithError(logE, err).Warn("get the root directory")
+			slogerr.WithError(logger, err).Warn("get the root directory")
 		}
 		rootDir = dir
 	}
 	modInstaller := module.NewInstaller(fs, github.New(ctx), http.DefaultClient)
-	importer := jsonnet.NewImporter(ctx, logE, &module.ParamInstall{
+	importer := jsonnet.NewImporter(ctx, logger, &module.ParamInstall{
 		BaseDir: rootDir,
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
@@ -82,7 +84,7 @@ func (tc *testCommand) action(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	return ctrl.Test(ctx, logE, &testcmd.ParamTest{ //nolint:wrapcheck
+	return ctrl.Test(ctx, logger, &testcmd.ParamTest{ //nolint:wrapcheck
 		FilePaths:      cmd.Args().Slice(),
 		ConfigFilePath: cmd.String("config"),
 		TargetID:       cmd.String("target"),

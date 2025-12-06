@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 )
 
 type completionCommand struct {
-	logE   *logrus.Entry
 	stdout io.Writer
 }
 

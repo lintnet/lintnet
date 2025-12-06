@@ -3,19 +3,19 @@ package cli
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"runtime"
 
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/controller/info"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 	"github.com/urfave/cli/v3"
 )
 
 type infoCommand struct {
-	logE    *logrus.Entry
+	logger  *slog.Logger
 	version string
 	commit  string
 }
@@ -65,12 +65,12 @@ $ lintnet info -module-root-dir
 
 func (lc *infoCommand) action(ctx context.Context, c *cli.Command) error {
 	fs := afero.NewOsFs()
-	logE := lc.logE
+	logger := lc.logger
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
 	if rootDir == "" {
 		dir, err := config.GetRootDir()
 		if err != nil {
-			logerr.WithError(logE, err).Warn("get the root directory")
+			slogerr.WithError(logger, err).Warn("get the root directory")
 		}
 		rootDir = dir
 	}

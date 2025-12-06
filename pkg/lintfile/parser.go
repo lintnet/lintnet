@@ -6,9 +6,8 @@ import (
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Parser struct {
@@ -40,9 +39,7 @@ func (p *Parser) Parses(lintFiles []*config.LintFile) ([]*domain.Node, error) {
 	for _, lintFile := range lintFiles {
 		node, err := p.Parse(lintFile)
 		if err != nil {
-			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"file_path": lintFile.Path,
-			})
+			return nil, slogerr.With(err, "file_path", lintFile.Path) //nolint:wrapcheck
 		}
 		nodes = append(nodes, node)
 	}

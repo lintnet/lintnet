@@ -2,16 +2,18 @@ package cli
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 
 	"github.com/lintnet/lintnet/pkg/controller/newcmd"
-	"github.com/lintnet/lintnet/pkg/log"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/slog-util/slogutil"
 	"github.com/urfave/cli/v3"
 )
 
 type newCommand struct {
-	logE *logrus.Entry
+	logger      *slog.Logger
+	logLevelVar *slog.LevelVar
 }
 
 func (lc *newCommand) command() *cli.Command {
@@ -32,12 +34,12 @@ If the argument is not given, the lint file is created as "main.jsonnet".
 
 func (lc *newCommand) action(ctx context.Context, cmd *cli.Command) error {
 	ctrl := newcmd.NewController(afero.NewOsFs())
-	logE := lc.logE
-	log.SetLevel(cmd.String("log-level"), logE)
-	log.SetColor(cmd.String("log-color"), logE)
+	if err := slogutil.SetLevel(lc.logLevelVar, cmd.String("log-level")); err != nil {
+		return fmt.Errorf("set log level: %w", err)
+	}
 	fileName := "main.jsonnet"
 	if cmd.Args().Len() > 0 {
 		fileName = cmd.Args().First()
 	}
-	return ctrl.New(ctx, logE, fileName) //nolint:wrapcheck
+	return ctrl.New(ctx, lc.logger, fileName) //nolint:wrapcheck
 }

@@ -1,16 +1,16 @@
 package filefind
 
 import (
+	"log/slog"
 	"path/filepath"
 
 	"github.com/lintnet/lintnet/pkg/config"
-	"github.com/sirupsen/logrus"
 )
 
-func (f *FileFinder) FindLintFiles(logE *logrus.Entry, cfg *config.Config, cfgDir string) ([]*config.LintFile, error) {
+func (f *FileFinder) FindLintFiles(logger *slog.Logger, cfg *config.Config, cfgDir string) ([]*config.LintFile, error) {
 	arr := make([]*config.LintFile, 0, len(cfg.Targets))
 	for _, target := range cfg.Targets {
-		lintFiles, err := f.findFilesFromLintFiles(logE, target.LintFiles, cfgDir, cfg.IgnoredPatterns)
+		lintFiles, err := f.findFilesFromLintFiles(logger, target.LintFiles, cfgDir, cfg.IgnoredPatterns)
 		if err != nil {
 			return nil, err
 		}
