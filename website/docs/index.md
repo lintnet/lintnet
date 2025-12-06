@@ -40,7 +40,7 @@ lintnet enhances Jsonnet's capabilities with [go-jsonnet](https://github.com/goo
   - You can search information and ask help to others when you have some troubles
   - You can utilize the knowledge for not only this tool but also other projects
 - Secure
-  - Jsonnet retricts access to filesystems and networks, and external command execution
+  - Jsonnet restricts access to filesystems and networks, and external command execution
 
 ## How does lintnet achieve lint using Jsonnet?
 
