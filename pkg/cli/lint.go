@@ -11,20 +11,19 @@ import (
 	"github.com/lintnet/lintnet/pkg/controller/lint"
 	"github.com/lintnet/lintnet/pkg/github"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
-	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
+	"github.com/suzuki-shunsuke/slog-util/slogutil"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
 
 type lintCommand struct {
-	logE    *logrus.Entry
 	version string
 }
 
-func (lc *lintCommand) command() *cli.Command {
+func (lc *lintCommand) command(logger *slogutil.Logger) *cli.Command {
 	return &cli.Command{
 		Name:      "lint",
 		Aliases:   []string{"l"},
@@ -47,7 +46,7 @@ You can output JSON even if the lint succeeds. This is useful if you pass the ou
 
 $ lintnet lint -output-success
 `,
-		Action: lc.action,
+		Action: urfave.Action(lc.action, logger),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "output",
@@ -79,21 +78,21 @@ $ lintnet lint -output-success
 	}
 }
 
-func (lc *lintCommand) action(ctx context.Context, cmd *cli.Command) error {
+func (lc *lintCommand) action(ctx context.Context, cmd *cli.Command, logger *slogutil.Logger) error {
 	fs := afero.NewOsFs()
-	logE := lc.logE
-	log.SetLevel(cmd.String("log-level"), logE)
-	log.SetColor(cmd.String("log-color"), logE)
+	if err := logger.SetLevel(cmd.String("log-level")); err != nil {
+		return fmt.Errorf("set log level: %w", err)
+	}
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
 	if rootDir == "" {
 		dir, err := config.GetRootDir()
 		if err != nil {
-			logerr.WithError(logE, err).Warn("get the root directory")
+			slogerr.WithError(logger.Logger, err).Warn("get the root directory")
 		}
 		rootDir = dir
 	}
 	modInstaller := module.NewInstaller(fs, github.New(ctx), http.DefaultClient)
-	importer := jsonnet.NewImporter(ctx, logE, &module.ParamInstall{
+	importer := jsonnet.NewImporter(ctx, logger.Logger, &module.ParamInstall{
 		BaseDir: rootDir,
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
@@ -107,7 +106,7 @@ func (lc *lintCommand) action(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	return ctrl.Lint(ctx, logE, &lint.ParamLint{ //nolint:wrapcheck
+	return ctrl.Lint(ctx, logger.Logger, &lint.ParamLint{ //nolint:wrapcheck
 		FilePaths:       cmd.Args().Slice(),
 		ErrorLevel:      cmd.String("error-level"),
 		ShownErrorLevel: cmd.String("shown-error-level"),

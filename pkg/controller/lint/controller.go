@@ -3,6 +3,7 @@ package lint
 import (
 	"context"
 	"io"
+	"log/slog"
 
 	gojsonnet "github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
@@ -14,7 +15,6 @@ import (
 	"github.com/lintnet/lintnet/pkg/lintfile"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/lintnet/lintnet/pkg/output"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -40,12 +40,12 @@ type ConfigReader interface {
 }
 
 type ModuleInstaller interface {
-	Installs(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, modules map[string]*config.ModuleArchive) error
+	Installs(ctx context.Context, logger *slog.Logger, param *module.ParamInstall, modules map[string]*config.ModuleArchive) error
 }
 
 type MockModuleInstaller struct{}
 
-func (m *MockModuleInstaller) Installs(ctx context.Context, logE *logrus.Entry, param *module.ParamInstall, modules map[string]*config.ModuleArchive) error { //nolint:revive
+func (m *MockModuleInstaller) Installs(ctx context.Context, logger *slog.Logger, param *module.ParamInstall, modules map[string]*config.ModuleArchive) error { //nolint:revive
 	return nil
 }
 
@@ -54,7 +54,7 @@ type Linter interface {
 }
 
 type FileFinder interface {
-	Find(logE *logrus.Entry, cfg *config.Config, rootDir, cfgDir string) ([]*filefind.Target, error)
+	Find(logger *slog.Logger, cfg *config.Config, rootDir, cfgDir string) ([]*filefind.Target, error)
 }
 
 type ParamController struct {

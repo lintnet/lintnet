@@ -48,7 +48,7 @@ func readTar(fs afero.Fs, dest string, tr *tar.Reader) error {
 
 	switch hdr.Typeflag {
 	case tar.TypeDir:
-		if err := fs.MkdirAll(targetPath, os.FileMode(hdr.Mode)); err != nil { //nolint:gosec
+		if err := fs.MkdirAll(targetPath, os.FileMode(hdr.Mode)); err != nil {
 			return fmt.Errorf("create a directory: %w", err)
 		}
 	case tar.TypeReg:
@@ -56,7 +56,7 @@ func readTar(fs afero.Fs, dest string, tr *tar.Reader) error {
 			return fmt.Errorf("create a directory: %w", err)
 		}
 
-		outFile, err := fs.OpenFile(targetPath, os.O_CREATE|os.O_RDWR, os.FileMode(hdr.Mode)) //nolint:gosec
+		outFile, err := fs.OpenFile(targetPath, os.O_CREATE|os.O_RDWR, os.FileMode(hdr.Mode))
 		if err != nil {
 			return fmt.Errorf("open a file: %w", err)
 		}

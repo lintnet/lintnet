@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"maps"
 
 	"github.com/lintnet/lintnet/pkg/errlevel"
 )
@@ -119,9 +120,7 @@ func (rc *RawConfig) Parse() (*Config, error) {
 			return nil, err
 		}
 		cfg.Targets[i] = target
-		for k, ma := range target.ModuleArchives {
-			moduleArchives[k] = ma
-		}
+		maps.Copy(moduleArchives, target.ModuleArchives)
 	}
 	if err := rc.Outputs.Preprocess(moduleArchives); err != nil {
 		return nil, err

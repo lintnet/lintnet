@@ -1,13 +1,13 @@
 package output_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 	"github.com/lintnet/lintnet/pkg/output"
-	"github.com/sirupsen/logrus"
 )
 
 func TestFormatResults(t *testing.T) {
@@ -45,11 +45,11 @@ func TestFormatResults(t *testing.T) {
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			errs := output.FormatResults(logE, d.results, d.errLevel)
+			errs := output.FormatResults(logger, d.results, d.errLevel)
 			if diff := cmp.Diff(d.exp, errs); diff != "" {
 				t.Fatal(diff)
 			}

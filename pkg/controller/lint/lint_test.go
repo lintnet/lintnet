@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"log/slog"
 	"os"
 	"testing"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/controller/lint"
 	"github.com/lintnet/lintnet/pkg/testutil"
-	"github.com/sirupsen/logrus"
 )
 
 func TestController_Lint(t *testing.T) { //nolint:funlen,gocognit,cyclop
@@ -65,7 +65,7 @@ func TestController_Lint(t *testing.T) { //nolint:funlen,gocognit,cyclop
 			}
 			ctrl := lint.NewController(d.paramC, fs, stdout, &lint.MockModuleInstaller{}, importer)
 			ctx := t.Context()
-			logE := logrus.NewEntry(logrus.New())
+			logger := slog.New(slog.DiscardHandler)
 			var exp any
 			if d.exp != "" {
 				b, err := os.ReadFile(d.exp)
@@ -76,7 +76,7 @@ func TestController_Lint(t *testing.T) { //nolint:funlen,gocognit,cyclop
 					t.Fatal(err)
 				}
 			}
-			if err := ctrl.Lint(ctx, logE, d.param); err != nil {
+			if err := ctrl.Lint(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return
 				}

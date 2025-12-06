@@ -3,6 +3,7 @@ package lint
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/lintnet/lintnet/pkg/config"
@@ -11,7 +12,6 @@ import (
 	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
 	"github.com/lintnet/lintnet/pkg/output"
-	"github.com/sirupsen/logrus"
 )
 
 type ParamLint struct {
@@ -44,19 +44,15 @@ func (p *ParamLint) OutputterParam() *output.ParamGet {
 }
 
 // Lint lints files.
-func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamLint) error { //nolint:cyclop,funlen
-	logE.WithFields(logrus.Fields{
-		"param": log.JSON(param),
-	}).Debug("parameter")
+func (c *Controller) Lint(ctx context.Context, logger *slog.Logger, param *ParamLint) error { //nolint:cyclop,funlen
+	logger.Debug("parameter", "param", log.JSON(param))
 	// Find and read a configuration file.
 	rawCfg := &config.RawConfig{}
 	if err := c.configReader.Read(param.ConfigFilePath, rawCfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
-	logE.WithFields(logrus.Fields{
-		"config": log.JSON(rawCfg),
-	}).Debug("read config")
+	logger.Debug("read config", "config", log.JSON(rawCfg))
 
 	if param.TargetID != "" {
 		// If a target id is specified, gets a target from the configuration file by the target id.
@@ -73,10 +69,7 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 		return fmt.Errorf("parse a configuration file: %w", err)
 	}
 
-	logE.WithFields(logrus.Fields{
-		"config":     log.JSON(cfg),
-		"raw_config": log.JSON(rawCfg),
-	}).Debug("parse config")
+	logger.Debug("parse config", "config", log.JSON(cfg), "raw_config", log.JSON(rawCfg))
 
 	// Get a directory of the configuration file.
 	cfgDir := filepath.Dir(rawCfg.FilePath)
@@ -104,31 +97,26 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	modRootDir := filepath.Join(param.RootDir, "modules")
 
 	// Install modules.
-	if err := c.moduleInstaller.Installs(ctx, logE, &module.ParamInstall{
+	if err := c.moduleInstaller.Installs(ctx, logger, &module.ParamInstall{
 		BaseDir: modRootDir,
 	}, cfg.ModuleArchives); err != nil {
 		return fmt.Errorf("install modules: %w", err)
 	}
 
 	// Find targets, which are pairs of lint files and data files.
-	targets, err := c.fileFinder.Find(logE, cfg, modRootDir, cfgDir)
+	targets, err := c.fileFinder.Find(logger, cfg, modRootDir, cfgDir)
 	if err != nil {
 		return fmt.Errorf("find files: %w", err)
 	}
 
-	logE.WithFields(logrus.Fields{
-		"targets": log.JSON(targets),
-	}).Debug("found files")
+	logger.Debug("found files", "targets", log.JSON(targets))
 
 	filterParam := param.FilterParam()
 
 	if len(param.FilePaths) > 0 {
 		// If files are specified, filters targets by the files.
 		targets = filefilter.FilterTargetsByFilePaths(filterParam, targets)
-		logE.WithFields(logrus.Fields{
-			"filter_param": log.JSON(filterParam),
-			"targets":      log.JSON(targets),
-		}).Debug("filtered targets by given files")
+		logger.Debug("filtered targets by given files", "filter_param", log.JSON(filterParam), "targets", log.JSON(targets))
 	}
 
 	// Lint targets.
@@ -136,14 +124,10 @@ func (c *Controller) Lint(ctx context.Context, logE *logrus.Entry, param *ParamL
 	if err != nil {
 		return fmt.Errorf("lint targets: %w", err)
 	}
-	logE.WithFields(logrus.Fields{
-		"config":  log.JSON(cfg),
-		"results": log.JSON(results),
-		"targets": log.JSON(targets),
-	}).Debug("linted")
+	logger.Debug("linted", "config", log.JSON(cfg), "results", log.JSON(results), "targets", log.JSON(targets))
 
 	// Output results.
-	return c.Output(logE, errLevel, shownErrLevel, results, []Outputter{outputter}, param.OutputSuccess)
+	return c.Output(logger, errLevel, shownErrLevel, results, []Outputter{outputter}, param.OutputSuccess)
 }
 
 func getErrorLevel(errLevel string, defaultErrorLevel errlevel.Level) (errlevel.Level, error) {

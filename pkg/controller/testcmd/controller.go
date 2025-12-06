@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"io"
+	"log/slog"
 
 	"github.com/google/go-jsonnet"
 	"github.com/lintnet/lintnet/pkg/config"
@@ -12,7 +13,6 @@ import (
 	"github.com/lintnet/lintnet/pkg/encoding"
 	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/lint"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -111,7 +111,7 @@ type Controller struct {
 }
 
 type FileFinder interface {
-	FindLintFiles(logE *logrus.Entry, cfg *config.Config, cfgDir string) ([]*config.LintFile, error)
+	FindLintFiles(logger *slog.Logger, cfg *config.Config, cfgDir string) ([]*config.LintFile, error)
 }
 
 type ParamController struct {

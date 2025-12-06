@@ -10,20 +10,19 @@ import (
 	"github.com/lintnet/lintnet/pkg/controller/testcmd"
 	"github.com/lintnet/lintnet/pkg/github"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
-	"github.com/lintnet/lintnet/pkg/log"
 	"github.com/lintnet/lintnet/pkg/module"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
+	"github.com/suzuki-shunsuke/slog-util/slogutil"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
 
 type testCommand struct {
-	logE    *logrus.Entry
 	version string
 }
 
-func (tc *testCommand) command() *cli.Command {
+func (tc *testCommand) command(logger *slogutil.Logger) *cli.Command {
 	return &cli.Command{
 		Name:      "test",
 		Aliases:   []string{"t"},
@@ -44,7 +43,7 @@ If a configuration file isn't specified and isn't found, "lintnet test" works as
 
 You can test only a specific target with -target option.
 `,
-		Action: tc.action,
+		Action: urfave.Action(tc.action, logger),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "target",
@@ -55,21 +54,21 @@ You can test only a specific target with -target option.
 	}
 }
 
-func (tc *testCommand) action(ctx context.Context, cmd *cli.Command) error {
+func (tc *testCommand) action(ctx context.Context, cmd *cli.Command, logger *slogutil.Logger) error {
 	fs := afero.NewOsFs()
-	logE := tc.logE
-	log.SetLevel(cmd.String("log-level"), logE)
-	log.SetColor(cmd.String("log-color"), logE)
+	if err := logger.SetLevel(cmd.String("log-level")); err != nil {
+		return fmt.Errorf("set log level: %w", err)
+	}
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
 	if rootDir == "" {
 		dir, err := config.GetRootDir()
 		if err != nil {
-			logerr.WithError(logE, err).Warn("get the root directory")
+			slogerr.WithError(logger.Logger, err).Warn("get the root directory")
 		}
 		rootDir = dir
 	}
 	modInstaller := module.NewInstaller(fs, github.New(ctx), http.DefaultClient)
-	importer := jsonnet.NewImporter(ctx, logE, &module.ParamInstall{
+	importer := jsonnet.NewImporter(ctx, logger.Logger, &module.ParamInstall{
 		BaseDir: rootDir,
 	}, &jsonnet.FileImporter{
 		JPaths: []string{rootDir},
@@ -82,7 +81,7 @@ func (tc *testCommand) action(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	return ctrl.Test(ctx, logE, &testcmd.ParamTest{ //nolint:wrapcheck
+	return ctrl.Test(ctx, logger.Logger, &testcmd.ParamTest{ //nolint:wrapcheck
 		FilePaths:      cmd.Args().Slice(),
 		ConfigFilePath: cmd.String("config"),
 		TargetID:       cmd.String("target"),

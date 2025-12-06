@@ -5,17 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 
-	"github.com/google/go-github/v75/github"
+	"github.com/google/go-github/v79/github"
 	"github.com/lintnet/lintnet/pkg/config"
 	"github.com/lintnet/lintnet/pkg/osfile"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 var errSubDirMustBeOne = errors.New("the number of sub directories must be one")
@@ -46,20 +46,18 @@ func NewInstaller(fs afero.Fs, gh GitHub, httpClient HTTPClient) *Installer {
 	}
 }
 
-func (mi *Installer) Installs(ctx context.Context, logE *logrus.Entry, param *ParamInstall, modules map[string]*config.ModuleArchive) error {
+func (mi *Installer) Installs(ctx context.Context, logger *slog.Logger, param *ParamInstall, modules map[string]*config.ModuleArchive) error {
 	for _, mod := range modules {
 		modID := mod.String()
-		logE := logE.WithField("module_id", modID)
-		if err := mi.Install(ctx, logE, param, mod); err != nil {
-			return fmt.Errorf("install a module: %w", logerr.WithFields(err, logrus.Fields{
-				"module_id": modID,
-			}))
+		logger := logger.With("module_id", modID)
+		if err := mi.Install(ctx, logger, param, mod); err != nil {
+			return fmt.Errorf("install a module: %w", slogerr.With(err, "module_id", modID))
 		}
 	}
 	return nil
 }
 
-func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *ParamInstall, mod *config.ModuleArchive) error { //nolint:funlen,cyclop
+func (mi *Installer) Install(ctx context.Context, logger *slog.Logger, param *ParamInstall, mod *config.ModuleArchive) error { //nolint:funlen,cyclop
 	// Check if the module is already downloaded
 	dest := filepath.Join(param.BaseDir, filepath.FromSlash(mod.FilePath()))
 	f, err := afero.DirExists(mi.fs, dest)
@@ -77,11 +75,11 @@ func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *Par
 		Ref: mod.Ref,
 	}, 5) //nolint:mnd
 	if err != nil {
-		return fmt.Errorf("get an archive link by GitHub API: %w", logerr.WithFields(err, logrus.Fields{
-			"module_repo_owner": mod.RepoOwner,
-			"module_repo_name":  mod.RepoName,
-			"module_ref":        mod.Ref,
-		}))
+		return fmt.Errorf("get an archive link by GitHub API: %w", slogerr.With(err,
+			"module_repo_owner", mod.RepoOwner,
+			"module_repo_name", mod.RepoName,
+			"module_ref", mod.Ref,
+		))
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
@@ -101,7 +99,7 @@ func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *Par
 	}
 	defer func() {
 		if err := mi.fs.RemoveAll(tempDir); err != nil {
-			logE.WithError(err).Warn("delete a temporal directory")
+			slogerr.WithError(logger, err).Warn("delete a temporal directory")
 		}
 	}()
 	tempDest := filepath.Join(tempDir, "module.tar.gz")
@@ -110,7 +108,7 @@ func (mi *Installer) Install(ctx context.Context, logE *logrus.Entry, param *Par
 		return fmt.Errorf("create a temporal file: %w", err)
 	}
 	defer tempFile.Close()
-	logE.Info("downloading a module")
+	logger.Info("downloading a module")
 	if _, err := io.Copy(tempFile, resp.Body); err != nil {
 		return fmt.Errorf("download a module on a temporal directory: %w", err)
 	}

@@ -2,20 +2,21 @@ package lint
 
 import (
 	"errors"
+	"log/slog"
 
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/errlevel"
 	"github.com/lintnet/lintnet/pkg/output"
-	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Outputter interface {
 	Output(result *output.Output) error
 }
 
-func (c *Controller) Output(logE *logrus.Entry, errLevel, shownErrLevel errlevel.Level, results []*domain.Result, outputters []Outputter, outputSuccess bool) error {
+func (c *Controller) Output(logger *slog.Logger, errLevel, shownErrLevel errlevel.Level, results []*domain.Result, outputters []Outputter, outputSuccess bool) error {
 	fes := &output.Output{
-		Errors:         output.FormatResults(logE, results, shownErrLevel),
+		Errors:         output.FormatResults(logger, results, shownErrLevel),
 		LintnetVersion: c.param.Version,
 		Env:            c.param.Env,
 	}
@@ -28,7 +29,7 @@ func (c *Controller) Output(logE *logrus.Entry, errLevel, shownErrLevel errlevel
 	}
 	for _, outputter := range outputters {
 		if err := outputter.Output(fes); err != nil {
-			logE.WithError(err).Error("output errors")
+			slogerr.WithError(logger, err).Error("output errors")
 		}
 	}
 	if failed {

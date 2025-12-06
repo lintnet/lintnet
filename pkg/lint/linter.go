@@ -7,8 +7,7 @@ import (
 	"github.com/lintnet/lintnet/pkg/domain"
 	"github.com/lintnet/lintnet/pkg/filefind"
 	"github.com/lintnet/lintnet/pkg/jsonnet"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Linter struct {
@@ -138,9 +137,7 @@ func (l *Linter) getTLA(dataSet *domain.DataSet) (*domain.TopLevelArgument, erro
 		for i, dataFile := range dataSet.Files {
 			data, err := l.dataFileParser.Parse(dataFile)
 			if err != nil {
-				return nil, fmt.Errorf("parse a data file: %w", logerr.WithFields(err, logrus.Fields{
-					"data_file": dataFile.Raw,
-				}))
+				return nil, fmt.Errorf("parse a data file: %w", slogerr.With(err, "data_file", dataFile.Raw))
 			}
 			combinedData[i] = data.Data
 		}
