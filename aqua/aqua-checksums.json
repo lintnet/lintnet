@@ -136,33 +136,33 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/lintnet/lintnet/v0.4.11/lintnet_darwin_amd64.tar.gz",
-      "checksum": "F201E9F1A573C8BF166025BE7301CE9AD7A0661E08CD9C994273B6B61695B5EA",
+      "id": "github_release/github.com/lintnet/lintnet/v1.0.0/lintnet_darwin_amd64.tar.gz",
+      "checksum": "9A687622E67D8DF8F919B9FF2C77A5CAFD0775E4C703E30CB632F9CBC3864327",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/lintnet/lintnet/v0.4.11/lintnet_darwin_arm64.tar.gz",
-      "checksum": "358A5ADD56607B3C45F65F86C47F5FEE59D6688A2D50CEE1B34B6407CFA33DF0",
+      "id": "github_release/github.com/lintnet/lintnet/v1.0.0/lintnet_darwin_arm64.tar.gz",
+      "checksum": "AE6FF5DA5A27A1D0D489D4014FBF08F312ADCA16097652940145E980A74C689A",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/lintnet/lintnet/v0.4.11/lintnet_linux_amd64.tar.gz",
-      "checksum": "1C98CD93786E094988E4543FFA70069C56B471BAE820791D0D71B04CF5460BDA",
+      "id": "github_release/github.com/lintnet/lintnet/v1.0.0/lintnet_linux_amd64.tar.gz",
+      "checksum": "9C7E4ED962EA87A34789401A53D13A325316BB83868C33C586F3E7755C8E621F",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/lintnet/lintnet/v0.4.11/lintnet_linux_arm64.tar.gz",
-      "checksum": "C2AD8FF6103EE7C1BF82F90046D8423E1A73DEEA64B4424150F5F4F75A24D5DD",
+      "id": "github_release/github.com/lintnet/lintnet/v1.0.0/lintnet_linux_arm64.tar.gz",
+      "checksum": "AFAB8D1C8895DAF4E153AC186692D7A1BABB47583E0FBC365B093D6EBF92D814",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/lintnet/lintnet/v0.4.11/lintnet_windows_amd64.zip",
-      "checksum": "C4B2281088C77A948858E6B3BB793E0BBF6C060362BC705BB6D34630144478E1",
+      "id": "github_release/github.com/lintnet/lintnet/v1.0.0/lintnet_windows_amd64.zip",
+      "checksum": "6A661A2BE028DFDE1CC8B952F61943483C2809F2217834BAC75A9587068733B9",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/lintnet/lintnet/v0.4.11/lintnet_windows_arm64.zip",
-      "checksum": "934EB8779DA5EEEE0875DA1E7B69F238E9C53E1DA90AF34A5E409686B38C66A8",
+      "id": "github_release/github.com/lintnet/lintnet/v1.0.0/lintnet_windows_arm64.zip",
+      "checksum": "1438AE1B65CF940B8D20AC2C471D31BD0CA2331CA2F0AB0AD215E5C856B1FD61",
       "algorithm": "sha256"
     },
     {
