@@ -56,7 +56,7 @@ e.g.
 ```jsonnet
 local schema = import 'main_config_schema.json'; // Import JSON Schema
 local validateJSONSchema = std.native('jsonschema.Validate');
-local vr = validateJSONSchema(schema, param.config); // Validate param.config with JSON Schema main_config_shema.json
+local vr = validateJSONSchema(schema, param.config); // Validate param.config with JSON Schema main_config_schema.json
 ```
 
 Validate validates `v` with JSON Schema `schema` and returns the result.
