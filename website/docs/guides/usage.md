@@ -15,7 +15,7 @@ USAGE:
    lintnet [global options] [command [command options]]
 
 VERSION:
-   0.4.11 (0ba58ccc5316e997ea48b0e289529b0399764457)
+   1.0.0
 
 COMMANDS:
    lint, l     Lint files
@@ -23,13 +23,12 @@ COMMANDS:
    init        Scaffold configuration file
    test, t     Test lint files
    new         Create a lint file and a test file
-   completion  Output shell completion script for bash, zsh, or fish
    version     Show version
    help, h     Shows a list of commands or help for one command
+   completion  Output shell completion script for bash, zsh, fish, or Powershell
 
 GLOBAL OPTIONS:
    --log-level string          log level [$LINTNET_LOG_LEVEL]
-   --log-color string          Log color. One of 'auto' (default), 'always', 'never' [$LINTNET_LOG_COLOR]
    --config string, -c string  Configuration file path [$LINTNET_CONFIG]
    --help, -h                  show help
    --version, -v               print the version
@@ -69,7 +68,7 @@ OPTIONS:
    --target string, -t string       Lint only a specific target. You can specify a target id
    --error-level string, -e string  Set the error level [$LINTNET_ERROR_LEVEL]
    --shown-error-level string       Set the shown error level [$LINTNET_SHOWN_ERROR_LEVEL]
-   --output-success                 Output the result even if the lint succeeds (default: false) [$LINTNET_OUTPUT_SUCCESS]
+   --output-success                 Output the result even if the lint succeeds [$LINTNET_OUTPUT_SUCCESS]
    --help, -h                       show help
 ```
 
@@ -110,8 +109,8 @@ DESCRIPTION:
 
 
 OPTIONS:
-   --module-root-dir  Show only the root directory where modules are installed (default: false)
-   --mask-user        Mask the current user name (default: false)
+   --module-root-dir  Show only the root directory where modules are installed
+   --mask-user        Mask the current user name
    --help, -h         show help
 ```
 
@@ -193,90 +192,6 @@ OPTIONS:
    --help, -h  show help
 ```
 
-## lintnet completion
-
-```console
-$ lintnet completion --help
-NAME:
-   lintnet completion - Output shell completion script for bash, zsh, or fish
-
-USAGE:
-   lintnet completion [command [command options]]
-
-DESCRIPTION:
-   Output shell completion script for bash, zsh, or fish.
-   Source the output to enable completion.
-
-   e.g.
-
-   .bash_profile
-
-   if command -v lintnet &> /dev/null; then
-     source <(lintnet completion bash)
-   fi
-
-   .zprofile
-
-   if command -v lintnet &> /dev/null; then
-     source <(lintnet completion zsh)
-   fi
-
-   fish
-
-   lintnet completion fish > ~/.config/fish/completions/lintnet.fish
-
-
-COMMANDS:
-   bash  Output shell completion script for bash
-   zsh   Output shell completion script for zsh
-   fish  Output shell completion script for fish
-
-OPTIONS:
-   --help, -h  show help
-```
-
-### completion bash
-
-```console
-$ completion bash --help
-NAME:
-   lintnet completion bash - Output shell completion script for bash
-
-USAGE:
-   lintnet completion bash
-
-OPTIONS:
-   --help, -h  show help
-```
-
-### completion zsh
-
-```console
-$ completion zsh --help
-NAME:
-   lintnet completion zsh - Output shell completion script for zsh
-
-USAGE:
-   lintnet completion zsh
-
-OPTIONS:
-   --help, -h  show help
-```
-
-### completion fish
-
-```console
-$ completion fish --help
-NAME:
-   lintnet completion fish - Output shell completion script for fish
-
-USAGE:
-   lintnet completion fish
-
-OPTIONS:
-   --help, -h  show help
-```
-
 ## lintnet version
 
 ```console
@@ -288,6 +203,37 @@ USAGE:
    lintnet version
 
 OPTIONS:
-   --json, -j  Output version in JSON format (default: false)
+   --json, -j  Output version in JSON format
+   --help, -h  show help
+```
+
+## lintnet completion
+
+```console
+$ lintnet completion --help
+NAME:
+   lintnet completion - Output shell completion script for bash, zsh, fish, or Powershell
+
+USAGE:
+   lintnet completion
+
+DESCRIPTION:
+   Output shell completion script for bash, zsh, fish, or Powershell.
+   Source the output to enable completion.
+
+   # .bashrc
+   source <(lintnet completion bash)
+
+   # .zshrc
+   source <(lintnet completion zsh)
+
+   # fish
+   lintnet completion fish > ~/.config/fish/completions/lintnet.fish
+
+   # Powershell
+   Output the script to path/to/autocomplete/lintnet.ps1 an run it.
+
+
+OPTIONS:
    --help, -h  show help
 ```
