@@ -2,34 +2,16 @@ package cli
 
 import (
 	"context"
-	"io"
-	"log/slog"
 
-	"github.com/suzuki-shunsuke/urfave-cli-v3-util/helpall"
-	"github.com/suzuki-shunsuke/urfave-cli-v3-util/vcmd"
+	"github.com/suzuki-shunsuke/slog-util/slogutil"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
 
-type Runner struct {
-	Stdin       io.Reader
-	Stdout      io.Writer
-	Stderr      io.Writer
-	LDFlags     *LDFlags
-	Logger      *slog.Logger
-	LogLevelVar *slog.LevelVar
-}
-
-type LDFlags struct {
-	Version string
-	Commit  string
-	Date    string
-}
-
-func (r *Runner) Run(ctx context.Context, args ...string) error {
-	return helpall.With(&cli.Command{ //nolint:wrapcheck
-		Name:    "lintnet",
-		Usage:   "Powerful, Secure, Shareable Linter Powered by Jsonnet. https://lintnet.github.io/",
-		Version: r.LDFlags.Version + " (" + r.LDFlags.Commit + ")",
+func Run(ctx context.Context, logger *slogutil.Logger, env *urfave.Env) error {
+	return urfave.Command(env, &cli.Command{ //nolint:wrapcheck
+		Name:  "lintnet",
+		Usage: "Powerful, Secure, Shareable Linter Powered by Jsonnet. https://lintnet.github.io/",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "log-level",
@@ -43,39 +25,18 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 				Sources: cli.EnvVars("LINTNET_CONFIG"),
 			},
 		},
-		EnableShellCompletion: true,
 		Commands: []*cli.Command{
 			(&lintCommand{
-				logger:      r.Logger,
-				logLevelVar: r.LogLevelVar,
-				version:     r.LDFlags.Version,
-			}).command(),
+				version: env.Version,
+			}).command(logger),
 			(&infoCommand{
-				logger:  r.Logger,
-				version: r.LDFlags.Version,
-				commit:  r.LDFlags.Commit,
-			}).command(),
-			(&initCommand{
-				logger:      r.Logger,
-				logLevelVar: r.LogLevelVar,
-			}).command(),
+				version: env.Version,
+			}).command(logger),
+			(&initCommand{}).command(logger),
 			(&testCommand{
-				logger:      r.Logger,
-				logLevelVar: r.LogLevelVar,
-				version:     r.LDFlags.Version,
-			}).command(),
-			(&newCommand{
-				logger:      r.Logger,
-				logLevelVar: r.LogLevelVar,
-			}).command(),
-			(&completionCommand{
-				stdout: r.Stdout,
-			}).command(),
-			vcmd.New(&vcmd.Command{
-				Name:    "lintnet",
-				Version: r.LDFlags.Version,
-				SHA:     r.LDFlags.Commit,
-			}),
+				version: env.Version,
+			}).command(logger),
+			(&newCommand{}).command(logger),
 		},
-	}, nil).Run(ctx, args)
+	}).Run(ctx, env.Args)
 }

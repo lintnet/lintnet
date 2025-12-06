@@ -60,15 +60,15 @@ func (rm *RawModule) UnmarshalJSON(b []byte) error {
 type Module struct {
 	Archive   *ModuleArchive
 	SlashPath string
-	Config    map[string]interface{}
+	Config    map[string]any
 }
 
 type ModuleGlob struct {
-	SlashPath string                 `json:"slash_path,omitempty"`
-	Archive   *ModuleArchive         `json:"archive,omitempty"`
-	Config    map[string]interface{} `json:"config,omitempty"`
-	Files     []*LintGlobFile        `json:"files,omitempty"`
-	Excluded  bool                   `json:"excluded,omitempty"`
+	SlashPath string          `json:"slash_path,omitempty"`
+	Archive   *ModuleArchive  `json:"archive,omitempty"`
+	Config    map[string]any  `json:"config,omitempty"`
+	Files     []*LintGlobFile `json:"files,omitempty"`
+	Excluded  bool            `json:"excluded,omitempty"`
 }
 
 func (m *Module) FilePath() string {
