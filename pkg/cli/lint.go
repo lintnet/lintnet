@@ -33,7 +33,7 @@ type LintArgs struct {
 	FilePaths       []string
 }
 
-func (lc *lintCommand) command(logger *slogutil.Logger, gFlags *GlobalFlags) *cli.Command {
+func (lc *lintCommand) command(logger *slogutil.Logger, gFlags *GlobalFlags) *cli.Command { //nolint:funlen
 	args := &LintArgs{
 		GlobalFlags: gFlags,
 	}
