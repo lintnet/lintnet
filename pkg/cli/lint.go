@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 	"github.com/suzuki-shunsuke/slog-util/slogutil"
-	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
 
@@ -23,7 +22,21 @@ type lintCommand struct {
 	version string
 }
 
-func (lc *lintCommand) command(logger *slogutil.Logger) *cli.Command {
+type LintArgs struct {
+	*GlobalFlags
+
+	Output          string
+	Target          string
+	ErrorLevel      string
+	ShownErrorLevel string
+	OutputSuccess   bool
+	FilePaths       []string
+}
+
+func (lc *lintCommand) command(logger *slogutil.Logger, gFlags *GlobalFlags) *cli.Command { //nolint:funlen
+	args := &LintArgs{
+		GlobalFlags: gFlags,
+	}
 	return &cli.Command{
 		Name:      "lint",
 		Aliases:   []string{"l"},
@@ -46,41 +59,55 @@ You can output JSON even if the lint succeeds. This is useful if you pass the ou
 
 $ lintnet lint -output-success
 `,
-		Action: urfave.Action(lc.action, logger),
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return lc.action(ctx, logger, args)
+		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "output",
-				Aliases: []string{"o"},
-				Usage:   "You can customize the output format. You can specify an output id",
+				Name:        "output",
+				Aliases:     []string{"o"},
+				Usage:       "You can customize the output format. You can specify an output id",
+				Destination: &args.Output,
 			},
 			&cli.StringFlag{
-				Name:    "target",
-				Aliases: []string{"t"},
-				Usage:   "Lint only a specific target. You can specify a target id",
+				Name:        "target",
+				Aliases:     []string{"t"},
+				Usage:       "Lint only a specific target. You can specify a target id",
+				Destination: &args.Target,
 			},
 			&cli.StringFlag{
-				Name:    "error-level",
-				Aliases: []string{"e"},
-				Usage:   "Set the error level",
-				Sources: cli.EnvVars("LINTNET_ERROR_LEVEL"),
+				Name:        "error-level",
+				Aliases:     []string{"e"},
+				Usage:       "Set the error level",
+				Sources:     cli.EnvVars("LINTNET_ERROR_LEVEL"),
+				Destination: &args.ErrorLevel,
 			},
 			&cli.StringFlag{
-				Name:    "shown-error-level",
-				Usage:   "Set the shown error level",
-				Sources: cli.EnvVars("LINTNET_SHOWN_ERROR_LEVEL"),
+				Name:        "shown-error-level",
+				Usage:       "Set the shown error level",
+				Sources:     cli.EnvVars("LINTNET_SHOWN_ERROR_LEVEL"),
+				Destination: &args.ShownErrorLevel,
 			},
 			&cli.BoolFlag{
-				Name:    "output-success",
-				Usage:   "Output the result even if the lint succeeds",
-				Sources: cli.EnvVars("LINTNET_OUTPUT_SUCCESS"),
+				Name:        "output-success",
+				Usage:       "Output the result even if the lint succeeds",
+				Sources:     cli.EnvVars("LINTNET_OUTPUT_SUCCESS"),
+				Destination: &args.OutputSuccess,
+			},
+		},
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "file",
+				Max:         -1,
+				Destination: &args.FilePaths,
 			},
 		},
 	}
 }
 
-func (lc *lintCommand) action(ctx context.Context, cmd *cli.Command, logger *slogutil.Logger) error {
+func (lc *lintCommand) action(ctx context.Context, logger *slogutil.Logger, args *LintArgs) error {
 	fs := afero.NewOsFs()
-	if err := logger.SetLevel(cmd.String("log-level")); err != nil {
+	if err := logger.SetLevel(args.LogLevel); err != nil {
 		return fmt.Errorf("set log level: %w", err)
 	}
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
@@ -107,13 +134,13 @@ func (lc *lintCommand) action(ctx context.Context, cmd *cli.Command, logger *slo
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 	return ctrl.Lint(ctx, logger.Logger, &lint.ParamLint{ //nolint:wrapcheck
-		FilePaths:       cmd.Args().Slice(),
-		ErrorLevel:      cmd.String("error-level"),
-		ShownErrorLevel: cmd.String("shown-error-level"),
-		ConfigFilePath:  cmd.String("config"),
-		TargetID:        cmd.String("target"),
-		OutputSuccess:   cmd.Bool("output-success"),
-		Output:          cmd.String("output"),
+		FilePaths:       args.FilePaths,
+		ErrorLevel:      args.ErrorLevel,
+		ShownErrorLevel: args.ShownErrorLevel,
+		ConfigFilePath:  args.Config,
+		TargetID:        args.Target,
+		OutputSuccess:   args.OutputSuccess,
+		Output:          args.Output,
 		RootDir:         rootDir,
 		DataRootDir:     pwd,
 		PWD:             pwd,

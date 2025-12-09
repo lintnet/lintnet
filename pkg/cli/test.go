@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 	"github.com/suzuki-shunsuke/slog-util/slogutil"
-	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
 
@@ -22,7 +21,17 @@ type testCommand struct {
 	version string
 }
 
-func (tc *testCommand) command(logger *slogutil.Logger) *cli.Command {
+type TestArgs struct {
+	*GlobalFlags
+
+	Target    string
+	FilePaths []string
+}
+
+func (tc *testCommand) command(logger *slogutil.Logger, gFlags *GlobalFlags) *cli.Command {
+	args := &TestArgs{
+		GlobalFlags: gFlags,
+	}
 	return &cli.Command{
 		Name:      "test",
 		Aliases:   []string{"t"},
@@ -43,20 +52,30 @@ If a configuration file isn't specified and isn't found, "lintnet test" works as
 
 You can test only a specific target with -target option.
 `,
-		Action: urfave.Action(tc.action, logger),
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return tc.action(ctx, logger, args)
+		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "target",
-				Aliases: []string{"t"},
-				Usage:   "Target ID",
+				Name:        "target",
+				Aliases:     []string{"t"},
+				Usage:       "Target ID",
+				Destination: &args.Target,
+			},
+		},
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "file",
+				Max:         -1,
+				Destination: &args.FilePaths,
 			},
 		},
 	}
 }
 
-func (tc *testCommand) action(ctx context.Context, cmd *cli.Command, logger *slogutil.Logger) error {
+func (tc *testCommand) action(ctx context.Context, logger *slogutil.Logger, args *TestArgs) error {
 	fs := afero.NewOsFs()
-	if err := logger.SetLevel(cmd.String("log-level")); err != nil {
+	if err := logger.SetLevel(args.LogLevel); err != nil {
 		return fmt.Errorf("set log level: %w", err)
 	}
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
@@ -82,9 +101,9 @@ func (tc *testCommand) action(ctx context.Context, cmd *cli.Command, logger *slo
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 	return ctrl.Test(ctx, logger.Logger, &testcmd.ParamTest{ //nolint:wrapcheck
-		FilePaths:      cmd.Args().Slice(),
-		ConfigFilePath: cmd.String("config"),
-		TargetID:       cmd.String("target"),
+		FilePaths:      args.FilePaths,
+		ConfigFilePath: args.Config,
+		TargetID:       args.Target,
 		RootDir:        rootDir,
 		PWD:            pwd,
 	})
