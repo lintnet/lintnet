@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 	"github.com/suzuki-shunsuke/slog-util/slogutil"
-	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
 
@@ -19,7 +18,17 @@ type infoCommand struct {
 	version string
 }
 
-func (lc *infoCommand) command(logger *slogutil.Logger) *cli.Command {
+type InfoArgs struct {
+	*GlobalFlags
+
+	ModuleRootDir bool
+	MaskUser      bool
+}
+
+func (lc *infoCommand) command(logger *slogutil.Logger, gFlags *GlobalFlags) *cli.Command {
+	args := &InfoArgs{
+		GlobalFlags: gFlags,
+	}
 	return &cli.Command{
 		Name:      "info",
 		Usage:     "Output the information regarding lintnet",
@@ -48,21 +57,25 @@ You can also get the root directory where modules are installed.
 
 $ lintnet info -module-root-dir
 `,
-		Action: urfave.Action(lc.action, logger),
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return lc.action(ctx, logger, args)
+		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "module-root-dir",
-				Usage: "Show only the root directory where modules are installed",
+				Name:        "module-root-dir",
+				Usage:       "Show only the root directory where modules are installed",
+				Destination: &args.ModuleRootDir,
 			},
 			&cli.BoolFlag{
-				Name:  "mask-user",
-				Usage: "Mask the current user name",
+				Name:        "mask-user",
+				Usage:       "Mask the current user name",
+				Destination: &args.MaskUser,
 			},
 		},
 	}
 }
 
-func (lc *infoCommand) action(ctx context.Context, c *cli.Command, logger *slogutil.Logger) error {
+func (lc *infoCommand) action(ctx context.Context, logger *slogutil.Logger, args *InfoArgs) error {
 	fs := afero.NewOsFs()
 	rootDir := os.Getenv("LINTNET_ROOT_DIR")
 	if rootDir == "" {
@@ -82,10 +95,10 @@ func (lc *infoCommand) action(ctx context.Context, c *cli.Command, logger *slogu
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 	return ctrl.Info(ctx, &info.ParamInfo{ //nolint:wrapcheck
-		ConfigFilePath: c.String("config"),
+		ConfigFilePath: args.Config,
 		RootDir:        rootDir,
 		PWD:            pwd,
-		ModuleRootDir:  c.Bool("module-root-dir"),
-		MaskUser:       c.Bool("mask-user"),
+		ModuleRootDir:  args.ModuleRootDir,
+		MaskUser:       args.MaskUser,
 	})
 }
