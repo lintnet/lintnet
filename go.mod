@@ -7,7 +7,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v80 v80.0.0
+	github.com/google/go-github/v83 v83.0.0
 	github.com/google/go-jsonnet v0.21.0
 	github.com/lintnet/go-jsonnet-native-functions v0.4.2
 	github.com/otiai10/copy v1.14.1
@@ -26,7 +26,7 @@ require (
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/lmittmann/tint v1.1.2 // indirect
