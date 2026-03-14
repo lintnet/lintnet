@@ -15,8 +15,8 @@ require (
 	github.com/spf13/afero v1.15.0
 	github.com/suzuki-shunsuke/go-convmap v0.2.1
 	github.com/suzuki-shunsuke/slog-error v0.2.2
-	github.com/suzuki-shunsuke/slog-util v0.3.1
-	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.2.2
+	github.com/suzuki-shunsuke/slog-util v0.3.2
+	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.2.3
 	github.com/tmccombs/hcl2json v0.6.8
 	github.com/urfave/cli/v3 v3.7.0
 	golang.org/x/oauth2 v0.36.0
@@ -29,7 +29,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/lmittmann/tint v1.1.2 // indirect
+	github.com/lmittmann/tint v1.1.3 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
