@@ -103,7 +103,7 @@ e.g.
 - run: echo "module_root_dir=$(lintnet info -module-root-dir)" >> "$GITHUB_OUTPUT"
   id: lintnet
 
-- uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+- uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
   with:
     path: |
       ${{steps.lintnet.outputs.module_root_dir}}
