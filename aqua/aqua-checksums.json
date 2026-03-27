@@ -81,36 +81,6 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/google/go-jsonnet/v0.21.0/go-jsonnet_Darwin_arm64.tar.gz",
-      "checksum": "398189A264E31A2C1316EED8EE6308306A221FD10B72F405DEF0100D295EFEAC",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/google/go-jsonnet/v0.21.0/go-jsonnet_Darwin_x86_64.tar.gz",
-      "checksum": "A6CEE4B381D2319FA807D7A7BF8A4ECF2D0CCA64E2BCD53EEAA575CE1F7689A4",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/google/go-jsonnet/v0.21.0/go-jsonnet_Linux_arm64.tar.gz",
-      "checksum": "4A263DA605DBE2EDB99529F495266211062FAC476789F2119408BC223338F1D6",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/google/go-jsonnet/v0.21.0/go-jsonnet_Linux_x86_64.tar.gz",
-      "checksum": "AD3181FDE77726B02D17EB4E72687020BF2CB35B9336CDEAACA4783C7FF104F7",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/google/go-jsonnet/v0.21.0/go-jsonnet_Windows_arm64.tar.gz",
-      "checksum": "5244713590B976D8CB675ABA57434B2FA667663C299FE777A478C01C86E46341",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/google/go-jsonnet/v0.21.0/go-jsonnet_Windows_x86_64.tar.gz",
-      "checksum": "81D71A287EE5DFD0860831EEAC281A7327CE8876D5FE9A8B7E19726DBBC0CE4F",
-      "algorithm": "sha256"
-    },
-    {
       "id": "github_release/github.com/goreleaser/goreleaser/v2.14.1/goreleaser_Darwin_all.tar.gz",
       "checksum": "9F2E47F847B4F4177376FC6AA6914FBC7F673F59720076747E738B578C2E896E",
       "algorithm": "sha256"
