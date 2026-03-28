@@ -81,6 +81,36 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/google/go-jsonnet/v0.22.0/go-jsonnet_0.22.0_darwin_amd64.tar.gz",
+      "checksum": "2ADA40ECE13E8B4E1F37C06315783110C84B496963B0B8B90809DAF69DF7DFC9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/go-jsonnet/v0.22.0/go-jsonnet_0.22.0_darwin_arm64.tar.gz",
+      "checksum": "112534191B6E27F2AE01BB80C6AB82950FB7BF5772E2E81C5472F59A069700F5",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/go-jsonnet/v0.22.0/go-jsonnet_0.22.0_linux_amd64.tar.gz",
+      "checksum": "E87A93EA44E34DA92C15636205C7F2240BF3AC92D00CCB855DBB4E7E03EA6941",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/go-jsonnet/v0.22.0/go-jsonnet_0.22.0_linux_arm64.tar.gz",
+      "checksum": "3016B049254CB92548BA99304B6F44EC3795E6173F908E3CE3C5ADD57243FE20",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/go-jsonnet/v0.22.0/go-jsonnet_0.22.0_windows_amd64.tar.gz",
+      "checksum": "277B83DDBE836A627DCDE0655720AA42B02277FDF3A9CDAEBEEF2A53E98599B1",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/go-jsonnet/v0.22.0/go-jsonnet_0.22.0_windows_arm64.tar.gz",
+      "checksum": "663D4B9258E201CE9471A02E329167027E68BF4063192A937D83D8B6BAC8B044",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/goreleaser/goreleaser/v2.14.3/goreleaser_Darwin_all.tar.gz",
       "checksum": "3507798489E107A78AFF36B169DE48148A335AC26EB3161608D905F3F3A957BD",
       "algorithm": "sha256"
@@ -311,8 +341,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.453.0/registry.yaml",
-      "checksum": "8F4B510C0478FA5E5FCEA2B0272AFA3F52CD6AE4E00270B4A3220E1B12C28B9F4955B0EC2264FD20368CF6146DCEC652B8EED25F2C0B04FAE5417A524ACE7C51",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.488.0/registry.yaml",
+      "checksum": "0E1379C572F79240F6E9A1769BE24BE8019158B190A39B9BB218A2E668A3A9882842A4E83B4697ED22D2C38870DC7A473A4B13B3F27AED320A7A5ADF8AEB9C77",
       "algorithm": "sha512"
     }
   ]
