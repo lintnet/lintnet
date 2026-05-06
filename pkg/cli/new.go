@@ -38,7 +38,7 @@ If the argument is not given, the lint file is created as "main.jsonnet".
 		},
 		Arguments: []cli.Argument{
 			&cli.StringArg{
-				Name:        "file",
+				Name:        flagFile,
 				Value:       "main.jsonnet",
 				Destination: &args.FileName,
 			},

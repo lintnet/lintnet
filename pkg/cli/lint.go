@@ -97,7 +97,7 @@ $ lintnet lint -output-success
 		},
 		Arguments: []cli.Argument{
 			&cli.StringArgs{
-				Name:        "file",
+				Name:        flagFile,
 				Max:         -1,
 				Destination: &args.FilePaths,
 			},

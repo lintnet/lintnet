@@ -8,6 +8,8 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+const flagFile = "file"
+
 type GlobalFlags struct {
 	LogLevel string
 	Config   string

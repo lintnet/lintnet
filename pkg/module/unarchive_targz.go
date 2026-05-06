@@ -13,7 +13,10 @@ import (
 	"github.com/spf13/afero"
 )
 
-const maxFileSize = 1073741824 // 1GB
+const (
+	maxFileSize    = 1073741824 // 1GB
+	permissionMask = 0o7777
+)
 
 func extractTarGz(fs afero.Fs, src, dest string) error {
 	f, err := fs.Open(src)
@@ -46,9 +49,11 @@ func readTar(fs afero.Fs, dest string, tr *tar.Reader) error {
 
 	targetPath := filepath.Join(dest, filepath.Clean(hdr.Name))
 
+	mode := os.FileMode(uint32(hdr.Mode) & permissionMask) //nolint:gosec // mask to permission bits keeps the conversion in uint32 range
+
 	switch hdr.Typeflag {
 	case tar.TypeDir:
-		if err := fs.MkdirAll(targetPath, os.FileMode(hdr.Mode)); err != nil {
+		if err := fs.MkdirAll(targetPath, mode); err != nil {
 			return fmt.Errorf("create a directory: %w", err)
 		}
 	case tar.TypeReg:
@@ -56,7 +61,7 @@ func readTar(fs afero.Fs, dest string, tr *tar.Reader) error {
 			return fmt.Errorf("create a directory: %w", err)
 		}
 
-		outFile, err := fs.OpenFile(targetPath, os.O_CREATE|os.O_RDWR, os.FileMode(hdr.Mode))
+		outFile, err := fs.OpenFile(targetPath, os.O_CREATE|os.O_RDWR, mode)
 		if err != nil {
 			return fmt.Errorf("open a file: %w", err)
 		}
