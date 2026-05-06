@@ -65,7 +65,7 @@ You can test only a specific target with -target option.
 		},
 		Arguments: []cli.Argument{
 			&cli.StringArgs{
-				Name:        "file",
+				Name:        flagFile,
 				Max:         -1,
 				Destination: &args.FilePaths,
 			},
