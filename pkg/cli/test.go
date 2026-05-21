@@ -86,7 +86,11 @@ func (tc *testCommand) action(ctx context.Context, logger *slogutil.Logger, args
 		}
 		rootDir = dir
 	}
-	modInstaller := module.NewInstaller(fs, github.New(ctx), http.DefaultClient)
+	ghClient, err := github.New(ctx)
+	if err != nil {
+		return fmt.Errorf("create a GitHub client: %w", err)
+	}
+	modInstaller := module.NewInstaller(fs, ghClient, http.DefaultClient)
 	importer := jsonnet.NewImporter(ctx, logger.Logger, &module.ParamInstall{
 		BaseDir: rootDir,
 	}, &jsonnet.FileImporter{
