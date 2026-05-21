@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -23,8 +24,12 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context) *RepositoriesService {
-	return github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
+func New(ctx context.Context) (*RepositoriesService, error) {
+	client, err := github.NewClient(github.WithHTTPClient(getHTTPClientForGitHub(ctx, getGitHubToken())))
+	if err != nil {
+		return nil, fmt.Errorf("create a GitHub client: %w", err)
+	}
+	return client.Repositories, nil
 }
 
 func getGitHubToken() string {

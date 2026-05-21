@@ -8,7 +8,11 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	if client := github.New(t.Context()); client == nil {
+	client, err := github.New(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if client == nil {
 		t.Fatal("client must not be nil")
 	}
 }
