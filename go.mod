@@ -7,7 +7,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v87 v87.0.0
+	github.com/google/go-github/v88 v88.0.0
 	github.com/google/go-jsonnet v0.22.0
 	github.com/lintnet/go-jsonnet-native-functions v0.4.2
 	github.com/otiai10/copy v1.14.1
