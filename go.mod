@@ -11,7 +11,7 @@ require (
 	github.com/google/go-jsonnet v0.22.0
 	github.com/lintnet/go-jsonnet-native-functions v0.4.2
 	github.com/otiai10/copy v1.14.1
-	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/spf13/afero v1.15.0
 	github.com/suzuki-shunsuke/go-convmap v0.2.1
 	github.com/suzuki-shunsuke/slog-error v0.2.2
