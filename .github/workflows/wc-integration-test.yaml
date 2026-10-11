@@ -2,16 +2,13 @@
 name: integration-test
 on:
   workflow_call:
-    secrets:
-      TAKUMI_GUARD_BOT_ID:
-        required: true
 jobs:
   integration-test:
+    # Go modules are downloaded by the gomodule job in the caller workflow
     timeout-minutes: 30
     runs-on: ubuntu-26.04
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -19,10 +16,10 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          cache: false
 
-      - uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
-        with:
-          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+      - name: Restore Go modules
+        uses: suzuki-shunsuke/download-go-module-action/restore@9b315459d80513111c52b004d15ad89e7b3e46b7 # v0.0.4
 
       - run: go install ./cmd/lintnet
       - run: lintnet lint
