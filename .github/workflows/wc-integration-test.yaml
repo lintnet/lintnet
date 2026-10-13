@@ -19,7 +19,7 @@ jobs:
           cache: false
 
       - name: Restore Go modules
-        uses: suzuki-shunsuke/download-go-module-action/restore@dc4640ee5d5a7bea22008b5eac92a560ce90f1fb # v0.0.7
+        uses: suzuki-shunsuke/download-go-module-action/restore@59ba5863b931de21763c13df6ad926cf98158517 # v0.0.8
 
       - run: go install ./cmd/lintnet
       - run: lintnet lint
