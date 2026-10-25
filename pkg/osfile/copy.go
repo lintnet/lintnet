@@ -5,13 +5,13 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/otiai10/copy"
+	cp "github.com/otiai10/copy"
 	"github.com/spf13/afero"
 )
 
 func Copy(fs afero.Fs, src, dst string) error {
 	if _, ok := fs.(*afero.OsFs); ok {
-		return copy.Copy(src, dst) //nolint:wrapcheck
+		return cp.Copy(src, dst) //nolint:wrapcheck
 	}
 	return cpDir(fs, src, dst)
 }
