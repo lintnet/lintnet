@@ -7,5 +7,6 @@
     "github>suzuki-shunsuke/renovate-config#4.0.0",
     "github>suzuki-shunsuke/renovate-config:action-go-version#4.0.0",
     "github>suzuki-shunsuke/renovate-config:nolimit#4.0.0",
+    "github>suzuki-shunsuke/renovate-config:go-directive#4.0.0",
   ],
 }
