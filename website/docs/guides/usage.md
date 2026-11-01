@@ -15,7 +15,7 @@ USAGE:
    lintnet [global options] [command [command options]]
 
 VERSION:
-   1.0.0
+   1.0.1
 
 COMMANDS:
    lint, l     Lint files
@@ -70,6 +70,10 @@ OPTIONS:
    --shown-error-level string       Set the shown error level [$LINTNET_SHOWN_ERROR_LEVEL]
    --output-success                 Output the result even if the lint succeeds [$LINTNET_OUTPUT_SUCCESS]
    --help, -h                       show help
+
+GLOBAL OPTIONS:
+   --log-level string          log level [$LINTNET_LOG_LEVEL]
+   --config string, -c string  Configuration file path [$LINTNET_CONFIG]
 ```
 
 ## lintnet info
@@ -112,6 +116,10 @@ OPTIONS:
    --module-root-dir  Show only the root directory where modules are installed
    --mask-user        Mask the current user name
    --help, -h         show help
+
+GLOBAL OPTIONS:
+   --log-level string          log level [$LINTNET_LOG_LEVEL]
+   --config string, -c string  Configuration file path [$LINTNET_CONFIG]
 ```
 
 ## lintnet init
@@ -135,6 +143,10 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string          log level [$LINTNET_LOG_LEVEL]
+   --config string, -c string  Configuration file path [$LINTNET_CONFIG]
 ```
 
 ## lintnet test
@@ -145,7 +157,7 @@ NAME:
    lintnet test - Test lint files
 
 USAGE:
-   lintnet test [<lint file, test file, or directory> ...]
+   lintnet test [options] [<lint file, test file, or directory> ...]
 
 DESCRIPTION:
    Test lint files.
@@ -167,6 +179,10 @@ DESCRIPTION:
 OPTIONS:
    --target string, -t string  Target ID
    --help, -h                  show help
+
+GLOBAL OPTIONS:
+   --log-level string          log level [$LINTNET_LOG_LEVEL]
+   --config string, -c string  Configuration file path [$LINTNET_CONFIG]
 ```
 
 ## lintnet new
@@ -190,6 +206,10 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string          log level [$LINTNET_LOG_LEVEL]
+   --config string, -c string  Configuration file path [$LINTNET_CONFIG]
 ```
 
 ## lintnet version
@@ -200,11 +220,15 @@ NAME:
    lintnet version - Show version
 
 USAGE:
-   lintnet version
+   lintnet version [options]
 
 OPTIONS:
    --json, -j  Output version in JSON format
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string          log level [$LINTNET_LOG_LEVEL]
+   --config string, -c string  Configuration file path [$LINTNET_CONFIG]
 ```
 
 ## lintnet completion
@@ -215,7 +239,7 @@ NAME:
    lintnet completion - Output shell completion script for bash, zsh, fish, or Powershell
 
 USAGE:
-   lintnet completion
+   lintnet completion [command [command options]]
 
 DESCRIPTION:
    Output shell completion script for bash, zsh, fish, or Powershell.
@@ -231,8 +255,70 @@ DESCRIPTION:
    lintnet completion fish > ~/.config/fish/completions/lintnet.fish
 
    # Powershell
-   Output the script to path/to/autocomplete/lintnet.ps1 an run it.
+   Output the script to path/to/autocomplete/lintnet.ps1 and run it.
 
+
+COMMANDS:
+   bash  Output bash completion script
+   zsh   Output zsh completion script
+   fish  Output fish completion script
+   pwsh  Output pwsh completion script
+
+OPTIONS:
+   --help, -h  show help
+```
+
+### completion bash
+
+```console
+$ completion bash --help
+NAME:
+   lintnet completion bash - Output bash completion script
+
+USAGE:
+   lintnet completion bash [options]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+### completion zsh
+
+```console
+$ completion zsh --help
+NAME:
+   lintnet completion zsh - Output zsh completion script
+
+USAGE:
+   lintnet completion zsh [options]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+### completion fish
+
+```console
+$ completion fish --help
+NAME:
+   lintnet completion fish - Output fish completion script
+
+USAGE:
+   lintnet completion fish [options]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+### completion pwsh
+
+```console
+$ completion pwsh --help
+NAME:
+   lintnet completion pwsh - Output pwsh completion script
+
+USAGE:
+   lintnet completion pwsh [options]
 
 OPTIONS:
    --help, -h  show help
